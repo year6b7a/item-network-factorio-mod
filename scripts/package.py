@@ -4,11 +4,18 @@ from subprocess import Popen
 
 
 def main():
-    mod_name = "item-network"
+    with open("info.json") as fid:
+        mod_info = json.load(fid)
+    mod_name = mod_info["name"]
+    mod_version = mod_info["version"]
+    full_mod_name = f"{mod_name}_{mod_version}"
+
+    contents_path = f"build/zip_contents/{full_mod_name}"
 
     run_cmd(["rm", "-rf", "build"])
     run_cmd(["mkdir", "build"])
-    run_cmd(["mkdir", "build/temp_folder"])
+    run_cmd(["mkdir", "build/zip_contents"])
+    run_cmd(["mkdir", contents_path])
 
     paths_to_copy = [
         "graphics",
@@ -23,13 +30,11 @@ def main():
         "Queue.lua",
         "thumbnail.png",
     ]
-    run_cmd(["cp", "-r", *paths_to_copy, "build/temp_folder"])
-
-    with open("info.json") as fid:
-        mod_info = json.load(fid)
-    mod_name = mod_info["name"]
-
-    run_cmd(["zip", "-r", f"../{mod_name}.zip", "."], cwd="build/temp_folder")
+    run_cmd(["cp", "-r", *paths_to_copy, contents_path])
+    run_cmd(
+        ["zip", "-r", f"../{full_mod_name}.zip", "."],
+        cwd="build/zip_contents",
+    )
 
 
 def run_cmd(cmd, cwd=None):
