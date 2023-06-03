@@ -16,7 +16,13 @@ And here's a single chest that can continuously transport 4 blue lanes of iron o
 
 This mod also adds a Network Loader which is just a normal loader for transporting full lanes of items in and out of network chests. Inserters also work with network chests but loaders often lead to cleaner designs.
 
-There is no doubt that this mod is cheating and defeats the purpose of many of factorio's existing transportation mechanics like trains and logistic chests. If trains work well for you then you probably don't need this mod. This mod is instead intended for:
+Both Network Chests and Network Loaders are enabled without research and can be crafted without any items. These items might work well locked behind an endgame technology and require a ton of ingredients but for now it's more fun to have them available from the start.
+
+Network chests give and take items randomly for equal distribution to all chests which means belt balancers are no longer needed.
+
+### Target Audience
+
+There is no doubt that this mod is cheating and defeats the purpose of many existing transportation mechanics like trains and logistic chests. If trains work well for you then you probably don't need this mod. This mod is instead intended for:
 
 - Players who have already built large transportation layers and are ready for something simpler that scales better than trains.
 - Players who want to finish that spaghetti base but don't want to rebuilt the entire factory.
@@ -24,10 +30,6 @@ There is no doubt that this mod is cheating and defeats the purpose of many of f
 - Players who want a simpler way to build outposts.
 
 In short, this mod is for players who want a logistics solution that gets out of the way to focus on recipes and efficient factories.
-
-Both Network Chests and Network Loaders are enabled without research and can be crafted without any items. These items might work well locked behind an endgame technology and require a ton of ingredients but for now it's more fun to have them available from the start.
-
-Network chests give and take items randomly for equal distribution to all chests which means belt balancers are no longer needed.
 
 ### Configuring Network Chests
 
