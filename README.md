@@ -59,6 +59,10 @@ A similar approach can be used on take requests to set priority. For example, it
 
 Recipes can be copied from assamblers just like requester logistic chests which makes it easy to build a mall.
 
+### Integration with Personal Logistics
+
+Every second, this mod tries to fulfull personal logistic requests from the item network and push trashed items into the network.
+
 ### Underlying Implementation
 
 Network chests are implemented as a normal chest with 48 slots. Each of the chest's requests has a buffer size and filtered item slots are used to reserve space for that item. For example if the request buffers 51 coal, the mod will filter 2 chest slots for coal.
