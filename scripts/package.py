@@ -29,6 +29,8 @@ def main():
         "Paths.lua",
         "Queue.lua",
         "thumbnail.png",
+        "README.md",
+        "readme-pictures",
     ]
     run_cmd(["cp", "-r", *paths_to_copy, contents_path])
     run_cmd(
