@@ -585,8 +585,8 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
     default_limit = request.limit
   end
 
-  local width = 300
-  local height = 250
+  local width = 400
+  local height = 300
 
   local frame = player.gui.screen.add({
     type = "frame",
@@ -633,6 +633,7 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
   })
   local presets = {
     { count = 1 },
+    { count = 10 },
     { count = 50 },
     { count = 200 },
     { count = 1000 },
