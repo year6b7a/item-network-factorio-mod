@@ -417,6 +417,22 @@ NetworkChestGui.event_handlers = {
     end,
   },
   {
+    name = "set_preset_count",
+    event = "on_gui_click",
+    handler = function(event, element)
+      local gui = global.mod.network_chest_gui
+      local mg = gui.add_request_modal
+      local count = element.tags.count
+      if mg.request_type == "take" then
+        NetworkChestGui.nrm_set_buffer(count)
+        NetworkChestGui.nrm_set_limit(0)
+      else
+        NetworkChestGui.nrm_set_buffer(count)
+        NetworkChestGui.nrm_set_limit(count)
+      end
+    end,
+  },
+  {
     name = "make_new_request_btn",
     event = "on_gui_click",
     handler = function(event, element)
@@ -611,6 +627,25 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
   })
   item_picker.elem_value = default_item
 
+  local preset_count_flow = main_flow.add({
+    type = "flow",
+    direction = "horizontal",
+  })
+  local presets = {
+    { count = 1 },
+    { count = 50 },
+    { count = 200 },
+    { count = 1000 },
+  }
+  for _, preset in ipairs(presets) do
+    local btn_1 = preset_count_flow.add({
+      type = "button",
+      caption = string.format("%d", preset.count),
+      tags = { event = "set_preset_count", count = preset.count },
+    })
+    btn_1.style.width = 60
+  end
+
   local buffer_flow = main_flow.add({ type = "flow", direction = "horizontal" })
   buffer_flow.add({ type = "label", caption = "Buffer:" })
   local buffer_size_input = buffer_flow.add({
@@ -683,11 +718,21 @@ function NetworkChestGui.nrm_set_default_buffer_and_limit()
     else
       limit = math.min(50, stack_size)
     end
-    mg.buffer = buffer
-    mg.buffer_size_input.text = string.format("%d", buffer)
-    mg.limit = limit
-    mg.limit_input.text = string.format("%d", limit)
+    NetworkChestGui.nrm_set_buffer(buffer)
+    NetworkChestGui.nrm_set_limit(limit)
   end
+end
+
+function NetworkChestGui.nrm_set_buffer(buffer)
+  local mg = global.mod.network_chest_gui.add_request_modal
+  mg.buffer = buffer
+  mg.buffer_size_input.text = string.format("%d", buffer)
+end
+
+function NetworkChestGui.nrm_set_limit(limit)
+  local mg = global.mod.network_chest_gui.add_request_modal
+  mg.limit = limit
+  mg.limit_input.text = string.format("%d", limit)
 end
 
 NetworkChestGui.handler_map = {}
