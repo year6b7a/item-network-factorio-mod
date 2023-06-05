@@ -70,8 +70,9 @@ function M.add_loader()
     belt_length = 0.5,
     fast_replaceable_group = "transport-belt",
     filter_count = 1,
-    -- next_upgrade = "ei_fast-loader",
-    speed = data.raw["transport-belt"]["express-transport-belt"].speed,
+    -- https://wiki.factorio.com/Prototype/TransportBeltConnectable#speed
+    -- equivalent to 2x blue belt speed
+    speed = 0.1875,
     structure = {
       direction_in = {
         sheet = {
