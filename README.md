@@ -53,7 +53,7 @@ For example, here's how to configure barrel supply for an entire factory. Barrel
 
 The barrel assembler can give barrels to the network with a low limit of 10. The un-barreling assemblers can give barrels to the network with a higher limit of 100. The barreling assembler will make new barrels until there are 10 in the network, and from that point on un-barreling assemblers will give barrels with a higher priority to guarantee they don't back up.
 
-A similar approach can be used on take requests to set priority. For example, it might be useful to prioritize coal going to the power plant while plastic and furnaces take goal with lower priority. This can be done by setting the coal network chest to take coal from the network with a limit of 0. Plastic can take coal only when there is more than 100 coal in the network. Coal mines will insert into the network up to 200 items to make sure items can be provided to both the power plant and plastic when there is enough coal.
+A similar approach can be used on take requests to set priority. For example, it might be useful to prioritize coal going to the power plant while plastic and furnaces take coal with lower priority. This can be done by setting the coal network chest to take coal from the network with a limit of 0. Plastic can take coal only when there is more than 100 coal in the network. Coal mines will insert into the network up to 200 items to make sure items can be provided to both the power plant and plastic when there is enough coal.
 
 ### Copy Recipes from Assemblers
 
