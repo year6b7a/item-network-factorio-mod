@@ -585,6 +585,12 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
     default_limit = request.limit
   end
 
+  local gui = global.mod.network_chest_gui
+  if gui.add_request_modal ~= nil then
+    gui.add_request_modal.frame.destroy()
+    gui.add_request_modal = nil
+  end
+
   local width = 400
   local height = 300
 
@@ -696,7 +702,6 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
     limit = default_limit,
     disable_set_defaults_on_change = type == "edit",
   }
-  local gui = global.mod.network_chest_gui
   assert(gui.add_request_modal == nil)
   gui.add_request_modal = modal_gui
   player.opened = frame
