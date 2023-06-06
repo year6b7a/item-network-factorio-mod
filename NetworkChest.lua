@@ -633,25 +633,25 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
   })
   item_picker.elem_value = default_item
 
-  local preset_count_flow = main_flow.add({
-    type = "flow",
-    direction = "horizontal",
-  })
-  local presets = {
-    { count = 1 },
-    { count = 10 },
-    { count = 50 },
-    { count = 200 },
-    { count = 1000 },
-  }
-  for _, preset in ipairs(presets) do
-    local btn_1 = preset_count_flow.add({
-      type = "button",
-      caption = string.format("%d", preset.count),
-      tags = { event = "set_preset_count", count = preset.count },
-    })
-    btn_1.style.width = 60
-  end
+  -- local preset_count_flow = main_flow.add({
+  --   type = "flow",
+  --   direction = "horizontal",
+  -- })
+  -- local presets = {
+  --   { count = 1 },
+  --   { count = 10 },
+  --   { count = 50 },
+  --   { count = 200 },
+  --   { count = 1000 },
+  -- }
+  -- for _, preset in ipairs(presets) do
+  --   local btn_1 = preset_count_flow.add({
+  --     type = "button",
+  --     caption = string.format("%d", preset.count),
+  --     tags = { event = "set_preset_count", count = preset.count },
+  --   })
+  --   btn_1.style.width = 60
+  -- end
 
   local buffer_flow = main_flow.add({ type = "flow", direction = "horizontal" })
   buffer_flow.add({ type = "label", caption = "Buffer:" })
