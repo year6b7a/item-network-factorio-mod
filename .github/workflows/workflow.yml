@@ -1,0 +1,15 @@
+name: Actions
+on: [push]
+jobs:
+  Install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - run: python3 scripts/package.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: mod-zip
+          path: build/item-network*.zip
