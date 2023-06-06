@@ -596,7 +596,7 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
 
   local frame = player.gui.screen.add({
     type = "frame",
-    caption = type == "add" and "Add Request" or "Edit Request",
+    caption = type == "add" and "Add Item" or "Edit Item",
     name = "add-request",
   })
 
@@ -615,13 +615,13 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
     state = default_is_take,
     tags = { event = "choose_take_btn" },
   })
-  type_flow.add({ type = "label", caption = "Take" })
+  type_flow.add({ type = "label", caption = "Provide" })
   local choose_give_btn = type_flow.add({
     type = "radiobutton",
     state = not default_is_take,
     tags = { event = "choose_give_btn" },
   })
-  type_flow.add({ type = "label", caption = "Give" })
+  type_flow.add({ type = "label", caption = "Request" })
 
   local item_flow = main_flow.add({ type = "flow", direction = "horizontal" })
   item_flow.add({ type = "label", caption = "Item:" })
@@ -683,7 +683,7 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
 
   main_flow.add({
     type = "button",
-    caption = type == "add" and "Add Request" or "Confirm Changes",
+    caption = type == "add" and "Add Item" or "Confirm Changes",
     tags = { event = "make_new_request_btn", type = type, request_id = request_id },
   })
 
@@ -813,13 +813,12 @@ function NetworkChestGui.new(player, chest_entity)
     type = "flow",
     direction = "horizontal",
   })
-  requests_header_flow.add({ type = "label", caption = "Network Requests" })
   local add_request_btn = requests_header_flow.add({
     type = "button",
-    caption = "+",
+    caption = "Add Item",
     tags = { event = "add_request" },
   })
-  add_request_btn.style.width = 40
+  -- add_request_btn.style.width = 40
   local requests_scroll = requests_flow.add({
     type = "scroll-pane",
     direction = "vertical",
@@ -861,6 +860,8 @@ function NetworkChestGui.add_request_element(request, parent)
     name = request.id,
   })
 
+  flow.add({ name = "before-item", type = "label" })
+
   local choose_item_button = flow.add({
     name = "item-selection",
     type = "choose-elem-button",
@@ -868,10 +869,7 @@ function NetworkChestGui.add_request_element(request, parent)
   })
   choose_item_button.locked = true
 
-  flow.add({
-    name = "label",
-    type = "label",
-  })
+  flow.add({ name = "after-item", type = "label" })
 
   local edit_btn = flow.add({
     type = "button",
@@ -893,17 +891,25 @@ end
 function NetworkChestGui.update_request_element(request, element)
   element["item-selection"].elem_value = request.item
 
-  local label
+  local before_item_label
+  local after_item_label
   if request.type == "take" then
-    label = string.format("Take when network has more than %d and buffer %d.",
+    before_item_label = "Provide"
+    after_item_label = string.format(
+      "when network has more than %d and buffer %d.",
       request.limit,
-      request.buffer)
+      request.buffer
+    )
   else
-    label = string.format("Give when network has less than %d and buffer %d.",
+    before_item_label = "Request"
+    after_item_label = string.format(
+      "when network has less than %d and buffer %d.",
       request.limit,
-      request.buffer)
+      request.buffer
+    )
   end
-  element["label"].caption = label
+  element["before-item"].caption = before_item_label
+  element["after-item"].caption = after_item_label
 end
 
 function M.on_gui_click(event)
