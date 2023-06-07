@@ -10,7 +10,7 @@ This approach scales well for everything from a seldom-used mall to moving vast 
 
 This mod also adds a Network Loader which is just a normal loader for transporting full lanes of items in and out of network chests. Inserters also work with network chests but loaders often lead to cleaner designs.
 
-Here's an example of moving 128 blue belts of copper ore where almost every belt is saturated. In addition to the 128 network chests in this picture, this world has 2084 network chests with half dedicated to moving copper and the other half moving other items.
+Here's an example of moving 128 blue belts of copper ore where almost every belt is saturated. In addition to the 256 network chests in this picture, this world has 2084 network chests with half dedicated to moving copper and the other half moving other items.
 ![128 Belts of copper](/readme-pictures/2048-chest-test-consistency.png)
 
 And here's a mall powered entirely by network chests:
