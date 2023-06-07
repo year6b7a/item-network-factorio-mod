@@ -8,21 +8,21 @@ It does this by adding a new item called "Network Chest" which serves as an acce
 
 This approach scales well for everything from a seldom-used mall to moving vast quantities of items.
 
-For example, here's a mall powered entirely by network chests:
-![Mall](/readme-pictures/mall.png)
-
-And here's a single chest that can continuously transport 4 blue lanes of iron ore at once.
-![Iron Transport](/readme-pictures/large-scale-iron.png)
-
 This mod also adds a Network Loader which is just a normal loader for transporting full lanes of items in and out of network chests. Inserters also work with network chests but loaders often lead to cleaner designs.
 
-Both Network Chests and Network Loaders are enabled without research and can be crafted without any items. These items might work well locked behind an endgame technology and require a ton of ingredients but for now it's more fun to have them available from the start.
+Here's an example of moving 128 blue belts of copper ore where almost every belt is saturated. In addition to the 128 network chests in this picture, this world has 2084 network chests with half dedicated to moving copper and the other half moving other items.
+![128 Belts of copper](/readme-pictures/2048-chest-test-consistency.png)
 
-Network chests give and take items randomly for equal distribution to all chests which means belt balancers are no longer needed.
+And here's a mall powered entirely by network chests:
+![Mall](/readme-pictures/mall.png)
+
+Both Network Chests and Network Loaders are enabled without research and can be crafted without any items. While it might be more fair to lock these items behind endgame research expensive ingredients, it's more fun to have them available from the start.
+
+Network chests make belt balancers obsolete because they update randomly to ensure fairness.
 
 ### Target Audience
 
-There is no doubt that this mod is cheating and defeats the purpose of many existing transportation mechanics like trains and logistic chests. If trains work well for you then you probably don't need this mod. This mod is instead intended for:
+There is no doubt that this mod is cheating and defeats the purpose of many existing transportation mechanics like trains and bots. If trains work well for you then you probably don't need this mod. This mod is instead intended for:
 
 - Players who have already built large transportation layers and are ready for something simpler that scales better than trains.
 - Players who want to rebuild small parts of their spaghetti base without rebuilding the entire factory.
@@ -35,15 +35,15 @@ In short, this mod is for players who want a logistics solution that gets out of
 
 Network chests have a custom UI to configure requests that can be accessed by clicking on the chest.
 
-Each chest has a list of requests. "Take" requests take items from the network and "Give" requests give items to the network.
+Each chest has a list of items where the chest either requests or provides each item.
 
 ![Adding a request](/readme-pictures/add-new-item.png)
 ![Chest with a request](/readme-pictures/chest-with-request.png)
 
 Each request has a "limit" and "buffer" defined as follows:
 
-- Take "item" from the network when there are more than "limit" items in the network and store "buffer" in this chest.
-- Give "item" to the network when there are less than "limit" items in the network and store "buffer" in this chest.
+- Provide `item` from the network when there is more than `limit` in the network and store `buffer` items in this chest.
+- Request `item` to give to the network when there is less than `limit` in the network and store `buffer` items in this chest.
 
 This method of defining requests is easy to use but also allows for complex production loops with both custom input and output priorities.
 
@@ -79,7 +79,9 @@ Fluids cannot be directly transported through the network and instead need to be
 
 ### Performance
 
-This mod is tuned to take about 1-2ms every tick and does a fixed amount of work on every tick. While this is a lot of time for each tick, this mod also does a lot of work to transport all items for an entire base. For larger bases this overhead is comparable to the render time for belts and trains.
+This mod is tuned to take about 1-3ms every tick and does a fixed amount of work on every tick. While this is a lot of time for each tick, this mod also does a lot of work to transport all items for an entire base. For larger bases this overhead is comparable to the render time for belts, trains and bots.
+
+On the test world with 2048 network chests and 4096 loaders, the mod takes 2.5ms per tick which is about half the game update time on my computer.
 
 Internally the mod maintains a circular buffer of every network chest. On every tick it randomly pops off 20 chests and updates their contents by either giving items to the network or taking items from the network.
 
@@ -91,6 +93,7 @@ This mod has been tested in the following ways:
 
 - Launched a rocket in vanilla Factorio with 10x science.
 - Reached the "Quantum Age" in Exotic Industries (so far!).
+- Created a sandbox world with 2048 chests and 4096 loaders.
 - Unit tested the circular buffer implementation.
 
 This is plenty of play time to test:
