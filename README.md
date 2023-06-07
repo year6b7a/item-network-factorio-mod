@@ -106,3 +106,23 @@ This is plenty of play time to test:
 ### Contributing
 
 Please submit issues on [the github repo](https://github.com/year6b7a/item-network-factorio-mod). Pull requests are welcome!
+
+### Similar Mods
+
+The idea of teleporting items is definitely not new. Here is a short list of similar mods:
+
+- [Crash-Site Logistics Center](https://mods.factorio.com/mod/Kux-LogisticsCenterCS)
+- [TeleportProviderChest](https://mods.factorio.com/mod/TeleportProviderChest/faq)
+- [ItemTeleportation](https://mods.factorio.com/mod/ItemTeleportation)
+- [Subspace Storage](https://mods.factorio.com/mod/subspace_storage)
+- [Bulk Teleporters](https://mods.factorio.com/mod/bulkteleport/faq)
+- [Smart chest](https://mods.factorio.com/mod/smartchest)
+- [Quantum Resource Distribution 2](https://mods.factorio.com/mod/QuantumResourceDistribution2)
+- [Storage Energistics](https://mods.factorio.com/mod/storage_energistics)
+
+While all these mods are related to teleporting items, they have different priorities and Item Network in particular has unique priorities that might make it a good fit.
+
+- **Scale**: This mod is designed and tested to scale thousands of network chests and transport as many items as possible while being UPS friendly.
+- **Complex Recipes**: Through limits, this mod can prioritize requesting and providing items to move items through complex recipe chains without requiring other coordination mechanisms like splitters or pumps.
+- **Ease of Use**: This mod is designed to make it as easy as possible to move items without trying to make the mechanic balanced or fair. This mod is cheating but in an interesting way that can delight experienced players.
+- **Compatibility**: This mod is designed to work with with all other mods without config changes.
