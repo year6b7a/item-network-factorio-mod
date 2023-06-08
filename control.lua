@@ -80,6 +80,10 @@ function main()
     defines.events.on_gui_checked_state_changed,
     NetworkChest.on_gui_checked_state_changed
   )
+  script.on_event(
+    defines.events.on_gui_confirmed,
+    NetworkChest.on_gui_confirmed
+  )
 
   script.on_nth_tick(1, NetworkChest.onTick)
   script.on_nth_tick(60, NetworkChest.updatePlayers)

@@ -399,6 +399,20 @@ NetworkChestGui.event_handlers = {
   },
   {
     name = "buffer_size_input",
+    event = "on_gui_confirmed",
+    handler = function(event, element)
+      NetworkChestGui.try_to_add_request(event)
+    end,
+  },
+  {
+    name = "limit_input",
+    event = "on_gui_confirmed",
+    handler = function(event, element)
+      NetworkChestGui.try_to_add_request(event)
+    end,
+  },
+  {
+    name = "buffer_size_input",
     event = "on_gui_text_changed",
     handler = function(event, element)
       local gui = global.mod.network_chest_gui
@@ -435,70 +449,7 @@ NetworkChestGui.event_handlers = {
     name = "make_new_request_btn",
     event = "on_gui_click",
     handler = function(event, element)
-      local gui = global.mod.network_chest_gui
-      local mg = gui.add_request_modal
-      local request_type = mg.request_type
-      local item = mg.item
-      local buffer = mg.buffer
-      local limit = mg.limit
-
-      if request_type == nil or item == nil or buffer == nil or limit == nil then
-        return
-      end
-
-      if buffer <= 0 or limit < 0 then
-        return
-      end
-
-      -- make sure item request does not already exist
-      for _, request in ipairs(gui.requests) do
-        if (
-            element.tags.type == "add"
-            or element.tags.type == "edit" and request.id ~= element.tags.request_id
-          ) and request.item == item then
-          return
-        end
-      end
-
-      -- make sure request size does not exceed chest size
-      local used_slots = 0
-      for _, request in ipairs(gui.requests) do
-        local stack_size = game.item_prototypes[request.item].stack_size
-        local slots = math.ceil(request.buffer / stack_size)
-        used_slots = used_slots + slots
-      end
-      assert(used_slots <= Constants.NUM_INVENTORY_SLOTS)
-      local new_inv_slots = math.ceil(buffer /
-        game.item_prototypes[item].stack_size)
-      if used_slots + new_inv_slots > Constants.NUM_INVENTORY_SLOTS then
-        return
-      end
-
-      if element.tags.type == "add" then
-        local request = {
-          id = M.rand_hex(16),
-          type = request_type,
-          item = item,
-          buffer = buffer,
-          limit = limit,
-        }
-        table.insert(gui.requests, request)
-        NetworkChestGui.add_request_element(request, gui.requests_scroll)
-      elseif element.tags.type == "edit" then
-        local request = NetworkChestGui.get_request_by_id(
-          element.tags.request_id
-        )
-        if request ~= nil then
-          request.type = request_type
-          request.item = item
-          request.buffer = buffer
-          request.limit = limit
-        end
-        local request_elem = gui.requests_scroll[element.tags.request_id]
-        NetworkChestGui.update_request_element(request, request_elem)
-      end
-      local player = game.get_player(event.player_index)
-      player.opened = gui.frame
+      NetworkChestGui.try_to_add_request(event)
     end,
   },
   {
@@ -550,6 +501,75 @@ NetworkChestGui.event_handlers = {
     end,
   },
 }
+
+function NetworkChestGui.try_to_add_request(event)
+  local gui = global.mod.network_chest_gui
+  local mg = gui.add_request_modal
+  local modal_type = mg.modal_type
+  local request_id = mg.request_id
+  local request_type = mg.request_type
+  local item = mg.item
+  local buffer = mg.buffer
+  local limit = mg.limit
+
+  if request_type == nil or item == nil or buffer == nil or limit == nil then
+    return
+  end
+
+  if buffer <= 0 or limit < 0 then
+    return
+  end
+
+  -- make sure item request does not already exist
+  for _, request in ipairs(gui.requests) do
+    if (
+        modal_type == "add"
+        or modal_type == "edit" and request.id ~= request_id
+      ) and request.item == item then
+      return
+    end
+  end
+
+  -- make sure request size does not exceed chest size
+  local used_slots = 0
+  for _, request in ipairs(gui.requests) do
+    local stack_size = game.item_prototypes[request.item].stack_size
+    local slots = math.ceil(request.buffer / stack_size)
+    used_slots = used_slots + slots
+  end
+  assert(used_slots <= Constants.NUM_INVENTORY_SLOTS)
+  local new_inv_slots = math.ceil(buffer /
+    game.item_prototypes[item].stack_size)
+  if used_slots + new_inv_slots > Constants.NUM_INVENTORY_SLOTS then
+    return
+  end
+
+  if modal_type == "add" then
+    local request = {
+      id = M.rand_hex(16),
+      type = request_type,
+      item = item,
+      buffer = buffer,
+      limit = limit,
+    }
+    table.insert(gui.requests, request)
+    NetworkChestGui.add_request_element(request, gui.requests_scroll)
+  elseif modal_type == "edit" then
+    local request = NetworkChestGui.get_request_by_id(
+      request_id
+    )
+    if request ~= nil then
+      request.type = request_type
+      request.item = item
+      request.buffer = buffer
+      request.limit = limit
+    end
+    local request_elem = gui.requests_scroll[request_id]
+    NetworkChestGui.update_request_element(request, request_elem)
+  end
+  local player = game.get_player(event.player_index)
+  player.opened = gui.frame
+end
 
 function NetworkChestGui.get_request_by_id(request_id)
   if request_id == nil then
@@ -700,6 +720,8 @@ function NetworkChestGui.open_request_modal(player, type, request_id)
     buffer = default_buffer,
     limit = default_limit,
     disable_set_defaults_on_change = type == "edit",
+    modal_type = type,
+    request_id = request_id, -- only defined for edit events
   }
   assert(gui.add_request_modal == nil)
   gui.add_request_modal = modal_gui
@@ -925,6 +947,10 @@ end
 
 function M.on_gui_elem_changed(event)
   NetworkChestGui.handle_generic_gui_event(event, "on_gui_elem_changed")
+end
+
+function M.on_gui_confirmed(event)
+  NetworkChestGui.handle_generic_gui_event(event, "on_gui_confirmed")
 end
 
 function M.add_take_btn_enabled()
