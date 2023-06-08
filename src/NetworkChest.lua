@@ -1,33 +1,11 @@
 local Queue = require "src.Queue"
 local Constants = require "src.constants"
+local GlobalState = require "src.GlobalState"
 
 local M = {}
 
 
-function M.setupGlobals()
-  if global.mod == nil then
-    global.mod = {
-      rand = game.create_random_generator(),
-      chests = {},
-      scan_queue = Queue.new(),
-      items = {},
-    }
-  end
-end
-
-function M.rand_hex(len)
-  local chars = {}
-  for _ = 1, len do
-    table.insert(chars, string.format("%x", math.floor(global.mod.rand() * 16)))
-  end
-  return table.concat(chars, "")
-end
-
 function M.on_create(event, entity)
-  if global.mod.chests[entity.unit_number] ~= nil then
-    return
-  end
-
   local requests = {}
 
   if event.tags ~= nil then
@@ -37,12 +15,7 @@ function M.on_create(event, entity)
     end
   end
 
-
-  Queue.push(global.mod.scan_queue, entity.unit_number)
-  global.mod.chests[entity.unit_number] = {
-    entity = entity,
-    requests = requests,
-  }
+  GlobalState.register_chest_entity(entity, requests)
 end
 
 local function generic_create_handler(event)
@@ -111,7 +84,9 @@ function M.on_player_setup_blueprint(event)
   end
 
   for unit_number, entity in pairs(mapping) do
-    local chest_info = global.mod.chests[entity.unit_number]
+    local chest_info = GlobalState.get_chest_info(
+      entity.unit_number
+    )
     if chest_info ~= nil then
       blueprint.set_blueprint_entity_tag(
         unit_number,
@@ -127,8 +102,7 @@ function M.on_entity_settings_pasted(event)
   local dest = event.destination
   if dest.name == "network-chest" then
     if source.name == "network-chest" then
-      global.mod.chests[dest.unit_number].requests =
-        global.mod.chests[source.unit_number].requests
+      GlobalState.copy_chest_requests(source.unit_number, dest.unit_number)
     else
       local recipe = source.get_recipe()
       if recipe ~= nil then
@@ -145,14 +119,14 @@ function M.on_entity_settings_pasted(event)
             })
           end
         end
-        global.mod.chests[dest.unit_number].requests = requests
+        GlobalState.set_chest_requests(dest.unit_number, requests)
       end
     end
   end
 end
 
 function M.onDelete(entity)
-  global.mod.chests[entity.unit_number] = nil
+  GlobalState.delete_chest_entity(entity.unit_number)
   if global.mod.network_chest_gui ~= nil and global.mod.network_chest_gui.entity.unit_number == entity.unit_number then
     global.mod.network_chest_gui.frame.destroy()
     global.mod.network_chest_gui = nil
@@ -160,14 +134,12 @@ function M.onDelete(entity)
 end
 
 function M.updatePlayers()
-  local network_items = global.mod.items
   for _, player in pairs(game.players) do
     -- put all trash into network
     local trash_inv = player.get_inventory(defines.inventory.character_trash)
     if trash_inv ~= nil then
       for name, count in pairs(trash_inv.get_contents()) do
-        local current = network_items[name] or 0
-        network_items[name] = current + count
+        GlobalState.increment_item_count(name, count)
       end
       trash_inv.clear()
     end
@@ -188,7 +160,7 @@ function M.updatePlayers()
         for logistic_idx = 1, character.request_slot_count do
           local param = player.get_personal_logistic_slot(logistic_idx)
           if param ~= nil and param.name ~= nil then
-            local available_in_network = network_items[param.name] or 0
+            local available_in_network = GlobalState.get_item_count(param.name)
             local current_amount = main_contents[param.name] or 0
             local delta = math.min(available_in_network,
               math.max(0, param.min - current_amount))
@@ -197,7 +169,10 @@ function M.updatePlayers()
                 name = param.name,
                 count = delta,
               })
-              network_items[param.name] = available_in_network - n_transfered
+              GlobalState.set_item_count(
+                param.name,
+                available_in_network - n_transfered
+              )
             end
           end
         end
@@ -220,7 +195,6 @@ end
 
 
 local function update_network_chest(info)
-  local net_items = global.mod.items
   local inv = info.entity.get_output_inventory()
   local contents = inv.get_contents()
 
@@ -234,14 +208,14 @@ local function update_network_chest(info)
   -- make transfers with network
   for _, request in ipairs(info.requests) do
     local current_count = contents[request.item] or 0
-    local network_count = net_items[request.item] or 0
+    local network_count = GlobalState.get_item_count(request.item)
     if request.type == "take" then
       local n_take = math.max(0, request.buffer - current_count)
       local n_give = math.max(0, network_count - request.limit)
       local n_transfer = math.min(n_take, n_give)
       if n_transfer > 0 then
         contents[request.item] = current_count + n_transfer
-        net_items[request.item] = network_count - n_transfer
+        GlobalState.set_item_count(request.item, network_count - n_transfer)
       end
     else
       local n_give = current_count
@@ -249,7 +223,7 @@ local function update_network_chest(info)
       local n_transfer = math.min(n_take, n_give)
       if n_transfer > 0 then
         contents[request.item] = current_count - n_transfer
-        net_items[request.item] = network_count + n_transfer
+        GlobalState.set_item_count(request.item, network_count + n_transfer)
       end
     end
   end
@@ -303,28 +277,20 @@ local function update_network_chest(info)
   for item, count in pairs(contents) do
     assert(count >= 0)
     if count > 0 then
-      local net_count = net_items[item] or 0
-      net_items[item] = net_count + count
+      GlobalState.increment_item_count(item, count)
     end
-  end
-end
-
-function M.shuffle(list)
-  for i = #list, 2, -1 do
-    local j = global.mod.rand(i)
-    list[i], list[j] = list[j], list[i]
   end
 end
 
 function M.onTick()
-  M.setupGlobals()
+  GlobalState.setup()
   local scanned_units = {}
-  for _ = 1, math.min(20, global.mod.scan_queue.size) do
-    local unit_number = Queue.pop_random(global.mod.scan_queue, global.mod.rand)
+  for _ = 1, math.min(20, GlobalState.get_scan_queue_size()) do
+    local unit_number = GlobalState.scan_queue_pop()
     if unit_number == nil then
       break
     end
-    local info = global.mod.chests[unit_number]
+    local info = GlobalState.get_chest_info(unit_number)
     if info == nil then
       goto continue
     end
@@ -339,7 +305,7 @@ function M.onTick()
       scanned_units[unit_number] = true
       update_network_chest(info)
     end
-    Queue.push(global.mod.scan_queue, unit_number)
+    GlobalState.scan_queue_push(unit_number)
     ::continue::
   end
 end
@@ -546,7 +512,7 @@ function NetworkChestGui.try_to_add_request(event)
 
   if modal_type == "add" then
     local request = {
-      id = M.rand_hex(16),
+      id = GlobalState.rand_hex(16),
       type = request_type,
       item = item,
       buffer = buffer,
@@ -796,13 +762,14 @@ function NetworkChestGui.new(player, chest_entity)
   local width = 600
   local height = 500
 
-  local chest_requests = global.mod.chests[chest_entity.unit_number].requests
+  local chest_requests = GlobalState.get_chest_info(chest_entity.unit_number)
+    .requests
 
   local requests = {}
   for _, request in ipairs(chest_requests) do
     table.insert(requests, {
       type = request.type,
-      id = M.rand_hex(16),
+      id = GlobalState.rand_hex(16),
       item = request.item,
       buffer = request.buffer,
       limit = request.limit,
@@ -954,21 +921,21 @@ function M.on_gui_confirmed(event)
 end
 
 function M.add_take_btn_enabled()
-  local takes = global.mod.chests
-    [global.mod.network_chest_gui.entity.unit_number].takes
+  local takes = GlobalState.get_chest_info(global.mod.network_chest_gui.entity
+    .unit_number).takes
   return #takes == 0 or M.is_request_valid(takes[#takes])
 end
 
 function M.add_give_btn_enabled()
-  local gives = global.mod.chests
-    [global.mod.network_chest_gui.entity.unit_number].gives
+  local gives = GlobalState.get_chest_info(global.mod.network_chest_gui.entity
+    .unit_number).gives
   return #gives == 0 or M.is_request_valid(gives[#gives])
 end
 
 function M.on_gui_opened(event)
   if event.gui_type == defines.gui_type.entity and event.entity.name == "network-chest" then
     local entity = event.entity
-    assert(global.mod.chests[entity.unit_number] ~= nil)
+    assert(GlobalState.get_chest_info(entity.unit_number) ~= nil)
 
     local player = game.get_player(event.player_index)
     if player == nil then
@@ -1000,7 +967,7 @@ function NetworkChestGui.close(event, element)
               limit = request.limit,
             })
         end
-        global.mod.chests[gui.chest_entity.unit_number].requests = requests
+        GlobalState.set_chest_requests(gui.chest_entity.unit_number, requests)
       end
       gui.frame.destroy()
       global.mod.network_chest_gui = nil
