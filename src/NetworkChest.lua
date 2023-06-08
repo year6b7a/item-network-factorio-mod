@@ -27,18 +27,16 @@ function M.on_create(event, entity)
   if global.mod.chests[entity.unit_number] ~= nil then
     return
   end
-  local prev_unit_number = nil
-  if event.tags ~= nil then
-    prev_unit_number = event.tags.unit_number
-  end
 
   local requests = {}
-  if prev_unit_number ~= nil then
-    local prev_info = global.mod.chests[prev_unit_number]
-    if prev_info ~= nil then
-      requests = prev_info.requests
+
+  if event.tags ~= nil then
+    local requests_tag = event.tags.requests
+    if requests_tag ~= nil then
+      requests = requests_tag
     end
   end
+
 
   Queue.push(global.mod.scan_queue, entity.unit_number)
   global.mod.chests[entity.unit_number] = {
@@ -113,11 +111,12 @@ function M.on_player_setup_blueprint(event)
   end
 
   for unit_number, entity in pairs(mapping) do
-    if entity.name == "network-chest" then
+    local chest_info = global.mod.chests[entity.unit_number]
+    if chest_info ~= nil then
       blueprint.set_blueprint_entity_tag(
         unit_number,
-        "unit_number",
-        entity.unit_number
+        "requests",
+        chest_info.requests
       )
     end
   end
