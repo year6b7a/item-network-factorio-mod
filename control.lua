@@ -1,4 +1,4 @@
-local NetworkChest = require "NetworkChest"
+local NetworkChest = require "src.NetworkChest"
 
 
 

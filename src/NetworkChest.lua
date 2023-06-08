@@ -1,5 +1,5 @@
-local Queue = require "Queue"
-local Constants = require "constants"
+local Queue = require "src.Queue"
+local Constants = require "src.constants"
 
 local M = {}
 

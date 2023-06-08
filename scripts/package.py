@@ -21,17 +21,14 @@ def main():
     paths_to_copy = [
         "graphics",
         "locale",
-        "constants.lua",
         "control.lua",
         "data-final-fixes.lua",
         "data.lua",
         "info.json",
-        "NetworkChest.lua",
-        "Paths.lua",
-        "Queue.lua",
         "thumbnail.png",
         "README.md",
         "readme-pictures",
+        "src"
     ]
     run_cmd(["cp", "-r", *paths_to_copy, contents_path])
     run_cmd(

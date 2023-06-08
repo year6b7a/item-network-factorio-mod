@@ -1,5 +1,5 @@
-local constants = require "constants"
-local Paths     = require "Paths"
+local constants = require "src.constants"
+local Paths     = require "src.Paths"
 
 local M         = {}
 
