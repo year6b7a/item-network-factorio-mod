@@ -85,6 +85,16 @@ function main()
     NetworkChest.on_gui_confirmed
   )
 
+  -- custom events
+  script.on_event(
+    "in_confirm_dialog",
+    NetworkChest.in_confirm_dialog
+  )
+  script.on_event(
+    "in_cancel_dialog",
+    NetworkChest.in_cancel_dialog
+  )
+
   script.on_nth_tick(1, NetworkChest.onTick)
   script.on_nth_tick(60, NetworkChest.updatePlayers)
 end

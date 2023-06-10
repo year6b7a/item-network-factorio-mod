@@ -364,4 +364,12 @@ function M.on_gui_closed(event)
   NetworkChestGui.on_gui_closed(event)
 end
 
+function M.in_confirm_dialog(event)
+  NetworkChestGui.in_confirm_dialog(event)
+end
+
+function M.in_cancel_dialog(event)
+  NetworkChestGui.in_cancel_dialog(event)
+end
+
 return M

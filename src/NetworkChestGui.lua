@@ -156,6 +156,11 @@ function M.destroy_frame(player, frame_name)
 end
 
 function M.on_gui_closed(event)
+  local ui = GlobalState.get_ui_state(event.player_index)
+  local close_type = ui.close_type
+  ui.close_type = nil
+
+
   local element = event.element
   if element == nil then
     return
@@ -165,9 +170,10 @@ function M.on_gui_closed(event)
   if player == nil then
     return
   end
-  local ui = GlobalState.get_ui_state(event.player_index)
 
-  if element.name == UiConstants.MAIN_FRAME_NAME then
+  if close_type == nil then
+    M.reset(player, ui)
+  elseif element.name == UiConstants.MAIN_FRAME_NAME then
     -- make sure that the modal wasn't just opened
     if ui.network_chest.modal == nil then
       M.close_main_frame(player, true)
@@ -197,13 +203,23 @@ function M.close_main_frame(player, save_requests)
     )
   end
 
+  if ui.network_chest.modal ~= nil then
+    ui.network_chest.modal.frame.destroy()
+  end
   ui.network_chest.frame.destroy()
   ui.network_chest = nil
 end
 
 function M.close_modal(player)
   local ui = GlobalState.get_ui_state(player.index)
-  ui.network_chest.modal.frame.destroy()
+  if ui.network_chest == nil then
+    return
+  end
+  local modal = ui.network_chest.modal
+  if modal == nil then
+    return
+  end
+  modal.frame.destroy()
   ui.network_chest.modal = nil
   player.opened = ui.network_chest.frame
 end
@@ -357,7 +373,18 @@ function M.open_modal(player, type, request_id)
   -- the order is is important since setting player.opened = frame
   -- will trigger a "on_gui_closed" event that needs to be ignored.
   ui.network_chest.modal = modal
+  ui.close_type = "open modal"
   player.opened = frame
+end
+
+function M.in_confirm_dialog(event)
+  local ui = GlobalState.get_ui_state(event.player_index)
+  ui.close_type = "confirm"
+end
+
+function M.in_cancel_dialog(event)
+  local ui = GlobalState.get_ui_state(event.player_index)
+  ui.close_type = "cancel"
 end
 
 local Modal = {}
@@ -397,8 +424,9 @@ end
 
 function Modal.try_to_confirm(player_index)
   local player = game.get_player(player_index)
-  local ui = GlobalState.get_ui_state(player_index).network_chest
-  local modal = ui.modal
+  local ui = GlobalState.get_ui_state(player_index)
+  local chest_ui = ui.network_chest
+  local modal = chest_ui.modal
 
   local modal_type = modal.modal_type
   local request_id = modal.request_id
@@ -416,7 +444,7 @@ function Modal.try_to_confirm(player_index)
   end
 
   -- make sure item request does not already exist
-  for _, request in ipairs(ui.requests) do
+  for _, request in ipairs(chest_ui.requests) do
     if (
         modal_type == "add"
         or modal_type == "edit" and request.id ~= request_id
@@ -427,7 +455,7 @@ function Modal.try_to_confirm(player_index)
 
   -- make sure request size does not exceed chest size
   local used_slots = 0
-  for _, request in ipairs(ui.requests) do
+  for _, request in ipairs(chest_ui.requests) do
     local stack_size = game.item_prototypes[request.item].stack_size
     local slots = math.ceil(request.buffer / stack_size)
     used_slots = used_slots + slots
@@ -447,8 +475,8 @@ function Modal.try_to_confirm(player_index)
       buffer = buffer,
       limit = limit,
     }
-    table.insert(ui.requests, request)
-    M.add_request_element(request, ui.requests_scroll)
+    table.insert(chest_ui.requests, request)
+    M.add_request_element(request, chest_ui.requests_scroll)
   elseif modal_type == "edit" then
     local request = M.get_request_by_id(player,
       request_id
@@ -459,10 +487,11 @@ function Modal.try_to_confirm(player_index)
       request.buffer = buffer
       request.limit = limit
     end
-    local request_elem = ui.requests_scroll[request_id]
+    local request_elem = chest_ui.requests_scroll[request_id]
     M.update_request_element(request, request_elem)
   end
-  player.opened = ui.frame
+  ui.close_type = "confirm_request"
+  player.opened = chest_ui.frame
 end
 
 M.Modal = Modal
