@@ -94,9 +94,14 @@ function main()
     "in_cancel_dialog",
     NetworkChest.in_cancel_dialog
   )
+  script.on_event(
+    "in_open_network_view",
+    NetworkChest.in_open_network_view
+  )
 
   script.on_nth_tick(1, NetworkChest.onTick)
   script.on_nth_tick(60, NetworkChest.updatePlayers)
+  -- script.on_nth_tick(60 * 3, NetworkChest.on_every_5_seconds)
 end
 
 main()

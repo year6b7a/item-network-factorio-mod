@@ -88,6 +88,10 @@ function M.copy_chest_requests(source_unit_number, dest_unit_number)
 end
 
 function M.set_chest_requests(unit_number, requests)
+  local info = M.get_chest_info(unit_number)
+  if info == nil then
+    return
+  end
   global.mod.chests[unit_number].requests = requests
 end
 
@@ -95,8 +99,16 @@ function M.get_item_count(item_name)
   return global.mod.items[item_name] or 0
 end
 
+function M.get_items()
+  return global.mod.items
+end
+
 function M.set_item_count(item_name, count)
-  global.mod.items[item_name] = count
+  if count <= 0 then
+    global.mod.items[item_name] = nil
+  else
+    global.mod.items[item_name] = count
+  end
 end
 
 function M.increment_item_count(item_name, delta)
@@ -123,6 +135,10 @@ function M.get_player_info(player_index)
     global.mod.player_info[player_index] = info
   end
   return info
+end
+
+function M.get_player_info_map()
+  return global.mod.player_info
 end
 
 function M.get_ui_state(player_index)

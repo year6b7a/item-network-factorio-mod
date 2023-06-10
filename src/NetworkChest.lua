@@ -1,6 +1,8 @@
 local GlobalState = require "src.GlobalState"
 local NetworkChestGui = require "src.NetworkChestGui"
 local UiHandlers = require "src.UiHandlers"
+local NetworkViewUi = require "src.NetworkViewUi"
+local UiConstants = require "src.UiConstants"
 
 local M = {}
 
@@ -361,7 +363,12 @@ function M.on_gui_opened(event)
 end
 
 function M.on_gui_closed(event)
-  NetworkChestGui.on_gui_closed(event)
+  local frame = event.element
+  if frame ~= nil and frame.name == UiConstants.NV_FRAME then
+    NetworkViewUi.on_gui_closed(event)
+  else
+    NetworkChestGui.on_gui_closed(event)
+  end
 end
 
 function M.in_confirm_dialog(event)
@@ -370,6 +377,14 @@ end
 
 function M.in_cancel_dialog(event)
   NetworkChestGui.in_cancel_dialog(event)
+end
+
+function M.in_open_network_view(event)
+  NetworkViewUi.open_main_frame(event.player_index)
+end
+
+function M.on_every_5_seconds(event)
+  NetworkViewUi.on_every_5_seconds(event)
 end
 
 return M
