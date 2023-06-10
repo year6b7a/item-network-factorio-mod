@@ -1,6 +1,7 @@
-local Queue = require "src.Queue"
 local Constants = require "src.constants"
 local GlobalState = require "src.GlobalState"
+local NetworkChestGui2 = require "src.NetworkChestGui"
+local UiHandlers = require "src.UiHandlers"
 
 local M = {}
 
@@ -901,23 +902,23 @@ function NetworkChestGui.update_request_element(request, element)
 end
 
 function M.on_gui_click(event)
-  NetworkChestGui.handle_generic_gui_event(event, "on_gui_click")
+  UiHandlers.handle_generic_gui_event(event, "on_gui_click")
 end
 
 function M.on_gui_text_changed(event)
-  NetworkChestGui.handle_generic_gui_event(event, "on_gui_text_changed")
+  UiHandlers.handle_generic_gui_event(event, "on_gui_text_changed")
 end
 
 function M.on_gui_checked_state_changed(event)
-  NetworkChestGui.handle_generic_gui_event(event, "on_gui_checked_state_changed")
+  UiHandlers.handle_generic_gui_event(event, "on_gui_checked_state_changed")
 end
 
 function M.on_gui_elem_changed(event)
-  NetworkChestGui.handle_generic_gui_event(event, "on_gui_elem_changed")
+  UiHandlers.handle_generic_gui_event(event, "on_gui_elem_changed")
 end
 
 function M.on_gui_confirmed(event)
-  NetworkChestGui.handle_generic_gui_event(event, "on_gui_confirmed")
+  UiHandlers.handle_generic_gui_event(event, "on_gui_confirmed")
 end
 
 function M.add_take_btn_enabled()
@@ -942,9 +943,7 @@ function M.on_gui_opened(event)
       return
     end
 
-    local gui = NetworkChestGui.new(player, entity)
-    assert(global.mod.network_chest_gui == nil)
-    global.mod.network_chest_gui = gui
+    NetworkChestGui2.on_gui_opened(player, entity)
   end
 end
 
@@ -983,9 +982,10 @@ function NetworkChestGui.close(event, element)
 end
 
 function M.on_gui_closed(event)
-  if event.element ~= nil then
-    NetworkChestGui.close(event, event.element)
-  end
+  NetworkChestGui2.on_gui_closed(event)
+  -- if event.element ~= nil then
+  --   NetworkChestGui.close(event, event.element)
+  -- end
 end
 
 return M

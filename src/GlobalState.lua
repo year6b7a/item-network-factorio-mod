@@ -2,7 +2,14 @@ local Queue = require "src.Queue"
 
 local M = {}
 
+local setup_has_run = false
+
 function M.setup()
+  if setup_has_run then
+    return
+  end
+  setup_has_run = true
+
   if global.mod == nil then
     global.mod = {
       rand = game.create_random_generator(),
@@ -10,6 +17,29 @@ function M.setup()
       scan_queue = Queue.new(),
       items = {},
     }
+  end
+  M.remove_old_ui()
+  if global.mod.player_info == nil then
+    global.mod.player_info = {}
+  end
+end
+
+function M.remove_old_ui()
+  if global.mod.network_chest_gui ~= nil then
+    global.mod.network_chest_gui = nil
+    for _, player in pairs(game.players) do
+      local main_frame = player.gui.screen["network-chest-main-frame"]
+      if main_frame ~= nil then
+        game.print("deleting main frame")
+        main_frame.destroy()
+      end
+
+      local main_frame = player.gui.screen["add-request"]
+      if main_frame ~= nil then
+        game.print("deleting main frame")
+        main_frame.destroy()
+      end
+    end
   end
 end
 
@@ -84,6 +114,23 @@ end
 
 function M.scan_queue_push(unit_number)
   Queue.push(global.mod.scan_queue, unit_number)
+end
+
+function M.get_player_info(player_index)
+  local info = global.mod.player_info[player_index]
+  if info == nil then
+    info = {}
+    global.mod.player_info[player_index] = info
+  end
+  return info
+end
+
+function M.get_ui_state(player_index)
+  local info = M.get_player_info(player_index)
+  if info.ui == nil then
+    info.ui = {}
+  end
+  return info.ui
 end
 
 return M
