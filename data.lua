@@ -1,11 +1,14 @@
 local constants = require "src.constants"
-local Paths     = require "src.Paths"
+local Paths = require "src.Paths"
+local Hotkeys = require "src.Hotkeys"
 
-local M         = {}
+local M = {}
 
 function M.main()
   M.add_network_chest()
   M.add_loader()
+
+  data:extend(Hotkeys.hotkeys)
 end
 
 function M.add_network_chest()
