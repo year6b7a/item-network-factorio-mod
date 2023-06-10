@@ -10,8 +10,11 @@ function M.on_gui_opened(player, chest_entity)
   -- delete previous frames if exist
   M.reset(player, ui)
 
-  local chest_requests = GlobalState.get_chest_info(chest_entity.unit_number)
-    .requests
+  local chest_info = GlobalState.get_chest_info(chest_entity.unit_number)
+  if chest_info == nil then
+    return
+  end
+  local chest_requests = chest_info.requests
   local requests = M.get_ui_requests_from_chest_requests(chest_requests)
 
   local width = 600
