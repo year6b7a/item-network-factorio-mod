@@ -73,28 +73,64 @@ function M.on_entity_died(event)
   generic_destroy_handler(event)
 end
 
-function M.on_player_setup_blueprint(event)
-  local player = game.players[event.player_index]
-  local mapping = event.mapping.get()
+-- copied from https://discord.com/channels/139677590393716737/306402592265732098/1112775784411705384
+-- on the factorio discord
+-- thanks raiguard :)
+local function get_blueprint(event)
+  local player = game.get_player(event.player_index)
+  if not player then
+    return
+  end
 
-  local blueprint = player.blueprint_to_setup
-  if blueprint.valid_for_read == false then
-    local cursor = player.cursor_stack
-    if cursor and cursor.valid_for_read and cursor.name == "blueprint" then
-      blueprint = cursor
+  local bp = player.blueprint_to_setup
+  if bp and bp.valid_for_read then
+    return bp
+  end
+
+  bp = player.cursor_stack
+  if not bp or not bp.valid_for_read then
+    return nil
+  end
+
+  if bp.type == "blueprint-book" then
+    local item_inventory = bp.get_inventory(defines.inventory.item_main)
+    if item_inventory then
+      bp = item_inventory[bp.active_index]
+    else
+      return
     end
   end
 
-  for unit_number, entity in pairs(mapping) do
-    local chest_info = GlobalState.get_chest_info(
-      entity.unit_number
-    )
-    if chest_info ~= nil then
-      blueprint.set_blueprint_entity_tag(
-        unit_number,
-        "requests",
-        chest_info.requests
+  return bp
+end
+
+function M.on_player_setup_blueprint(event)
+  local blueprint = get_blueprint(event)
+  if blueprint == nil then
+    return
+  end
+
+  local entities = blueprint.get_blueprint_entities()
+  if entities == nil then
+    return
+  end
+
+  for _, entity in ipairs(entities) do
+    if entity.name == "network-chest" then
+      local real_entity = event.surface.find_entity(
+        "network-chest",
+        entity.position
       )
+      if real_entity ~= nil then
+        local chest_info = GlobalState.get_chest_info(real_entity.unit_number)
+        if chest_info ~= nil then
+          blueprint.set_blueprint_entity_tag(
+            entity.entity_number,
+            "requests",
+            chest_info.requests
+          )
+        end
+      end
     end
   end
 end
