@@ -39,7 +39,14 @@ function M.script_raised_built(event)
 end
 
 function M.on_entity_cloned(event)
-  generic_create_handler(event)
+  if event.source.name == "network-chest" and event.destination.name == "network-chest" then
+    GlobalState.register_chest_entity(event.destination)
+    local source_info = GlobalState.get_chest_info(event.source.unit_number)
+    local dest_info = GlobalState.get_chest_info(event.destination.unit_number)
+    if source_info ~= nil and dest_info ~= nil then
+      dest_info.requests = source_info.requests
+    end
+  end
 end
 
 function M.on_robot_built_entity(event)
