@@ -181,45 +181,54 @@ function M.onDelete(entity)
 end
 
 function M.updatePlayers()
+  if not global.mod.network_chest_has_been_placed then
+    return
+  end
+
   for _, player in pairs(game.players) do
-    -- put all trash into network
-    local trash_inv = player.get_inventory(defines.inventory.character_trash)
-    if trash_inv ~= nil then
-      for name, count in pairs(trash_inv.get_contents()) do
-        GlobalState.increment_item_count(name, count)
-      end
-      trash_inv.clear()
-    end
+    local enable_trash = settings.get_player_settings(player.index)
+      ["item-network-enable-logistic-trash"].value
 
-    -- get contents of player inventory
-    local main_inv = player.get_inventory(defines.inventory.character_main)
-    if main_inv ~= nil then
-      local character = player.character
-      if character ~= nil and character.character_personal_logistic_requests_enabled then
-        local main_contents = main_inv.get_contents()
-        local cursor_stack = player.cursor_stack
-        if cursor_stack ~= nil and cursor_stack.valid_for_read then
-          main_contents[cursor_stack.name] =
-            (main_contents[cursor_stack.name] or 0) + cursor_stack.count
+    if enable_trash then
+      -- put all trash into network
+      local trash_inv = player.get_inventory(defines.inventory.character_trash)
+      if trash_inv ~= nil then
+        for name, count in pairs(trash_inv.get_contents()) do
+          GlobalState.increment_item_count(name, count)
         end
+        trash_inv.clear()
+      end
 
-        -- scan logistic slots and transfer to character
-        for logistic_idx = 1, character.request_slot_count do
-          local param = player.get_personal_logistic_slot(logistic_idx)
-          if param ~= nil and param.name ~= nil then
-            local available_in_network = GlobalState.get_item_count(param.name)
-            local current_amount = main_contents[param.name] or 0
-            local delta = math.min(available_in_network,
-              math.max(0, param.min - current_amount))
-            if delta > 0 then
-              local n_transfered = main_inv.insert({
-                name = param.name,
-                count = delta,
-              })
-              GlobalState.set_item_count(
-                param.name,
-                available_in_network - n_transfered
-              )
+      -- get contents of player inventory
+      local main_inv = player.get_inventory(defines.inventory.character_main)
+      if main_inv ~= nil then
+        local character = player.character
+        if character ~= nil and character.character_personal_logistic_requests_enabled then
+          local main_contents = main_inv.get_contents()
+          local cursor_stack = player.cursor_stack
+          if cursor_stack ~= nil and cursor_stack.valid_for_read then
+            main_contents[cursor_stack.name] =
+              (main_contents[cursor_stack.name] or 0) + cursor_stack.count
+          end
+
+          -- scan logistic slots and transfer to character
+          for logistic_idx = 1, character.request_slot_count do
+            local param = player.get_personal_logistic_slot(logistic_idx)
+            if param ~= nil and param.name ~= nil then
+              local available_in_network = GlobalState.get_item_count(param.name)
+              local current_amount = main_contents[param.name] or 0
+              local delta = math.min(available_in_network,
+                math.max(0, param.min - current_amount))
+              if delta > 0 then
+                local n_transfered = main_inv.insert({
+                  name = param.name,
+                  count = delta,
+                })
+                GlobalState.set_item_count(
+                  param.name,
+                  available_in_network - n_transfered
+                )
+              end
             end
           end
         end

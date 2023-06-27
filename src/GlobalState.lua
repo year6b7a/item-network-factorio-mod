@@ -22,6 +22,10 @@ function M.setup()
   if global.mod.player_info == nil then
     global.mod.player_info = {}
   end
+
+  if global.mod.network_chest_has_been_placed == nil then
+    global.mod.network_chest_has_been_placed = global.mod.scan_queue.size > 0
+  end
 end
 
 function M.remove_old_ui()
@@ -72,6 +76,8 @@ function M.register_chest_entity(entity, requests)
     entity = entity,
     requests = requests,
   }
+
+  global.mod.network_chest_has_been_placed = true
 end
 
 function M.delete_chest_entity(unit_number)
