@@ -152,10 +152,12 @@ function M.on_entity_settings_pasted(event)
       local recipe = source.get_recipe()
       if recipe ~= nil then
         local requests = {}
+        local buffer_size = settings.global
+          ["item-network-stack-size-on-assembler-paste"].value
         for _, ingredient in ipairs(recipe.ingredients) do
           if ingredient.type == "item" then
             local stack_size = game.item_prototypes[ingredient.name].stack_size
-            local buffer = math.min(5, stack_size)
+            local buffer = math.min(buffer_size, stack_size)
             table.insert(requests, {
               type = "take",
               item = ingredient.name,
