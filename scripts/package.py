@@ -24,11 +24,12 @@ def main():
         "control.lua",
         "data-final-fixes.lua",
         "data.lua",
+        "settings.lua",
         "info.json",
         "thumbnail.png",
         "README.md",
         "readme-pictures",
-        "src"
+        "src",
     ]
     run_cmd(["cp", "-r", *paths_to_copy, contents_path])
     run_cmd(
