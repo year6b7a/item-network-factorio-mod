@@ -11,7 +11,7 @@ function M.main()
     },
     {
       type = "bool-setting",
-      name = "item-network-enable-logistic-trash",
+      name = "item-network-enable-player-logistics",
       setting_type = "runtime-per-user",
       default_value = true,
     },

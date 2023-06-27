@@ -187,7 +187,7 @@ function M.updatePlayers()
 
   for _, player in pairs(game.players) do
     local enable_trash = settings.get_player_settings(player.index)
-      ["item-network-enable-logistic-trash"].value
+      ["item-network-enable-player-logistics"].value
 
     if enable_trash then
       -- put all trash into network
