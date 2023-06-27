@@ -26,6 +26,13 @@ function M.setup()
   if global.mod.network_chest_has_been_placed == nil then
     global.mod.network_chest_has_been_placed = global.mod.scan_queue.size > 0
   end
+
+  if global.mod.fluids == nil then
+    global.mod.fluids = {}
+  end
+  if global.mod.tanks == nil then
+    global.mod.tanks = {}
+  end
 end
 
 function M.remove_old_ui()
@@ -84,8 +91,27 @@ function M.delete_chest_entity(unit_number)
   global.mod.chests[unit_number] = nil
 end
 
+function M.register_tank_entity(entity)
+  if global.mod.tanks[entity.unit_number] ~= nil then
+    return
+  end
+
+  Queue.push(global.mod.scan_queue, entity.unit_number)
+  global.mod.tanks[entity.unit_number] = {
+    entity = entity,
+  }
+end
+
+function M.delete_tank_entity(unit_number)
+  global.mod.tanks[unit_number] = nil
+end
+
 function M.get_chest_info(unit_number)
   return global.mod.chests[unit_number]
+end
+
+function M.get_tank_info(unit_number)
+  return global.mod.tanks[unit_number]
 end
 
 function M.copy_chest_requests(source_unit_number, dest_unit_number)
@@ -105,6 +131,10 @@ function M.get_item_count(item_name)
   return global.mod.items[item_name] or 0
 end
 
+function M.get_fluid_count(fluid_name)
+  return global.mod.fluids[fluid_name] or 0
+end
+
 function M.get_items()
   return global.mod.items
 end
@@ -114,6 +144,14 @@ function M.set_item_count(item_name, count)
     global.mod.items[item_name] = nil
   else
     global.mod.items[item_name] = count
+  end
+end
+
+function M.set_fluid_count(fluid_name, count)
+  if count <= 0 then
+    global.mod.fluids[fluid_name] = nil
+  else
+    global.mod.fluids[fluid_name] = count
   end
 end
 

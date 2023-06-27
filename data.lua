@@ -7,6 +7,7 @@ local M = {}
 function M.main()
   M.add_network_chest()
   M.add_loader()
+  M.add_network_tank()
 
   data:extend(Hotkeys.hotkeys)
 end
@@ -111,6 +112,51 @@ function M.add_loader()
     subgroup = data.raw["item"]["iron-chest"].subgroup,
     order = data.raw["item"]["iron-chest"].order,
   }
+
+  local recipe = {
+    name = name,
+    type = "recipe",
+    enabled = true,
+    energy_required = 0.5,
+    ingredients = {},
+    result = name,
+    result_count = 1,
+  }
+
+  data:extend({ entity, item, recipe })
+end
+
+function M.add_network_tank()
+  local name = "network-tank"
+  local override_item_name = "storage-tank"
+  local overwrite_prototype = "storage-tank"
+
+  local entity = table.deepcopy(data.raw[overwrite_prototype]
+    [override_item_name])
+  entity.name = name
+  entity.selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } }
+  entity.collision_box = { { -0.45, -0.45 }, { 0.45, 0.45 } }
+  entity.window_bounding_box = { { -0.2, -0.2 }, { 0.2, 0.2 } }
+  entity.fluid_box = {
+    base_area = constants.TANK_AREA,
+    height = constants.TANK_HEIGHT,
+    pipe_connections =
+    {
+      { position = { 0, 1 }, type = "input-output" },
+    },
+  }
+  -- entity.picture = {
+  --   filename = Paths.graphics .. "/entities/network-chest.png",
+  --   size = 64,
+  --   scale = 0.5,
+  -- }
+  entity.minable.result = name
+
+  local item = table.deepcopy(data.raw["item"][override_item_name])
+  item.name = name
+  item.place_result = name
+  -- item.icon = Paths.graphics .. "/items/network-chest.png"
+  item.size = 64
 
   local recipe = {
     name = name,
