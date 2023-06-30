@@ -407,7 +407,7 @@ local function update_tank(info)
     local n_give = math.max(0, network_count - limit)
     local n_transfer = math.min(n_take, n_give)
     if n_transfer > 0 then
-      game.print(string.format("taking %d", n_transfer))
+      -- game.print(string.format("taking %d", n_transfer))
       info.entity.insert_fluid({ name = fluid, amount = n_transfer })
       GlobalState.set_fluid_count(fluid, network_count - n_transfer)
     end
@@ -416,7 +416,7 @@ local function update_tank(info)
     local n_take = math.max(0, limit - network_count)
     local n_transfer = math.min(n_take, n_give)
     if n_transfer > 0 then
-      game.print(string.format("giving %d", n_transfer))
+      -- game.print(string.format("giving %d", n_transfer))
       info.entity.remove_fluid({ name = fluid, amount = n_transfer })
       GlobalState.set_fluid_count(fluid, network_count + n_transfer)
     end
