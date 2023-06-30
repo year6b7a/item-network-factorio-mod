@@ -16,13 +16,13 @@ function M.on_gui_opened(player, entity)
   end
 
   local default_is_take = true
-  local default_item = nil
+  local default_fluid = nil
   local default_buffer = nil
   local default_limit = nil
 
   if tank_info.config ~= nil then
-    default_is_take = tank_info.config.type
-    default_item = tank_info.config.item
+    default_is_take = tank_info.config.type == "take"
+    default_fluid = tank_info.config.fluid
     default_buffer = tank_info.config.buffer
     default_limit = tank_info.config.limit
   end
@@ -56,15 +56,15 @@ function M.on_gui_opened(player, entity)
   })
   type_flow.add({ type = "label", caption = "Request" })
 
-  local item_flow = main_flow.add({ type = "flow", direction = "horizontal" })
-  item_flow.add({ type = "label", caption = "Item:" })
-  local item_picker = item_flow.add({
+  local fluid_flow = main_flow.add({ type = "flow", direction = "horizontal" })
+  fluid_flow.add({ type = "label", caption = "Fluid:" })
+  local fluid_picker = fluid_flow.add({
     type = "choose-elem-button",
-    elem_type = "item",
-    elem_value = default_item,
-    tags = { event = UiConstants.NT_ITEM_PICKER },
+    elem_type = "fluid",
+    elem_value = default_fluid,
+    tags = { event = UiConstants.NT_FLUID_PICKER },
   })
-  item_picker.elem_value = default_item
+  fluid_picker.elem_value = default_fluid
 
   local buffer_flow = main_flow.add({ type = "flow", direction = "horizontal" })
   buffer_flow.add({ type = "label", caption = "Buffer:" })
@@ -113,7 +113,6 @@ function M.on_gui_opened(player, entity)
     },
   })
 
-  game.print("setting network tank")
   ui.network_tank = {
     frame = frame,
     unit_number = entity.unit_number,
@@ -122,7 +121,7 @@ function M.on_gui_opened(player, entity)
     buffer_size_input = buffer_size_input,
     limit_input = limit_input,
     type = default_is_take and "take" or "give",
-    item = default_item,
+    fluid = default_fluid,
     buffer = default_buffer,
     limit = default_limit,
   }
@@ -155,9 +154,9 @@ function M.set_default_buffer_and_limit(player_index)
   local ui = GlobalState.get_ui_state(player_index)
   local nt_ui = ui.network_tank
 
-  local item = nt_ui.item
+  local fluid = nt_ui.fluid
   local type = nt_ui.type
-  if item ~= nil and type ~= nil then
+  if fluid ~= nil and type ~= nil then
     local limit
     if type == "take" then
       limit = 0
@@ -184,11 +183,11 @@ function M.try_to_confirm(player_index)
   local nt_ui = ui.network_tank
 
   local type = nt_ui.type
-  local item = nt_ui.item
+  local fluid = nt_ui.fluid
   local buffer = nt_ui.buffer
   local limit = nt_ui.limit
 
-  if type == nil or item == nil or buffer == nil or limit == nil then
+  if type == nil or fluid == nil or buffer == nil or limit == nil then
     return
   end
 
@@ -207,7 +206,7 @@ function M.try_to_confirm(player_index)
 
   info.config = {
     type = type,
-    item = item,
+    fluid = fluid,
     buffer = buffer,
     limit = limit,
   }

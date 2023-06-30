@@ -131,31 +131,57 @@ function M.add_network_tank()
   local override_item_name = "storage-tank"
   local overwrite_prototype = "storage-tank"
 
-  local entity = table.deepcopy(data.raw[overwrite_prototype]
-    [override_item_name])
-  entity.name = name
-  entity.selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } }
-  entity.collision_box = { { -0.45, -0.45 }, { 0.45, 0.45 } }
-  entity.window_bounding_box = { { -0.2, -0.2 }, { 0.2, 0.2 } }
-  entity.fluid_box = {
-    base_area = constants.TANK_AREA,
-    height = constants.TANK_HEIGHT,
-    pipe_connections =
-    {
-      { position = { 0, 1 }, type = "input-output" },
+  local entity = {
+    name = name,
+    type = "storage-tank",
+    selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
+    collision_box = { { -0.45, -0.45 }, { 0.45, 0.45 } },
+    window_bounding_box = { { -1, -0.5 }, { 1, 0.5 } },
+    fluid_box = {
+      base_area = constants.TANK_AREA,
+      height = constants.TANK_HEIGHT,
+      pipe_connections =
+      {
+        { position = { 0, 1 }, type = "input-output" },
+      },
+    },
+    two_direction_only = false,
+    pictures = {
+      picture = {
+        sheet = {
+          filename = Paths.graphics .. "/entities/network-tank.png",
+          size = 64,
+          scale = 0.5,
+        },
+      },
+      window_background = {
+        filename = Paths.graphics .. "/empty-pixel.png",
+        size = 1,
+      },
+      fluid_background = {
+        filename = Paths.graphics .. "/entities/fluid-background.png",
+        size = { 32, 32 },
+      },
+      flow_sprite = {
+        filename = Paths.graphics .. "/empty-pixel.png",
+        size = 1,
+      },
+      gas_flow = {
+        filename = Paths.graphics .. "/empty-pixel.png",
+        size = 1,
+      },
+    },
+    flow_length_in_ticks = 1,
+    minable = {
+      mining_time = 0.5,
+      result = name,
     },
   }
-  -- entity.picture = {
-  --   filename = Paths.graphics .. "/entities/network-chest.png",
-  --   size = 64,
-  --   scale = 0.5,
-  -- }
-  entity.minable.result = name
 
   local item = table.deepcopy(data.raw["item"][override_item_name])
   item.name = name
   item.place_result = name
-  -- item.icon = Paths.graphics .. "/items/network-chest.png"
+  item.icon = Paths.graphics .. "/items/network-tank.png"
   item.size = 64
 
   local recipe = {

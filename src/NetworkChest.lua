@@ -4,6 +4,7 @@ local UiHandlers = require "src.UiHandlers"
 local NetworkViewUi = require "src.NetworkViewUi"
 local UiConstants = require "src.UiConstants"
 local NetworkTankGui = require "src.NetworkTankGui"
+local constants = require "src.constants"
 
 local M = {}
 
@@ -357,7 +358,7 @@ function M.update_network()
     end
     local info = GlobalState.get_chest_info(unit_number)
     if info == nil then
-      M.update_tank_queue(unit_number)
+      M.update_tank_queue(unit_number, scanned_units)
       goto continue
     end
     local entity = info.entity
@@ -379,18 +380,35 @@ end
 local function update_tank(info)
   local fluid = info.config.fluid
   local type = info.config.type
-  local limit = info.config.count
+  local limit = info.config.limit
   local buffer = info.config.buffer
   local contents = info.entity.get_fluid_contents()
+  local other_count = 0
+  for fluid0, count in pairs(contents) do
+    if fluid0 ~= fluid then
+      other_count = other_count + count
+    end
+  end
+  limit = math.min(limit, constants.MAX_TANK_SIZE - other_count)
 
   local current_count = contents[fluid] or 0
   local network_count = GlobalState.get_fluid_count(fluid)
+  -- game.print(string.format(
+  --   "updating tank %d, total_contents=%d, fluid=%s, type=%s, current_count=%d, network_count=%d",
+  --   info.entity.unit_number,
+  --   other_count,
+  --   fluid,
+  --   type,
+  --   current_count,
+  --   network_count
+  -- ))
   if type == "take" then
     local n_take = math.max(0, buffer - current_count)
     local n_give = math.max(0, network_count - limit)
     local n_transfer = math.min(n_take, n_give)
     if n_transfer > 0 then
-      contents[fluid] = current_count + n_transfer
+      game.print(string.format("taking %d", n_transfer))
+      info.entity.insert_fluid({ name = fluid, amount = n_transfer })
       GlobalState.set_fluid_count(fluid, network_count - n_transfer)
     end
   else
@@ -398,7 +416,8 @@ local function update_tank(info)
     local n_take = math.max(0, limit - network_count)
     local n_transfer = math.min(n_take, n_give)
     if n_transfer > 0 then
-      contents[fluid] = current_count - n_transfer
+      game.print(string.format("giving %d", n_transfer))
+      info.entity.remove_fluid({ name = fluid, amount = n_transfer })
       GlobalState.set_fluid_count(fluid, network_count + n_transfer)
     end
   end
@@ -409,20 +428,18 @@ function M.update_tank_queue(unit_number, scanned_units)
   if info == nil then
     return
   end
-  if info.config == nil then
-    return
-  end
   local entity = info.entity
   if not entity.valid then
     return
   end
 
-  if not entity.to_be_deconstructed() then
+  if info.config ~= nil and not entity.to_be_deconstructed() then
     if scanned_units[unit_number] == nil then
       scanned_units[unit_number] = true
       update_tank(info)
     end
   end
+
   GlobalState.scan_queue_push(unit_number)
 end
 

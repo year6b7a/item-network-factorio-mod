@@ -163,12 +163,12 @@ M.event_handlers = {
     end,
   },
   {
-    name = UiConstants.NT_ITEM_PICKER,
+    name = UiConstants.NT_FLUID_PICKER,
     event = "on_gui_elem_changed",
     handler = function(event, element)
       local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
-      local item = element.elem_value
-      nt_ui.item = item
+      local fluid = element.elem_value
+      nt_ui.fluid = fluid
       NetworkTankGui.set_default_buffer_and_limit(event.player_index)
     end,
   },
@@ -200,6 +200,22 @@ M.event_handlers = {
     handler = function(event, element)
       local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
       nt_ui.limit = tonumber(element.text)
+    end,
+  },
+  {
+    name = UiConstants.NT_CONFIRM_EVENT,
+    event = "on_gui_click",
+    handler = function(event, element)
+      NetworkTankGui.try_to_confirm(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NT_CANCEL_EVENT,
+    event = "on_gui_click",
+    handler = function(event, element)
+      local player = game.get_player(event.player_index)
+      local ui = GlobalState.get_ui_state(event.player_index)
+      NetworkTankGui.reset(player, ui)
     end,
   },
 }
