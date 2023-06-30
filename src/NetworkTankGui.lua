@@ -78,7 +78,7 @@ function M.on_gui_opened(player, entity)
   if default_buffer ~= nil then
     buffer_size_input.text = string.format("%s", default_buffer)
   end
-  buffer_size_input.style.width = 50
+  buffer_size_input.style.width = 100
 
   local limit_flow = main_flow.add({ type = "flow", direction = "horizontal" })
   limit_flow.add({ type = "label", caption = "Limit:" })
@@ -92,7 +92,7 @@ function M.on_gui_opened(player, entity)
   if default_limit ~= nil then
     limit_input.text = string.format("%s", default_limit)
   end
-  limit_input.style.width = 50
+  limit_input.style.width = 100
 
   local save_cancel_flow = main_flow.add({
     type = "flow",
