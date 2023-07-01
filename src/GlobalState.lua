@@ -91,7 +91,7 @@ function M.delete_chest_entity(unit_number)
   global.mod.chests[unit_number] = nil
 end
 
-function M.register_tank_entity(entity)
+function M.register_tank_entity(entity, config)
   if global.mod.tanks[entity.unit_number] ~= nil then
     return
   end
@@ -99,6 +99,7 @@ function M.register_tank_entity(entity)
   Queue.push(global.mod.scan_queue, entity.unit_number)
   global.mod.tanks[entity.unit_number] = {
     entity = entity,
+    config = config,
   }
 end
 
@@ -117,6 +118,11 @@ end
 function M.copy_chest_requests(source_unit_number, dest_unit_number)
   global.mod.chests[dest_unit_number].requests =
     global.mod.chests[source_unit_number].requests
+end
+
+function M.copy_tank_config(source_unit_number, dest_unit_number)
+  global.mod.tanks[dest_unit_number].config =
+    global.mod.tanks[source_unit_number].config
 end
 
 function M.set_chest_requests(unit_number, requests)

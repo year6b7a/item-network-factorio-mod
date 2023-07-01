@@ -72,7 +72,7 @@ function M.add_loader()
       .belt_animation_set,
     container_distance = 0.75,
     belt_length = 0.5,
-    fast_replaceable_group = "transport-belt",
+    fast_replaceable_group = "loader",
     filter_count = 1,
     -- https://wiki.factorio.com/Prototype/TransportBeltConnectable#speed
     -- equivalent to 2x blue belt speed
@@ -134,9 +134,17 @@ function M.add_network_tank()
   local entity = {
     name = name,
     type = "storage-tank",
+    flags = {
+      "placeable-neutral",
+      "player-creation",
+      "fast-replaceable-no-build-while-moving",
+    },
+    icon = Paths.graphics .. "/entities/network-tank.png",
+    icon_size = 64,
     selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
-    collision_box = { { -0.45, -0.45 }, { 0.45, 0.45 } },
+    collision_box = { { -0.4, -0.4 }, { 0.4, 0.4 } },
     window_bounding_box = { { -1, -0.5 }, { 1, 0.5 } },
+    drawing_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
     fluid_box = {
       base_area = constants.TANK_AREA,
       height = constants.TANK_HEIGHT,

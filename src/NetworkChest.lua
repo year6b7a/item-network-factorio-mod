@@ -30,7 +30,14 @@ local function generic_create_handler(event)
   if entity.name == "network-chest" then
     M.on_create(event, entity)
   elseif entity.name == "network-tank" then
-    GlobalState.register_tank_entity(entity)
+    local config = nil
+    if event.tags ~= nil then
+      local config_tag = event.tags.config
+      if config_tag ~= nil then
+        config = config_tag
+      end
+    end
+    GlobalState.register_tank_entity(entity, config)
   end
 end
 
@@ -144,6 +151,21 @@ function M.on_player_setup_blueprint(event)
           )
         end
       end
+    elseif entity.name == "network-tank" then
+      local real_entity = event.surface.find_entity(
+        "network-tank",
+        entity.position
+      )
+      if real_entity ~= nil then
+        local tank_info = GlobalState.get_tank_info(real_entity.unit_number)
+        if tank_info ~= nil and tank_info.config ~= nil then
+          blueprint.set_blueprint_entity_tag(
+            entity.entity_number,
+            "config",
+            tank_info.config
+          )
+        end
+      end
     end
   end
 end
@@ -174,6 +196,10 @@ function M.on_entity_settings_pasted(event)
         end
         GlobalState.set_chest_requests(dest.unit_number, requests)
       end
+    end
+  elseif dest.name == "network-tank" then
+    if source.name == "network-tank" then
+      GlobalState.copy_tank_config(source.unit_number, dest.unit_number)
     end
   end
 end
