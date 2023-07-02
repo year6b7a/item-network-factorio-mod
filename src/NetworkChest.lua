@@ -419,21 +419,11 @@ local function update_tank(info)
 
   local current_count = contents[fluid] or 0
   local network_count = GlobalState.get_fluid_count(fluid)
-  -- game.print(string.format(
-  --   "updating tank %d, total_contents=%d, fluid=%s, type=%s, current_count=%d, network_count=%d",
-  --   info.entity.unit_number,
-  --   other_count,
-  --   fluid,
-  --   type,
-  --   current_count,
-  --   network_count
-  -- ))
   if type == "take" then
     local n_take = math.max(0, buffer - current_count)
     local n_give = math.max(0, network_count - limit)
     local n_transfer = math.min(n_take, n_give)
     if n_transfer > 0 then
-      -- game.print(string.format("taking %d", n_transfer))
       info.entity.insert_fluid({ name = fluid, amount = n_transfer })
       GlobalState.set_fluid_count(fluid, network_count - n_transfer)
     end
@@ -442,7 +432,6 @@ local function update_tank(info)
     local n_take = math.max(0, limit - network_count)
     local n_transfer = math.min(n_take, n_give)
     if n_transfer > 0 then
-      -- game.print(string.format("giving %d", n_transfer))
       info.entity.remove_fluid({ name = fluid, amount = n_transfer })
       GlobalState.set_fluid_count(fluid, network_count + n_transfer)
     end
