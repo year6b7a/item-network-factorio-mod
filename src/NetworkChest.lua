@@ -415,7 +415,7 @@ local function update_tank(info)
       other_count = other_count + count
     end
   end
-  limit = math.min(limit, constants.MAX_TANK_SIZE - other_count)
+  buffer = math.min(buffer, constants.MAX_TANK_SIZE - other_count)
 
   local current_count = contents[fluid] or 0
   local network_count = GlobalState.get_fluid_count(fluid)
