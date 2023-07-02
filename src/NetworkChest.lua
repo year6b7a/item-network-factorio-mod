@@ -391,6 +391,8 @@ function M.update_network()
     if not entity.valid then
       goto continue
     end
+
+    GlobalState.scan_queue_push(unit_number)
     if entity.to_be_deconstructed() then
       goto continue
     end
@@ -398,7 +400,6 @@ function M.update_network()
       scanned_units[unit_number] = true
       update_network_chest(info)
     end
-    GlobalState.scan_queue_push(unit_number)
     ::continue::
   end
 end
