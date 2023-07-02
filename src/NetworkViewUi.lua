@@ -9,6 +9,7 @@ M.HEIGHT = 500
 function M.open_main_frame(player_index)
   local ui = GlobalState.get_ui_state(player_index)
   if ui.net_view ~= nil then
+    M.destroy(player_index)
     return
   end
 
@@ -34,7 +35,26 @@ function M.open_main_frame(player_index)
     direction = "vertical",
   })
 
-  main_flow.add({
+  local header_flow = main_flow.add({
+    type = "flow",
+    direction = "horizontal",
+  })
+
+  local item_radio = header_flow.add({
+    type = "radiobutton",
+    state = true,
+    tags = { event = UiConstants.NV_ITEM_RADIO },
+  })
+  header_flow.add({ type = "label", caption = "Items" })
+
+  local fluid_radio = header_flow.add({
+    type = "radiobutton",
+    state = false,
+    tags = { event = UiConstants.NV_FLUID_RADIO },
+  })
+  header_flow.add({ type = "label", caption = "Fluids" })
+
+  header_flow.add({
     type = "button",
     caption = "Refresh",
     tags = { event = UiConstants.NV_REFRESH_BTN },
@@ -43,6 +63,9 @@ function M.open_main_frame(player_index)
   ui.net_view = {
     frame = frame,
     main_flow = main_flow,
+    view_type = "item",
+    item_radio = item_radio,
+    fluid_radio = fluid_radio,
   }
 
   M.update_items(player_index)
@@ -67,7 +90,7 @@ function M.update_items(player_index)
   })
   item_flow.style.size = { width = M.WIDTH - 30, height = M.HEIGHT - 82 }
 
-  local rows = M.get_rows_of_items()
+  local rows = M.get_rows_of_items(net_view.view_type)
   for _, row in ipairs(rows) do
     local item_h_stack = item_flow.add({
       type = "flow",
@@ -76,8 +99,8 @@ function M.update_items(player_index)
     for _, item in ipairs(row) do
       local item_view = item_h_stack.add({
         type = "sprite-button",
-        elem_type = "item",
-        sprite = "item/" .. item.item,
+        elem_type = net_view.view_type,
+        sprite = net_view.view_type .. "/" .. item.item,
       })
       item_view.number = item.count
     end
@@ -88,10 +111,14 @@ local function items_list_sort(left, right)
   return left.count > right.count
 end
 
-function M.get_list_of_items()
+function M.get_list_of_items(view_type)
+  local items_to_display = view_type == "item" and
+    GlobalState.get_items() or
+    GlobalState.get_fluids()
+
   local items = {}
 
-  for item_name, item_count in pairs(GlobalState.get_items()) do
+  for item_name, item_count in pairs(items_to_display) do
     if item_count > 0 then
       table.insert(items, { item = item_name, count = item_count })
     end
@@ -102,8 +129,8 @@ function M.get_list_of_items()
   return items
 end
 
-function M.get_rows_of_items()
-  local items = M.get_list_of_items()
+function M.get_rows_of_items(view_type)
+  local items = M.get_list_of_items(view_type)
   local max_row_count = 10
   local rows = {}
   local row = {}
@@ -122,12 +149,16 @@ function M.get_rows_of_items()
   return rows
 end
 
-function M.on_gui_closed(event)
-  local ui = GlobalState.get_ui_state(event.player_index)
+function M.destroy(player_index)
+  local ui = GlobalState.get_ui_state(player_index)
   if ui.net_view ~= nil then
     ui.net_view.frame.destroy()
     ui.net_view = nil
   end
+end
+
+function M.on_gui_closed(event)
+  M.destroy(event.player_index)
 end
 
 function M.on_every_5_seconds(event)

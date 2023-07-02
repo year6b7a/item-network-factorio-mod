@@ -145,6 +145,10 @@ function M.get_items()
   return global.mod.items
 end
 
+function M.get_fluids()
+  return global.mod.fluids
+end
+
 function M.set_item_count(item_name, count)
   if count <= 0 then
     global.mod.items[item_name] = nil

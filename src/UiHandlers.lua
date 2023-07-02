@@ -226,6 +226,26 @@ M.event_handlers = {
       NetworkViewUi.update_items(event.player_index)
     end,
   },
+  {
+    name = UiConstants.NV_ITEM_RADIO,
+    event = "on_gui_click",
+    handler = function(event, element)
+      local ui = GlobalState.get_ui_state(event.player_index)
+      ui.net_view.fluid_radio.state = false
+      ui.net_view.view_type = "item"
+      NetworkViewUi.update_items(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NV_FLUID_RADIO,
+    event = "on_gui_click",
+    handler = function(event, element)
+      local ui = GlobalState.get_ui_state(event.player_index)
+      ui.net_view.item_radio.state = false
+      ui.net_view.view_type = "fluid"
+      NetworkViewUi.update_items(event.player_index)
+    end,
+  },
 }
 
 M.handler_map = {}
