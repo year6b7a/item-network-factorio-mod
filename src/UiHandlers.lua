@@ -1,6 +1,7 @@
 local UiConstants = require "src.UiConstants"
 local NetworkChestGui = require "src.NetworkChestGui"
 local GlobalState = require "src.GlobalState"
+local NetworkTankGui = require "src.NetworkTankGui"
 
 local M = {}
 
@@ -139,6 +140,82 @@ M.event_handlers = {
 
       local player = game.get_player(event.player_index)
       NetworkChestGui.open_modal(player, "edit", request_id)
+    end,
+  },
+  {
+    name = UiConstants.NT_CHOOSE_TAKE_BTN,
+    event = "on_gui_click",
+    handler = function(event, element)
+      local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
+      nt_ui.type = "take"
+      nt_ui.choose_give_btn.state = false
+      NetworkTankGui.set_default_buffer_and_limit(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NT_CHOOSE_GIVE_BTN,
+    event = "on_gui_click",
+    handler = function(event, element)
+      local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
+      nt_ui.type = "give"
+      nt_ui.choose_take_btn.state = false
+      NetworkTankGui.set_default_buffer_and_limit(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NT_FLUID_PICKER,
+    event = "on_gui_elem_changed",
+    handler = function(event, element)
+      local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
+      local fluid = element.elem_value
+      nt_ui.fluid = fluid
+      NetworkTankGui.set_default_buffer_and_limit(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NT_BUFFER_FIELD,
+    event = "on_gui_confirmed",
+    handler = function(event, element)
+      NetworkTankGui.try_to_confirm(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NT_LIMIT_FIELD,
+    event = "on_gui_confirmed",
+    handler = function(event, element)
+      NetworkTankGui.try_to_confirm(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NT_BUFFER_FIELD,
+    event = "on_gui_text_changed",
+    handler = function(event, element)
+      local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
+      nt_ui.buffer = tonumber(element.text)
+    end,
+  },
+  {
+    name = UiConstants.NT_LIMIT_FIELD,
+    event = "on_gui_text_changed",
+    handler = function(event, element)
+      local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
+      nt_ui.limit = tonumber(element.text)
+    end,
+  },
+  {
+    name = UiConstants.NT_CONFIRM_EVENT,
+    event = "on_gui_click",
+    handler = function(event, element)
+      NetworkTankGui.try_to_confirm(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NT_CANCEL_EVENT,
+    event = "on_gui_click",
+    handler = function(event, element)
+      local player = game.get_player(event.player_index)
+      local ui = GlobalState.get_ui_state(event.player_index)
+      NetworkTankGui.reset(player, ui)
     end,
   },
 }

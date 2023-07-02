@@ -3,6 +3,8 @@ local NetworkChestGui = require "src.NetworkChestGui"
 local UiHandlers = require "src.UiHandlers"
 local NetworkViewUi = require "src.NetworkViewUi"
 local UiConstants = require "src.UiConstants"
+local NetworkTankGui = require "src.NetworkTankGui"
+local constants = require "src.constants"
 
 local M = {}
 
@@ -27,6 +29,15 @@ local function generic_create_handler(event)
   end
   if entity.name == "network-chest" then
     M.on_create(event, entity)
+  elseif entity.name == "network-tank" then
+    local config = nil
+    if event.tags ~= nil then
+      local config_tag = event.tags.config
+      if config_tag ~= nil then
+        config = config_tag
+      end
+    end
+    GlobalState.register_tank_entity(entity, config)
   end
 end
 
@@ -61,6 +72,8 @@ local function generic_destroy_handler(event)
   local entity = event.entity
   if entity.name == "network-chest" then
     M.onDelete(entity)
+  elseif entity.name == "network-tank" then
+    GlobalState.delete_tank_entity(entity.unit_number)
   end
 end
 
@@ -138,6 +151,21 @@ function M.on_player_setup_blueprint(event)
           )
         end
       end
+    elseif entity.name == "network-tank" then
+      local real_entity = event.surface.find_entity(
+        "network-tank",
+        entity.position
+      )
+      if real_entity ~= nil then
+        local tank_info = GlobalState.get_tank_info(real_entity.unit_number)
+        if tank_info ~= nil and tank_info.config ~= nil then
+          blueprint.set_blueprint_entity_tag(
+            entity.entity_number,
+            "config",
+            tank_info.config
+          )
+        end
+      end
     end
   end
 end
@@ -168,6 +196,10 @@ function M.on_entity_settings_pasted(event)
         end
         GlobalState.set_chest_requests(dest.unit_number, requests)
       end
+    end
+  elseif dest.name == "network-tank" then
+    if source.name == "network-tank" then
+      GlobalState.copy_tank_config(source.unit_number, dest.unit_number)
     end
   end
 end
@@ -340,6 +372,10 @@ end
 
 function M.onTick()
   GlobalState.setup()
+  M.update_network()
+end
+
+function M.update_network()
   local scanned_units = {}
   for _ = 1, math.min(20, GlobalState.get_scan_queue_size()) do
     local unit_number = GlobalState.scan_queue_pop()
@@ -348,6 +384,7 @@ function M.onTick()
     end
     local info = GlobalState.get_chest_info(unit_number)
     if info == nil then
+      M.update_tank_queue(unit_number, scanned_units)
       goto continue
     end
     local entity = info.entity
@@ -364,6 +401,61 @@ function M.onTick()
     GlobalState.scan_queue_push(unit_number)
     ::continue::
   end
+end
+
+local function update_tank(info)
+  local fluid = info.config.fluid
+  local type = info.config.type
+  local limit = info.config.limit
+  local buffer = info.config.buffer
+  local contents = info.entity.get_fluid_contents()
+  local other_count = 0
+  for fluid0, count in pairs(contents) do
+    if fluid0 ~= fluid then
+      other_count = other_count + count
+    end
+  end
+  buffer = math.min(buffer, constants.MAX_TANK_SIZE - other_count)
+
+  local current_count = contents[fluid] or 0
+  local network_count = GlobalState.get_fluid_count(fluid)
+  if type == "take" then
+    local n_take = math.max(0, buffer - current_count)
+    local n_give = math.max(0, network_count - limit)
+    local n_transfer = math.min(n_take, n_give)
+    if n_transfer > 0 then
+      info.entity.insert_fluid({ name = fluid, amount = n_transfer })
+      GlobalState.set_fluid_count(fluid, network_count - n_transfer)
+    end
+  else
+    local n_give = current_count
+    local n_take = math.max(0, limit - network_count)
+    local n_transfer = math.min(n_take, n_give)
+    if n_transfer > 0 then
+      info.entity.remove_fluid({ name = fluid, amount = n_transfer })
+      GlobalState.set_fluid_count(fluid, network_count + n_transfer)
+    end
+  end
+end
+
+function M.update_tank_queue(unit_number, scanned_units)
+  local info = GlobalState.get_tank_info(unit_number)
+  if info == nil then
+    return
+  end
+  local entity = info.entity
+  if not entity.valid then
+    return
+  end
+
+  if info.config ~= nil and not entity.to_be_deconstructed() then
+    if scanned_units[unit_number] == nil then
+      scanned_units[unit_number] = true
+      update_tank(info)
+    end
+  end
+
+  GlobalState.scan_queue_push(unit_number)
 end
 
 -------------------------------------------
@@ -413,6 +505,16 @@ function M.on_gui_opened(event)
     end
 
     NetworkChestGui.on_gui_opened(player, entity)
+  elseif event.gui_type == defines.gui_type.entity and event.entity.name == "network-tank" then
+    local entity = event.entity
+    assert(GlobalState.get_tank_info(entity.unit_number) ~= nil)
+
+    local player = game.get_player(event.player_index)
+    if player == nil then
+      return
+    end
+
+    NetworkTankGui.on_gui_opened(player, entity)
   end
 end
 
@@ -420,6 +522,8 @@ function M.on_gui_closed(event)
   local frame = event.element
   if frame ~= nil and frame.name == UiConstants.NV_FRAME then
     NetworkViewUi.on_gui_closed(event)
+  elseif frame ~= nil and frame.name == UiConstants.NT_MAIN_FRAME then
+    NetworkTankGui.on_gui_closed(event)
   else
     NetworkChestGui.on_gui_closed(event)
   end

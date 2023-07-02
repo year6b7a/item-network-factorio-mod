@@ -7,6 +7,7 @@ local M = {}
 function M.main()
   M.add_network_chest()
   M.add_loader()
+  M.add_network_tank()
 
   data:extend(Hotkeys.hotkeys)
 end
@@ -71,7 +72,7 @@ function M.add_loader()
       .belt_animation_set,
     container_distance = 0.75,
     belt_length = 0.5,
-    fast_replaceable_group = "transport-belt",
+    fast_replaceable_group = "loader",
     filter_count = 1,
     -- https://wiki.factorio.com/Prototype/TransportBeltConnectable#speed
     -- equivalent to 2x blue belt speed
@@ -111,6 +112,85 @@ function M.add_loader()
     subgroup = data.raw["item"]["iron-chest"].subgroup,
     order = data.raw["item"]["iron-chest"].order,
   }
+
+  local recipe = {
+    name = name,
+    type = "recipe",
+    enabled = true,
+    energy_required = 0.5,
+    ingredients = {},
+    result = name,
+    result_count = 1,
+  }
+
+  data:extend({ entity, item, recipe })
+end
+
+function M.add_network_tank()
+  local name = "network-tank"
+  local override_item_name = "storage-tank"
+  local overwrite_prototype = "storage-tank"
+
+  local entity = {
+    name = name,
+    type = "storage-tank",
+    flags = {
+      "placeable-neutral",
+      "player-creation",
+      "fast-replaceable-no-build-while-moving",
+    },
+    icon = Paths.graphics .. "/entities/network-tank.png",
+    icon_size = 64,
+    selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
+    collision_box = { { -0.4, -0.4 }, { 0.4, 0.4 } },
+    window_bounding_box = { { -1, -0.5 }, { 1, 0.5 } },
+    drawing_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
+    fluid_box = {
+      base_area = constants.TANK_AREA,
+      height = constants.TANK_HEIGHT,
+      pipe_connections =
+      {
+        { position = { 0, 1 }, type = "input-output" },
+      },
+    },
+    two_direction_only = false,
+    pictures = {
+      picture = {
+        sheet = {
+          filename = Paths.graphics .. "/entities/network-tank.png",
+          size = 64,
+          scale = 0.5,
+        },
+      },
+      window_background = {
+        filename = Paths.graphics .. "/empty-pixel.png",
+        size = 1,
+      },
+      fluid_background = {
+        filename = Paths.graphics .. "/entities/fluid-background.png",
+        size = { 32, 32 },
+      },
+      flow_sprite = {
+        filename = Paths.graphics .. "/empty-pixel.png",
+        size = 1,
+      },
+      gas_flow = {
+        filename = Paths.graphics .. "/empty-pixel.png",
+        size = 1,
+      },
+    },
+    flow_length_in_ticks = 1,
+    minable = {
+      mining_time = 0.5,
+      result = name,
+    },
+  }
+
+  local item = table.deepcopy(data.raw["item"][override_item_name])
+  item.name = name
+  item.place_result = name
+  item.icon = Paths.graphics .. "/items/network-tank.png"
+  item.size = 64
 
   local recipe = {
     name = name,
