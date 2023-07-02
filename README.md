@@ -2,9 +2,9 @@
 
 ### Overview
 
-This mod adds a new item transportation mechanic to move as many items as quickly as possible.
+This mod adds a new transportation mechanic to move items and fluids as quickly as possible.
 
-It does this by adding a new item called "Network Chest" which serves as an access point to a limitless shared inventory for the entire mod. Network Chests can give and take items to and from this shared inventory to quickly move large numbers of items.
+It does this by adding Network Chests and Tanks which serve as an access points to a limitless shared inventory for the entire mod. Network Chests can give and take items to and from this shared inventory and Network Tanks move fluids.
 
 This approach scales well for everything from a seldom-used mall to moving vast quantities of items.
 
@@ -75,7 +75,11 @@ This implementation makes it easy to buffer just one nuclear reactor at the mall
 
 ### Fluids
 
-Fluids cannot be directly transported through the network and instead need to be barreled.
+**New!** Fluids can be transported through the network using Network Tanks. These tanks are configured exactly like Network Chests except they can only transport 1 fluid at a time.
+
+Fluids transported through network tanks will have their temperature reset to their default temperature and there is no way to specify the final temperature of fluids.
+
+![Network Tank](/readme-pictures/network-tank.png)
 
 ### Performance
 
