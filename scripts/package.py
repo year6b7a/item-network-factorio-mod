@@ -28,7 +28,6 @@ def main():
         "info.json",
         "thumbnail.png",
         "README.md",
-        "readme-pictures",
         "src",
     ]
     run_cmd(["cp", "-r", *paths_to_copy, contents_path])
