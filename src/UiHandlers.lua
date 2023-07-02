@@ -2,6 +2,7 @@ local UiConstants = require "src.UiConstants"
 local NetworkChestGui = require "src.NetworkChestGui"
 local GlobalState = require "src.GlobalState"
 local NetworkTankGui = require "src.NetworkTankGui"
+local NetworkViewUi = require "src.NetworkViewUi"
 
 local M = {}
 
@@ -216,6 +217,13 @@ M.event_handlers = {
       local player = game.get_player(event.player_index)
       local ui = GlobalState.get_ui_state(event.player_index)
       NetworkTankGui.reset(player, ui)
+    end,
+  },
+  {
+    name = UiConstants.NV_REFRESH_BTN,
+    event = "on_gui_click",
+    handler = function(event, element)
+      NetworkViewUi.update_items(event.player_index)
     end,
   },
 }

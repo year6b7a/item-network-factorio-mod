@@ -29,8 +29,20 @@ function M.open_main_frame(player_index)
   frame.style.size = { width, height }
   frame.auto_center = true
 
+  local main_flow = frame.add({
+    type = "flow",
+    direction = "vertical",
+  })
+
+  main_flow.add({
+    type = "button",
+    caption = "Refresh",
+    tags = { event = UiConstants.NV_REFRESH_BTN },
+  })
+
   ui.net_view = {
     frame = frame,
+    main_flow = main_flow,
   }
 
   M.update_items(player_index)
@@ -42,18 +54,18 @@ function M.update_items(player_index)
   if net_view == nil then
     return
   end
-  local item_flow = net_view.frame[UiConstants.MV_ITEM_FLOW]
+  local item_flow = net_view.main_flow[UiConstants.NV_ITEM_FLOW]
   if item_flow ~= nil then
     item_flow.destroy()
   end
 
-  item_flow = net_view.frame.add({
+  item_flow = net_view.main_flow.add({
     type = "scroll-pane",
     direction = "vertical",
-    name = UiConstants.MV_ITEM_FLOW,
+    name = UiConstants.NV_ITEM_FLOW,
     vertical_scroll_policy = "always",
   })
-  item_flow.style.size = { width = M.WIDTH - 30, height = M.HEIGHT - 52 }
+  item_flow.style.size = { width = M.WIDTH - 30, height = M.HEIGHT - 82 }
 
   local rows = M.get_rows_of_items()
   for _, row in ipairs(rows) do
