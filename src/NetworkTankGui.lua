@@ -48,13 +48,13 @@ function M.on_gui_opened(player, entity)
     state = default_is_take,
     tags = { event = UiConstants.NT_CHOOSE_TAKE_BTN },
   })
-  type_flow.add({ type = "label", caption = "Provide" })
+  type_flow.add({ type = "label", caption = "Request" })
   local choose_give_btn = type_flow.add({
     type = "radiobutton",
     state = not default_is_take,
     tags = { event = UiConstants.NT_CHOOSE_GIVE_BTN },
   })
-  type_flow.add({ type = "label", caption = "Request" })
+  type_flow.add({ type = "label", caption = "Provide" })
 
   local fluid_flow = main_flow.add({ type = "flow", direction = "horizontal" })
   fluid_flow.add({ type = "label", caption = "Fluid:" })

@@ -42,18 +42,14 @@ Each chest has a list of items where the chest either requests or provides each 
 
 Each request has a "limit" and "buffer" defined as follows:
 
-- Provide `item` from the network when there is more than `limit` in the network and store `buffer` items in this chest.
-- Request `item` to give to the network when there is less than `limit` in the network and store `buffer` items in this chest.
+- Provide `item` to the network when there is more than `limit` in the network and store `buffer` items in this chest.
+- Request `item` from the network when there is less than `limit` in the network and store `buffer` items in this chest.
 
 This method of defining requests is easy to use but also allows for complex production loops with both custom input and output priorities.
 
-For example, here's how to configure barrel supply for an entire factory. Barrels come from 2 types of sources, either an assembler that produces new barrels or from assemblers that empty fluids and produce a barrel as byproduct. Normally this is handled with a splitter that prioritizes input from un-barreling assemblers and similar behavior can be created with network chests.
+For example, here's how to prioritize sending coal to power generation. When there is more than 100 coal in the network it will be sent to plastic.
 
-![Barreling Configuration](/readme-pictures/barreling-loop.png)
-
-The barrel assembler can give barrels to the network with a low limit of 10. The un-barreling assemblers can give barrels to the network with a higher limit of 100. The barreling assembler will make new barrels until there are 10 in the network, and from that point on un-barreling assemblers will give barrels with a higher priority to guarantee they don't back up.
-
-A similar approach can be used on take requests to set priority. For example, it might be useful to prioritize coal going to the power plant while plastic and furnaces take coal with lower priority. This can be done by setting the coal network chest to take coal from the network with a limit of 0. Plastic can take coal only when there is more than 100 coal in the network. Coal mines will insert into the network up to 200 items to make sure items can be provided to both the power plant and plastic when there is enough coal.
+![Coal Prioritization](/readme-pictures/coal-priorities.png)
 
 ### Copy Recipes from Assemblers
 

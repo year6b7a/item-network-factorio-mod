@@ -113,14 +113,14 @@ function M.update_request_element(request, element)
   local before_item_label
   local after_item_label
   if request.type == "take" then
-    before_item_label = "Provide"
+    before_item_label = "Request"
     after_item_label = string.format(
       "when network has more than %d and buffer %d.",
       request.limit,
       request.buffer
     )
   else
-    before_item_label = "Request"
+    before_item_label = "Provide"
     after_item_label = string.format(
       "when network has less than %d and buffer %d.",
       request.limit,
@@ -286,13 +286,13 @@ function M.open_modal(player, type, request_id)
     state = default_is_take,
     tags = { event = UiConstants.MODAL_CHOOSE_TAKE_BTN_NAME },
   })
-  type_flow.add({ type = "label", caption = "Provide" })
+  type_flow.add({ type = "label", caption = "Request" })
   local choose_give_btn = type_flow.add({
     type = "radiobutton",
     state = not default_is_take,
     tags = { event = UiConstants.MODAL_CHOOSE_GIVE_BTN_NAME },
   })
-  type_flow.add({ type = "label", caption = "Request" })
+  type_flow.add({ type = "label", caption = "Provide" })
 
   local item_flow = main_flow.add({ type = "flow", direction = "horizontal" })
   item_flow.add({ type = "label", caption = "Item:" })
