@@ -42,8 +42,8 @@ Each chest has a list of items where the chest either requests or provides each 
 
 Each request has a "limit" and "buffer" defined as follows:
 
-- Provide `item` to the network when there is more than `limit` in the network and store `buffer` items in this chest.
-- Request `item` from the network when there is less than `limit` in the network and store `buffer` items in this chest.
+- Provide `item` to the network when there are less than `limit` items in the network and store `buffer` items in this chest.
+- Request `item` from the network when there are more than `limit` items in the network and store `buffer` items in this chest.
 
 This method of defining requests is easy to use but also allows for complex production loops with both custom input and output priorities.
 
