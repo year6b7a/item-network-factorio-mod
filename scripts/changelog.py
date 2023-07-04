@@ -6,7 +6,7 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version()
+    v = cl.version((0, 3, 2), datetime.date(2023, 7, 4))
     v.change('Swapped "Request" and "Provide" to be consistent with logistics chests.')
     v.change("Removed readme pictures to reduce zip size from 14Mb -> 500Kb.")
     v.fix(
