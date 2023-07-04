@@ -4,3 +4,4 @@
 /lua_modules
 /.luarocks
 /build
+__pycache__

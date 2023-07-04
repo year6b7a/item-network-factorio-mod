@@ -3,6 +3,8 @@ import json
 from subprocess import Popen
 import re
 
+from changelog import get_changelog
+
 
 def main():
     with open("info.json") as fid:
@@ -31,6 +33,7 @@ def main():
         "src",
     ]
     run_cmd(["cp", "-r", *paths_to_copy, contents_path])
+    build_changelog(mod_info, contents_path)
     run_cmd(
         ["zip", "-r", f"../{full_mod_name}.zip", "."],
         cwd="build/zip_contents",
@@ -38,8 +41,18 @@ def main():
     build_readme()
 
 
+def build_changelog(mod_info, contents_path):
+    cl = get_changelog()
+
+    cl_ver = cl.get_most_recent_version()
+    cl_ver = ".".join(str(n) for n in cl_ver)
+    assert cl_ver == mod_info["version"]
+
+    with open(f"{contents_path}/changelog.txt", "w") as fid:
+        fid.write(cl.to_str())
+
+
 def build_readme():
-    prefix = "https://raw.githubusercontent.com/year6b7a/item-network-factorio-mod/main"
     with open("build/README.md", "w") as out_fid, open("README.md") as in_fid:
         for line in in_fid:
             out_fid.write(
