@@ -100,6 +100,7 @@ function M.add_loader()
         },
       },
     },
+    se_allow_in_space = true,
   }
 
   local item = {
@@ -129,7 +130,6 @@ end
 function M.add_network_tank()
   local name = "network-tank"
   local override_item_name = "storage-tank"
-  local overwrite_prototype = "storage-tank"
 
   local entity = {
     name = name,
@@ -184,6 +184,7 @@ function M.add_network_tank()
       mining_time = 0.5,
       result = name,
     },
+    se_allow_in_space = true,
   }
 
   local item = table.deepcopy(data.raw["item"][override_item_name])
