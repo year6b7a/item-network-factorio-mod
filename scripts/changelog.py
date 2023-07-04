@@ -12,6 +12,9 @@ def get_changelog():
     v.fix(
         "Fixed bug where Network Tanks and Loaders could not be placed in space in Space Exploration."
     )
+    v.change(
+        "Changed to update limit when switching between Request and Provide in Network Chests."
+    )
 
     v = cl.version((0, 3, 1), datetime.date(2023, 7, 2))
     v.fix(

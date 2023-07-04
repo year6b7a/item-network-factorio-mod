@@ -395,22 +395,38 @@ local Modal = {}
 function Modal.set_default_buffer_and_limit(player_index)
   local ui = GlobalState.get_ui_state(player_index)
   local modal = ui.network_chest.modal
-  if modal.disable_set_defaults_on_change then
-    return
-  end
 
+  if not modal.disable_set_defaults_on_change then
+    Modal.set_default_buffer(player_index)
+    Modal.set_default_limit(player_index)
+  end
+end
+
+function Modal.set_default_buffer(player_index)
+  local ui = GlobalState.get_ui_state(player_index)
+  local modal = ui.network_chest.modal
   local item = modal.item
   local request_type = modal.request_type
   if item ~= nil and request_type ~= nil then
     local stack_size = game.item_prototypes[item].stack_size
     local buffer = math.min(50, stack_size)
+    Modal.set_buffer(buffer, modal)
+  end
+end
+
+function Modal.set_default_limit(player_index)
+  local ui = GlobalState.get_ui_state(player_index)
+  local modal = ui.network_chest.modal
+  local item = modal.item
+  local request_type = modal.request_type
+  if item ~= nil and request_type ~= nil then
+    local stack_size = game.item_prototypes[item].stack_size
     local limit
     if request_type == "take" then
       limit = 0
     else
       limit = math.min(50, stack_size)
     end
-    Modal.set_buffer(buffer, modal)
     Modal.set_limit(limit, modal)
   end
 end
