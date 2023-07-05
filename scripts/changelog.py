@@ -10,6 +10,7 @@ def get_changelog():
     v.fix(
         "Fixed bug where swapping between 'Request' and 'Provide' without a limit would crash."
     )
+    v.feature("Added ability to copy-paste settings from one Network Tank to another.")
 
     v = cl.version((0, 3, 2), datetime.date(2023, 7, 4))
     v.change('Swapped "Request" and "Provide" to be consistent with logistics chests.')

@@ -185,6 +185,8 @@ function M.add_network_tank()
       result = name,
     },
     se_allow_in_space = true,
+    allow_copy_paste = true,
+    additional_pastable_entities = { "network-tank" },
   }
 
   local item = table.deepcopy(data.raw["item"][override_item_name])
