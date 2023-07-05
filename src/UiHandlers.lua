@@ -27,7 +27,7 @@ M.event_handlers = {
         .modal
       modal.request_type = "take"
       modal.choose_give_btn.state = false
-      if modal.limit > 0 then
+      if modal.limit ~= nil and modal.limit > 0 then
         NetworkChestGui.Modal.set_default_limit(event.player_index)
       end
       NetworkChestGui.Modal.set_default_buffer_and_limit(event.player_index)
