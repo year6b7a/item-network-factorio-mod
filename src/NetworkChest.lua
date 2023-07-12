@@ -57,6 +57,13 @@ function M.on_entity_cloned(event)
     if source_info ~= nil and dest_info ~= nil then
       dest_info.requests = source_info.requests
     end
+  elseif event.source.name == "network-tank" and event.destination.name == "network-tank" then
+    GlobalState.register_tank_entity(event.source)
+    GlobalState.register_tank_entity(event.destination)
+    GlobalState.copy_tank_config(
+      event.source.unit_number,
+      event.destination.unit_number
+    )
   end
 end
 

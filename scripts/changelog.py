@@ -6,6 +6,9 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version((0, 3, 4), datetime.date(2023, 7, 12))
+    v.fix("Fixed bug where on_entity_cloned handler did not register network tanks.")
+
     v = cl.version((0, 3, 3), datetime.date(2023, 7, 5))
     v.fix(
         "Fixed bug where swapping between 'Request' and 'Provide' without a limit would crash."
