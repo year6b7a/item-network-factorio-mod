@@ -75,8 +75,8 @@ function M.add_loader()
     fast_replaceable_group = "loader",
     filter_count = 1,
     -- https://wiki.factorio.com/Prototype/TransportBeltConnectable#speed
-    -- equivalent to 2x blue belt speed
-    speed = 0.1875,
+    -- 360 items / sec
+    speed = 0.75,
     structure = {
       direction_in = {
         sheet = {

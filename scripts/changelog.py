@@ -8,6 +8,9 @@ def get_changelog():
 
     v = cl.version((0, 3, 4), datetime.date(2023, 7, 12))
     v.fix("Fixed bug where on_entity_cloned handler did not register network tanks.")
+    v.change(
+        "Increase loader speed to 360 items/sec. No issues seen in tests on existing factories but log a bug if this causes issues."
+    )
 
     v = cl.version((0, 3, 3), datetime.date(2023, 7, 5))
     v.fix(
