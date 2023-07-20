@@ -200,10 +200,12 @@ function M.close_main_frame(player, save_requests)
           limit = request.limit,
         })
     end
-    GlobalState.set_chest_requests(
-      ui.network_chest.chest_entity.unit_number,
-      requests
-    )
+    if ui.network_chest.chest_entity.valid then
+      GlobalState.set_chest_requests(
+        ui.network_chest.chest_entity.unit_number,
+        requests
+      )
+    end
   end
 
   if ui.network_chest.modal ~= nil then

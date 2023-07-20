@@ -6,6 +6,9 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version((0, 3, 5), datetime.date(2023, 7, 19))
+    v.fix("Fixed crash when deleting a Network Chest with the UI open.")
+
     v = cl.version((0, 3, 4), datetime.date(2023, 7, 12))
     v.fix("Fixed bug where on_entity_cloned handler did not register network tanks.")
     v.change(
