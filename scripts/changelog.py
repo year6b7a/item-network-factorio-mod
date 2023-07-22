@@ -6,6 +6,11 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version((0, 3, 6), datetime.date(2023, 7, 22))
+    v.fix(
+        "Fixed bug where destroying Network Chests and Tanks would delete Buffer contents. Contents are now automatically pushed into the network."
+    )
+
     v = cl.version((0, 3, 5), datetime.date(2023, 7, 19))
     v.fix("Fixed crash when deleting a Network Chest with the UI open.")
 

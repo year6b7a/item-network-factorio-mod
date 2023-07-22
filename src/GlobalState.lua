@@ -41,13 +41,11 @@ function M.remove_old_ui()
     for _, player in pairs(game.players) do
       local main_frame = player.gui.screen["network-chest-main-frame"]
       if main_frame ~= nil then
-        game.print("deleting main frame")
         main_frame.destroy()
       end
 
       local main_frame = player.gui.screen["add-request"]
       if main_frame ~= nil then
-        game.print("deleting main frame")
         main_frame.destroy()
       end
     end
@@ -91,6 +89,18 @@ function M.delete_chest_entity(unit_number)
   global.mod.chests[unit_number] = nil
 end
 
+function M.put_chest_contents_in_network(entity)
+  local inv = entity.get_output_inventory()
+
+  if inv ~= nil then
+    local contents = inv.get_contents()
+    for item, count in pairs(contents) do
+      M.increment_item_count(item, count)
+    end
+    inv.clear()
+  end
+end
+
 function M.register_tank_entity(entity, config)
   if global.mod.tanks[entity.unit_number] ~= nil then
     return
@@ -105,6 +115,14 @@ end
 
 function M.delete_tank_entity(unit_number)
   global.mod.tanks[unit_number] = nil
+end
+
+function M.put_tank_contents_in_network(entity)
+  local contents = entity.get_fluid_contents()
+  for fluid, count in pairs(contents) do
+    M.increment_fluid_count(fluid, count)
+  end
+  entity.clear_fluid_inside()
 end
 
 function M.get_chest_info(unit_number)
@@ -163,6 +181,11 @@ function M.set_fluid_count(fluid_name, count)
   else
     global.mod.fluids[fluid_name] = count
   end
+end
+
+function M.increment_fluid_count(fluid_name, delta)
+  local count = M.get_fluid_count(fluid_name)
+  global.mod.fluids[fluid_name] = count + delta
 end
 
 function M.increment_item_count(item_name, delta)

@@ -27,20 +27,24 @@ function main()
 
   -- delete
   script.on_event(
-    defines.events.on_player_mined_entity,
-    NetworkChest.on_player_mined_entity
+    defines.events.on_pre_player_mined_item,
+    NetworkChest.generic_destroy_handler
   )
   script.on_event(
     defines.events.on_robot_mined_entity,
-    NetworkChest.on_robot_mined_entity
+    NetworkChest.generic_destroy_handler
   )
   script.on_event(
     defines.events.script_raised_destroy,
-    NetworkChest.script_raised_destroy
+    NetworkChest.generic_destroy_handler
   )
   script.on_event(
     defines.events.on_entity_died,
-    NetworkChest.on_entity_died
+    NetworkChest.generic_destroy_handler
+  )
+  script.on_event(
+    defines.events.on_marked_for_deconstruction,
+    NetworkChest.on_marked_for_deconstruction
   )
 
 

@@ -75,29 +75,42 @@ function M.script_raised_revive(event)
   generic_create_handler(event)
 end
 
-local function generic_destroy_handler(event)
+function M.generic_destroy_handler(event)
   local entity = event.entity
   if entity.name == "network-chest" then
     M.onDelete(entity)
   elseif entity.name == "network-tank" then
+    GlobalState.put_tank_contents_in_network(entity)
     GlobalState.delete_tank_entity(entity.unit_number)
   end
 end
 
 function M.on_player_mined_entity(event)
-  generic_destroy_handler(event)
+  M.generic_destroy_handler(event)
+end
+
+function M.on_pre_player_mined_item(event)
+  M.generic_destroy_handler(event)
 end
 
 function M.on_robot_mined_entity(event)
-  generic_destroy_handler(event)
+  M.generic_destroy_handler(event)
 end
 
 function M.script_raised_destroy(event)
-  generic_destroy_handler(event)
+  M.generic_destroy_handler(event)
 end
 
 function M.on_entity_died(event)
-  generic_destroy_handler(event)
+  M.generic_destroy_handler(event)
+end
+
+function M.on_marked_for_deconstruction(event)
+  if event.entity.name == "network-chest" then
+    GlobalState.put_chest_contents_in_network(event.entity)
+  elseif event.entity.name == "network-tank" then
+    GlobalState.put_tank_contents_in_network(event.entity)
+  end
 end
 
 -- copied from https://discord.com/channels/139677590393716737/306402592265732098/1112775784411705384
@@ -212,6 +225,7 @@ function M.on_entity_settings_pasted(event)
 end
 
 function M.onDelete(entity)
+  GlobalState.put_chest_contents_in_network(entity)
   GlobalState.delete_chest_entity(entity.unit_number)
   if global.mod.network_chest_gui ~= nil and global.mod.network_chest_gui.entity.unit_number == entity.unit_number then
     global.mod.network_chest_gui.frame.destroy()
