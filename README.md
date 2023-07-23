@@ -77,6 +77,12 @@ Fluids transported through network tanks will have their temperature reset to th
 
 ![Network Tank](/readme-pictures/network-tank.png)
 
+### Network View
+
+Pressing `Ctrl + Shift + N` will bring up the Network View to see items and fluids currently in the network.
+
+![Network View window showing items and fluids in network](/readme-pictures/network-view.png)
+
 ### Performance
 
 This mod is tuned to take about 1-3ms every tick and does a fixed amount of work on every tick. While this is a lot of time for each tick, this mod also does a lot of work to transport all items for an entire base. For larger bases this overhead is comparable to the render time for belts, trains and bots.
