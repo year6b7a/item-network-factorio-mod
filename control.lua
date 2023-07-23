@@ -40,11 +40,17 @@ function main()
   )
   script.on_event(
     defines.events.on_entity_died,
-    NetworkChest.generic_destroy_handler
+    NetworkChest.on_entity_died
   )
   script.on_event(
     defines.events.on_marked_for_deconstruction,
     NetworkChest.on_marked_for_deconstruction
+  )
+
+
+  script.on_event(
+    defines.events.on_post_entity_died,
+    NetworkChest.on_post_entity_died
   )
 
 

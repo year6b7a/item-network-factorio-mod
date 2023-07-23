@@ -75,13 +75,26 @@ function M.script_raised_revive(event)
   generic_create_handler(event)
 end
 
-function M.generic_destroy_handler(event)
+function M.generic_destroy_handler(event, opts)
+  if opts == nil then
+    opts = {}
+  end
+
   local entity = event.entity
   if entity.name == "network-chest" then
-    M.onDelete(entity)
+    GlobalState.put_chest_contents_in_network(entity)
+    if not opts.do_not_delete_entity then
+      GlobalState.delete_chest_entity(entity.unit_number)
+    end
+    if global.mod.network_chest_gui ~= nil and global.mod.network_chest_gui.entity.unit_number == entity.unit_number then
+      global.mod.network_chest_gui.frame.destroy()
+      global.mod.network_chest_gui = nil
+    end
   elseif entity.name == "network-tank" then
     GlobalState.put_tank_contents_in_network(entity)
-    GlobalState.delete_tank_entity(entity.unit_number)
+    if not opts.do_not_delete_entity then
+      GlobalState.delete_tank_entity(entity.unit_number)
+    end
   end
 end
 
@@ -102,7 +115,7 @@ function M.script_raised_destroy(event)
 end
 
 function M.on_entity_died(event)
-  M.generic_destroy_handler(event)
+  M.generic_destroy_handler(event, { do_not_delete_entity = true })
 end
 
 function M.on_marked_for_deconstruction(event)
@@ -110,6 +123,27 @@ function M.on_marked_for_deconstruction(event)
     GlobalState.put_chest_contents_in_network(event.entity)
   elseif event.entity.name == "network-tank" then
     GlobalState.put_tank_contents_in_network(event.entity)
+  end
+end
+
+function M.on_post_entity_died(event)
+  if event.unit_number ~= nil then
+    local original_entity = GlobalState.get_chest_info(event.unit_number)
+    if original_entity ~= nil then
+      if event.ghost ~= nil then
+        event.ghost.tags = { requests = original_entity.requests }
+      end
+      GlobalState.delete_chest_entity(event.unit_number)
+    else
+      -- it might be a tank
+      local tank_info = GlobalState.get_tank_info(event.unit_number)
+      if tank_info ~= nil then
+        GlobalState.delete_tank_entity(event.unit_number)
+        if event.ghost ~= nil then
+          event.ghost.tags = { config = tank_info.config }
+        end
+      end
+    end
   end
 end
 
@@ -221,15 +255,6 @@ function M.on_entity_settings_pasted(event)
     if source.name == "network-tank" then
       GlobalState.copy_tank_config(source.unit_number, dest.unit_number)
     end
-  end
-end
-
-function M.onDelete(entity)
-  GlobalState.put_chest_contents_in_network(entity)
-  GlobalState.delete_chest_entity(entity.unit_number)
-  if global.mod.network_chest_gui ~= nil and global.mod.network_chest_gui.entity.unit_number == entity.unit_number then
-    global.mod.network_chest_gui.frame.destroy()
-    global.mod.network_chest_gui = nil
   end
 end
 

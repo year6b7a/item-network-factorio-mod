@@ -10,6 +10,9 @@ def get_changelog():
     v.fix(
         "Fixed bug where destroying Network Chests and Tanks would delete Buffer contents. Contents are now automatically pushed into the network."
     )
+    v.fix(
+        "Fixed bug where replacing ghosts of destroyed Network Chests and Tanks would not set previous requests."
+    )
 
     v = cl.version((0, 3, 5), datetime.date(2023, 7, 19))
     v.fix("Fixed crash when deleting a Network Chest with the UI open.")
