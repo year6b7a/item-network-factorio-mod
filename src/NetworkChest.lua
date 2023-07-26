@@ -571,7 +571,7 @@ function M.on_gui_closed(event)
     NetworkViewUi.on_gui_closed(event)
   elseif frame ~= nil and frame.name == UiConstants.NT_MAIN_FRAME then
     NetworkTankGui.on_gui_closed(event)
-  else
+  elseif frame ~= nil and (frame.name == UiConstants.MAIN_FRAME_NAME or frame.name == UiConstants.MODAL_FRAME_NAME) then
     NetworkChestGui.on_gui_closed(event)
   end
 end
