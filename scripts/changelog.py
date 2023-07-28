@@ -6,6 +6,11 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version((0, 3, 7), datetime.date(2023, 7, 27))
+    v.fix(
+        'Fixed bug where interacting with the mod before the first game tick would crash. This was easy to reproduce in the "Map Editor" mode.'
+    )
+
     v = cl.version((0, 3, 6), datetime.date(2023, 7, 22))
     v.fix(
         "Fixed bug where destroying Network Chests and Tanks would delete Buffer contents. Contents are now automatically pushed into the network."

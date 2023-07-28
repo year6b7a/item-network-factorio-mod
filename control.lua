@@ -112,6 +112,10 @@ function main()
   script.on_nth_tick(1, NetworkChest.onTick)
   script.on_nth_tick(60, NetworkChest.updatePlayers)
   -- script.on_nth_tick(60 * 3, NetworkChest.on_every_5_seconds)
+
+  script.on_init(function()
+    NetworkChest.on_init()
+  end)
 end
 
 main()

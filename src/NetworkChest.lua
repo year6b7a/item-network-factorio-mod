@@ -8,6 +8,9 @@ local constants = require "src.constants"
 
 local M = {}
 
+function M.on_init()
+  GlobalState.setup()
+end
 
 function M.on_create(event, entity)
   local requests = {}
