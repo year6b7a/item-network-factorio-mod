@@ -62,11 +62,19 @@ function M.pop_random(queue, rand)
   if queue.size == 0 then
     return nil
   end
+  M.swap_random_to_front(queue, rand)
+  return M.pop(queue)
+end
+
+function M.swap_random_to_front(queue, rand)
+  if queue.size < 2 then
+    return
+  end
+
   local idx = (queue.idx_start + rand(queue.size) - 2) % queue.capacity + 1
   local temp = queue.data[idx]
   queue.data[idx] = queue.data[queue.idx_start]
   queue.data[queue.idx_start] = temp
-  return M.pop(queue)
 end
 
 function M.get_front(queue)

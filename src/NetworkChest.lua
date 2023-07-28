@@ -334,6 +334,7 @@ end
 local function update_network_chest(info)
   local inv = info.entity.get_output_inventory()
   local contents = inv.get_contents()
+  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
 
   -- reset inventory
   inv.clear()
@@ -351,6 +352,7 @@ local function update_network_chest(info)
       local n_give = math.max(0, network_count - request.limit)
       local n_transfer = math.min(n_take, n_give)
       if n_transfer > 0 then
+        status = GlobalState.UPDATE_STATUS.UPDATED
         contents[request.item] = current_count + n_transfer
         GlobalState.set_item_count(request.item, network_count - n_transfer)
       end
@@ -359,6 +361,7 @@ local function update_network_chest(info)
       local n_take = math.max(0, request.limit - network_count)
       local n_transfer = math.min(n_take, n_give)
       if n_transfer > 0 then
+        status = GlobalState.UPDATE_STATUS.UPDATED
         contents[request.item] = current_count - n_transfer
         GlobalState.set_item_count(request.item, network_count + n_transfer)
       end
@@ -417,40 +420,8 @@ local function update_network_chest(info)
       GlobalState.increment_item_count(item, count)
     end
   end
-end
 
-function M.onTick()
-  GlobalState.setup()
-  M.update_network()
-end
-
-function M.update_network()
-  local scanned_units = {}
-  for _ = 1, math.min(20, GlobalState.get_scan_queue_size()) do
-    local unit_number = GlobalState.scan_queue_pop()
-    if unit_number == nil then
-      break
-    end
-    local info = GlobalState.get_chest_info(unit_number)
-    if info == nil then
-      M.update_tank_queue(unit_number, scanned_units)
-      goto continue
-    end
-    local entity = info.entity
-    if not entity.valid then
-      goto continue
-    end
-
-    GlobalState.scan_queue_push(unit_number)
-    if entity.to_be_deconstructed() then
-      goto continue
-    end
-    if scanned_units[unit_number] == nil then
-      scanned_units[unit_number] = true
-      update_network_chest(info)
-    end
-    ::continue::
-  end
+  return status
 end
 
 local function update_tank(info)
@@ -466,6 +437,7 @@ local function update_tank(info)
     end
   end
   buffer = math.min(buffer, constants.MAX_TANK_SIZE - other_count)
+  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
 
   local current_count = contents[fluid] or 0
   local network_count = GlobalState.get_fluid_count(fluid)
@@ -474,6 +446,7 @@ local function update_tank(info)
     local n_give = math.max(0, network_count - limit)
     local n_transfer = math.min(n_take, n_give)
     if n_transfer > 0 then
+      status = GlobalState.UPDATE_STATUS.UPDATED
       info.entity.insert_fluid({ name = fluid, amount = n_transfer })
       GlobalState.set_fluid_count(fluid, network_count - n_transfer)
     end
@@ -482,30 +455,63 @@ local function update_tank(info)
     local n_take = math.max(0, limit - network_count)
     local n_transfer = math.min(n_take, n_give)
     if n_transfer > 0 then
+      status = GlobalState.UPDATE_STATUS.UPDATED
       info.entity.remove_fluid({ name = fluid, amount = n_transfer })
       GlobalState.set_fluid_count(fluid, network_count + n_transfer)
     end
   end
+
+  return status
 end
 
-function M.update_tank_queue(unit_number, scanned_units)
-  local info = GlobalState.get_tank_info(unit_number)
-  if info == nil then
-    return
-  end
+local function update_chest_entity(unit_number, info)
   local entity = info.entity
   if not entity.valid then
-    return
+    return GlobalState.UPDATE_STATUS.INVALID
   end
 
-  if info.config ~= nil and not entity.to_be_deconstructed() then
-    if scanned_units[unit_number] == nil then
-      scanned_units[unit_number] = true
-      update_tank(info)
-    end
+  if entity.to_be_deconstructed() then
+    return GlobalState.UPDATE_STATUS.NOT_UPDATED
   end
 
-  GlobalState.scan_queue_push(unit_number)
+  return update_network_chest(info)
+end
+
+local function update_tank_entity(unit_number, info)
+  local entity = info.entity
+  if not entity.valid then
+    return GlobalState.UPDATE_STATUS.INVALID
+  end
+
+  if info.config == nil or entity.to_be_deconstructed() then
+    return GlobalState.UPDATE_STATUS.NOT_UPDATED
+  end
+
+  return update_tank(info)
+end
+
+local function update_entity(unit_number)
+  local info
+  info = GlobalState.get_chest_info(unit_number)
+  if info ~= nil then
+    return update_chest_entity(unit_number, info)
+  end
+
+  info = GlobalState.get_tank_info(unit_number)
+  if info ~= nil then
+    return update_tank_entity(unit_number, info)
+  end
+
+  return GlobalState.UPDATE_STATUS.INVALID
+end
+
+function M.update_queue()
+  GlobalState.update_queue(update_entity)
+end
+
+function M.onTick()
+  GlobalState.setup()
+  M.update_queue()
 end
 
 -------------------------------------------

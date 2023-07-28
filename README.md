@@ -18,7 +18,7 @@ And here's a mall powered entirely by network chests:
 
 Both Network Chests and Network Loaders are enabled without research and can be crafted without any items. While it might be more fair to lock these items behind endgame research expensive ingredients, it's more fun to have them available from the start.
 
-Network chests make belt balancers obsolete because they update randomly to ensure fairness.
+Network chests make belt balancers obsolete because they evenly distribute between producers and consumers.
 
 ### Target Audience
 
@@ -89,16 +89,21 @@ This mod is tuned to take about 1-3ms every tick and does a fixed amount of work
 
 On the test world with 2048 network chests and 4096 loaders, the mod takes 2.5ms per tick which is about half the game update time on my computer.
 
-Internally the mod maintains a circular buffer of every network chest. On every tick it randomly pops off 20 chests and updates their contents by either giving items to the network or taking items from the network.
+Internally the mod maintains a FIFO queue of every Network Chest and Tank. On every tick it:
+
+- Pops 20 entities off the front of the queue, updates the entities, and pushes them to the back of the queue.
+- Randomly swaps a single entity to the front of the queue to slowly shuffle the update order.
 
 Because this approach only scans a fixed number of chests per tick, chests will be scanned less frequently as the base scales up and more chests are built. It's sometimes necessary to increase the buffer and limit of high-throughput items like iron or copper and usually a buffer of 500-1000 items is enough to keep a full blue belt saturated.
+
+Network chests have no trouble keeping blue belts saturated with less than 2K Network Chests in the map. However there have been reports that it is hard to saturate belts in larger factories with ~50K Network Chests. While improving mod performance is a key area of focus, in the short term it is currently recommended to keep the number of chests below 3K.
 
 ### Play Testing
 
 This mod has been tested in the following ways:
 
 - Launched a rocket in vanilla Factorio with 10x science.
-- Reached the "Quantum Age" in Exotic Industries (so far!).
+- Reached the "Exotic Age" in Exotic Industries.
 - Created a sandbox world with 2048 chests and 4096 loaders.
 - Unit tested the circular buffer implementation.
 

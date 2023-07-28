@@ -6,6 +6,11 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version((0, 4, 0), datetime.date(2023, 7, 28))
+    v.change(
+        "Changed queue update logic to be less random and more consistent. This should help smooth out performance, especially for factories with a ton of Network Chests and Tanks."
+    )
+
     v = cl.version((0, 3, 7), datetime.date(2023, 7, 27))
     v.fix(
         'Fixed bug where interacting with the mod before the first game tick would crash. This was easy to reproduce in the "Map Editor" mode.'

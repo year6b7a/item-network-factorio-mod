@@ -10,6 +10,10 @@ function M.setup()
   end
   setup_has_run = true
 
+  M.inner_setup()
+end
+
+function M.inner_setup()
   if global.mod == nil then
     global.mod = {
       rand = game.create_random_generator(),
@@ -224,6 +228,43 @@ function M.get_ui_state(player_index)
     info.ui = {}
   end
   return info.ui
+end
+
+M.UPDATE_STATUS = {
+  INVALID = 0,
+  UPDATED = 1,
+  NOT_UPDATED = 2,
+  ALREADY_UPDATED = 3,
+}
+
+function M.update_queue(update_entity)
+  local MAX_ENTITIES_TO_UPDATE = 20
+  local updated_entities = {}
+
+  local function inner_update_entity(unit_number)
+    if updated_entities[unit_number] ~= nil then
+      return M.UPDATE_STATUS.ALREADY_UPDATED
+    end
+    updated_entities[unit_number] = true
+
+    status = update_entity(unit_number)
+    return status
+  end
+
+  for _ = 1, MAX_ENTITIES_TO_UPDATE do
+    local unit_number = Queue.pop(global.mod.scan_queue)
+    if unit_number == nil then
+      break
+    end
+
+    local status = inner_update_entity(unit_number)
+    if status == M.UPDATE_STATUS.NOT_UPDATED or status == M.UPDATE_STATUS.UPDATED or status == M.UPDATE_STATUS.ALREADY_UPDATED then
+      Queue.push(global.mod.scan_queue, unit_number)
+    end
+  end
+
+  -- finally, swap a random entity to the front of the queue to introduce randomness in update order.
+  Queue.swap_random_to_front(global.mod.scan_queue, global.mod.rand)
 end
 
 return M
