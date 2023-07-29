@@ -443,7 +443,7 @@ local function update_tank(info)
         )
         local n_give = math.max(0, fluid_instance.amount)
         local n_take = math.max(0, limit - current_count)
-        local n_transfer = math.min(n_give, n_take)
+        local n_transfer = math.floor(math.min(n_give, n_take))
         if n_transfer > 0 then
           status = GlobalState.UPDATE_STATUS.UPDATED
           GlobalState.increment_fluid_count(fluid_instance.name,
@@ -480,7 +480,7 @@ local function update_tank(info)
       )
       local n_give = math.max(0, network_count - limit)
       local n_take = math.max(0, buffer - tank_count)
-      local n_transfer = math.min(n_give, n_take)
+      local n_transfer = math.floor(math.min(n_give, n_take))
       if n_transfer > 0 then
         status = GlobalState.UPDATE_STATUS.UPDATED
         GlobalState.increment_fluid_count(fluid, temp, -n_transfer)
