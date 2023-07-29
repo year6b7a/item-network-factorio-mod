@@ -180,6 +180,13 @@ M.event_handlers = {
     end,
   },
   {
+    name = UiConstants.NT_TEMP_FIELD,
+    event = "on_gui_confirmed",
+    handler = function(event, element)
+      NetworkTankGui.try_to_confirm(event.player_index)
+    end,
+  },
+  {
     name = UiConstants.NT_BUFFER_FIELD,
     event = "on_gui_confirmed",
     handler = function(event, element)
@@ -191,6 +198,14 @@ M.event_handlers = {
     event = "on_gui_confirmed",
     handler = function(event, element)
       NetworkTankGui.try_to_confirm(event.player_index)
+    end,
+  },
+  {
+    name = UiConstants.NT_TEMP_FIELD,
+    event = "on_gui_text_changed",
+    handler = function(event, element)
+      local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
+      nt_ui.temperature = tonumber(element.text)
     end,
   },
   {

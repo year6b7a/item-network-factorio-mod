@@ -98,16 +98,26 @@ function M.update_items(player_index)
     })
     for _, item in ipairs(row) do
       local item_name
+      local tooltip
       if net_view.view_type == "item" then
         item_name = game.item_prototypes[item.item].localised_name
+        tooltip = { "", item_name, ": ", item.count }
       else
         item_name = game.fluid_prototypes[item.item].localised_name
+        tooltip = {
+          "",
+          item_name,
+          ": ",
+          string.format("%.0f", item.count),
+          " at ",
+          { "format-degrees-c", string.format("%.0f", item.temp) },
+        }
       end
       local item_view = item_h_stack.add({
         type = "sprite-button",
         elem_type = net_view.view_type,
         sprite = net_view.view_type .. "/" .. item.item,
-        tooltip = { "", item_name, ": ", item.count },
+        tooltip = tooltip,
       })
       item_view.number = item.count
     end
@@ -119,17 +129,25 @@ local function items_list_sort(left, right)
 end
 
 function M.get_list_of_items(view_type)
-  local items_to_display = view_type == "item" and
-    GlobalState.get_items() or
-    GlobalState.get_fluids()
-
   local items = {}
 
-  for item_name, item_count in pairs(items_to_display) do
-    if item_count > 0 then
-      table.insert(items, { item = item_name, count = item_count })
+  if view_type == "item" then
+    local items_to_display = GlobalState.get_items()
+    for item_name, item_count in pairs(items_to_display) do
+      if item_count > 0 then
+        table.insert(items, { item = item_name, count = item_count })
+      end
+    end
+  else
+    local fluids_to_display = GlobalState.get_fluids()
+    for fluid_name, fluid_temps in pairs(fluids_to_display) do
+      for temp, count in pairs(fluid_temps) do
+        table.insert(items, { item = fluid_name, count = count, temp = temp })
+      end
     end
   end
+
+
 
   table.sort(items, items_list_sort)
 

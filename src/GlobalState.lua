@@ -37,6 +37,23 @@ function M.inner_setup()
   if global.mod.tanks == nil then
     global.mod.tanks = {}
   end
+
+  if not global.mod.has_run_fluid_temp_conversion then
+    local new_fluids = {}
+    for fluid, count in pairs(global.mod.fluids) do
+      local default_temp = game.fluid_prototypes[fluid].default_temperature
+      new_fluids[fluid] = {}
+      new_fluids[fluid][default_temp] = count
+    end
+    global.mod.fluids = new_fluids
+    for _, entity in pairs(global.mod.tanks) do
+      if entity.config ~= nil then
+        entity.config.temperature =
+          game.fluid_prototypes[entity.config.fluid].default_temperature
+      end
+    end
+    global.mod.has_run_fluid_temp_conversion = true
+  end
 end
 
 function M.remove_old_ui()
@@ -122,9 +139,12 @@ function M.delete_tank_entity(unit_number)
 end
 
 function M.put_tank_contents_in_network(entity)
-  local contents = entity.get_fluid_contents()
-  for fluid, count in pairs(contents) do
-    M.increment_fluid_count(fluid, count)
+  local fluidbox = entity.fluidbox
+  for idx = 1, #fluidbox do
+    local fluid = fluidbox[idx]
+    if fluid ~= nil then
+      M.increment_fluid_count(fluid.name, fluid.temperature, fluid.amount)
+    end
   end
   entity.clear_fluid_inside()
 end
@@ -159,8 +179,12 @@ function M.get_item_count(item_name)
   return global.mod.items[item_name] or 0
 end
 
-function M.get_fluid_count(fluid_name)
-  return global.mod.fluids[fluid_name] or 0
+function M.get_fluid_count(fluid_name, temp)
+  local fluid_temps = global.mod.fluids[fluid_name]
+  if fluid_temps == nil then
+    return 0
+  end
+  return fluid_temps[temp] or 0
 end
 
 function M.get_items()
@@ -179,17 +203,22 @@ function M.set_item_count(item_name, count)
   end
 end
 
-function M.set_fluid_count(fluid_name, count)
+function M.set_fluid_count(fluid_name, temp, count)
   if count <= 0 then
-    global.mod.fluids[fluid_name] = nil
+    global.mod.fluids[fluid_name][temp] = nil
   else
-    global.mod.fluids[fluid_name] = count
+    local fluid_temps = global.mod.fluids[fluid_name]
+    if fluid_temps == nil then
+      fluid_temps = {}
+      global.mod.fluids[fluid_name] = fluid_temps
+    end
+    fluid_temps[temp] = count
   end
 end
 
-function M.increment_fluid_count(fluid_name, delta)
-  local count = M.get_fluid_count(fluid_name)
-  global.mod.fluids[fluid_name] = count + delta
+function M.increment_fluid_count(fluid_name, temp, delta)
+  local count = M.get_fluid_count(fluid_name, temp)
+  M.set_fluid_count(fluid_name, temp, count + delta)
 end
 
 function M.increment_item_count(item_name, delta)

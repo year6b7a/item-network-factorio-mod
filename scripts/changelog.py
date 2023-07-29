@@ -7,6 +7,7 @@ def get_changelog():
     cl = Changelog()
 
     v = cl.version((0, 4, 1), datetime.date(2023, 7, 29))
+    v.feature("Network Tanks now support fluids with different temperatures.")
     v.feature("Added tooltips to items and fluids in the Network View.")
 
     v = cl.version((0, 4, 0), datetime.date(2023, 7, 28))

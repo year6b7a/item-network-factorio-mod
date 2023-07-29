@@ -19,12 +19,14 @@ function M.on_gui_opened(player, entity)
   local default_fluid = nil
   local default_buffer = nil
   local default_limit = nil
+  local default_temp = nil
 
   if tank_info.config ~= nil then
     default_is_take = tank_info.config.type == "take"
     default_fluid = tank_info.config.fluid
     default_buffer = tank_info.config.buffer
     default_limit = tank_info.config.limit
+    default_temp = tank_info.config.temperature
   end
 
   local width = 600
@@ -65,6 +67,20 @@ function M.on_gui_opened(player, entity)
     tags = { event = UiConstants.NT_FLUID_PICKER },
   })
   fluid_picker.elem_value = default_fluid
+
+  local temp_flow = main_flow.add({ type = "flow", direction = "horizontal" })
+  temp_flow.add({ type = "label", caption = "Temperature:" })
+  local temperature_input = temp_flow.add({
+    type = "textfield",
+    numeric = true,
+    allow_decimal = false,
+    allow_negative = true,
+    tags = { event = UiConstants.NT_TEMP_FIELD },
+  })
+  if default_temp ~= nil then
+    temperature_input.text = string.format("%s", default_temp)
+  end
+  temperature_input.style.width = 100
 
   local buffer_flow = main_flow.add({ type = "flow", direction = "horizontal" })
   buffer_flow.add({ type = "label", caption = "Buffer:" })
@@ -119,11 +135,13 @@ function M.on_gui_opened(player, entity)
     choose_take_btn = choose_take_btn,
     choose_give_btn = choose_give_btn,
     buffer_size_input = buffer_size_input,
+    temperature_input = temperature_input,
     limit_input = limit_input,
     type = default_is_take and "take" or "give",
     fluid = default_fluid,
     buffer = default_buffer,
     limit = default_limit,
+    temperature = default_temp,
   }
 end
 
@@ -163,9 +181,18 @@ function M.set_default_buffer_and_limit(player_index)
     else
       limit = Constants.MAX_TANK_SIZE
     end
+    M.set_temperature(
+      game.fluid_prototypes[fluid].default_temperature,
+      nt_ui
+    )
     M.set_buffer(Constants.MAX_TANK_SIZE, nt_ui)
     M.set_limit(limit, nt_ui)
   end
+end
+
+function M.set_temperature(temperature, nt_ui)
+  nt_ui.temperature = temperature
+  nt_ui.temperature_input.text = string.format("%d", temperature)
 end
 
 function M.set_buffer(buffer, nt_ui)
@@ -186,8 +213,9 @@ function M.try_to_confirm(player_index)
   local fluid = nt_ui.fluid
   local buffer = nt_ui.buffer
   local limit = nt_ui.limit
+  local temperature = nt_ui.temperature
 
-  if type == nil or fluid == nil or buffer == nil or limit == nil then
+  if type == nil or fluid == nil or temperature == nil or buffer == nil or limit == nil then
     return
   end
 
@@ -209,6 +237,7 @@ function M.try_to_confirm(player_index)
     fluid = fluid,
     buffer = buffer,
     limit = limit,
+    temperature = temperature,
   }
 
   M.reset(game.get_player(player_index), ui)

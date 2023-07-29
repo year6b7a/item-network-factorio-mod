@@ -425,39 +425,72 @@ local function update_network_chest(info)
 end
 
 local function update_tank(info)
-  local fluid = info.config.fluid
+  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
   local type = info.config.type
   local limit = info.config.limit
   local buffer = info.config.buffer
-  local contents = info.entity.get_fluid_contents()
-  local other_count = 0
-  for fluid0, count in pairs(contents) do
-    if fluid0 ~= fluid then
-      other_count = other_count + count
-    end
-  end
-  buffer = math.min(buffer, constants.MAX_TANK_SIZE - other_count)
-  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
+  local fluid = info.config.fluid
+  local temp = info.config.temperature
 
-  local current_count = contents[fluid] or 0
-  local network_count = GlobalState.get_fluid_count(fluid)
-  if type == "take" then
-    local n_take = math.max(0, buffer - current_count)
-    local n_give = math.max(0, network_count - limit)
-    local n_transfer = math.min(n_take, n_give)
-    if n_transfer > 0 then
-      status = GlobalState.UPDATE_STATUS.UPDATED
-      info.entity.insert_fluid({ name = fluid, amount = n_transfer })
-      GlobalState.set_fluid_count(fluid, network_count - n_transfer)
+  if type == "give" then
+    local fluidbox = info.entity.fluidbox
+    for idx = 1, #fluidbox do
+      local fluid_instance = fluidbox[idx]
+      if fluid_instance ~= nil then
+        local current_count = GlobalState.get_fluid_count(
+          fluid_instance.name,
+          fluid_instance.temperature
+        )
+        local n_give = math.max(0, fluid_instance.amount)
+        local n_take = math.max(0, limit - current_count)
+        local n_transfer = math.min(n_give, n_take)
+        if n_transfer > 0 then
+          status = GlobalState.UPDATE_STATUS.UPDATED
+          GlobalState.increment_fluid_count(fluid_instance.name,
+            fluid_instance.temperature, n_transfer)
+          local removed = info.entity.remove_fluid({
+            name = fluid_instance.name,
+            temperature = fluid_instance.temperature,
+            amount = n_transfer,
+          })
+          assert(removed == n_transfer)
+        end
+      end
     end
   else
-    local n_give = current_count
-    local n_take = math.max(0, limit - network_count)
-    local n_transfer = math.min(n_take, n_give)
-    if n_transfer > 0 then
-      status = GlobalState.UPDATE_STATUS.UPDATED
-      info.entity.remove_fluid({ name = fluid, amount = n_transfer })
-      GlobalState.set_fluid_count(fluid, network_count + n_transfer)
+    local fluidbox = info.entity.fluidbox
+    local tank_fluid = nil
+    local tank_temp = nil
+    local tank_count = 0
+    local n_fluid_boxes = 0
+    for idx = 1, #fluidbox do
+      local fluid_instance = fluidbox[idx]
+      if fluid_instance ~= nil then
+        n_fluid_boxes = n_fluid_boxes + 1
+        tank_fluid = fluid_instance.name
+        tank_temp = fluid_instance.temperature
+        tank_count = fluid_instance.amount
+      end
+    end
+
+    if n_fluid_boxes == 0 or (n_fluid_boxes == 1 and tank_fluid == fluid and tank_temp == temp) then
+      local network_count = GlobalState.get_fluid_count(
+        fluid,
+        temp
+      )
+      local n_give = math.max(0, network_count - limit)
+      local n_take = math.max(0, buffer - tank_count)
+      local n_transfer = math.min(n_give, n_take)
+      if n_transfer > 0 then
+        status = GlobalState.UPDATE_STATUS.UPDATED
+        GlobalState.increment_fluid_count(fluid, temp, -n_transfer)
+        local added = info.entity.insert_fluid({
+          name = fluid,
+          amount = n_transfer,
+          temperature = temp,
+        })
+        assert(added == n_transfer)
+      end
     end
   end
 
