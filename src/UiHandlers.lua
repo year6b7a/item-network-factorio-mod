@@ -157,6 +157,7 @@ M.event_handlers = {
       nt_ui.type = "take"
       nt_ui.choose_give_btn.state = false
       NetworkTankGui.set_default_buffer_and_limit(event.player_index)
+      NetworkTankGui.update_input_visibility(event.player_index)
     end,
   },
   {
@@ -167,6 +168,7 @@ M.event_handlers = {
       nt_ui.type = "give"
       nt_ui.choose_take_btn.state = false
       NetworkTankGui.set_default_buffer_and_limit(event.player_index)
+      NetworkTankGui.update_input_visibility(event.player_index)
     end,
   },
   {

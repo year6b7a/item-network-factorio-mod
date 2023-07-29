@@ -142,7 +142,11 @@ function M.on_gui_opened(player, entity)
     buffer = default_buffer,
     limit = default_limit,
     temperature = default_temp,
+    fluid_flow = fluid_flow,
+    temp_flow = temp_flow,
+    buffer_flow = buffer_flow,
   }
+  M.update_input_visibility(player.index)
 end
 
 function M.on_gui_closed(event)
@@ -166,6 +170,14 @@ function M.destroy_frame(player, frame_name)
   if frame ~= nil then
     frame.destroy()
   end
+end
+
+function M.update_input_visibility(player_index)
+  local nt_ui = GlobalState.get_ui_state(player_index).network_tank
+  local visible = nt_ui.type == "take"
+  nt_ui.fluid_flow.visible = visible
+  nt_ui.temp_flow.visible = visible
+  nt_ui.buffer_flow.visible = visible
 end
 
 function M.set_default_buffer_and_limit(player_index)
