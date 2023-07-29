@@ -205,25 +205,55 @@ function M.set_limit(limit, nt_ui)
   nt_ui.limit_input.text = string.format("%d", limit)
 end
 
-function M.try_to_confirm(player_index)
-  local ui = GlobalState.get_ui_state(player_index)
-  local nt_ui = ui.network_tank
-
+local function get_config_from_network_tank_ui(nt_ui)
   local type = nt_ui.type
   local fluid = nt_ui.fluid
   local buffer = nt_ui.buffer
   local limit = nt_ui.limit
   local temperature = nt_ui.temperature
 
-  if type == nil or fluid == nil or temperature == nil or buffer == nil or limit == nil then
-    return
-  end
+  if type == "take" then
+    if type == nil or fluid == nil or temperature == nil or buffer == nil or limit == nil then
+      return nil
+    end
 
-  if buffer <= 0 or limit < 0 then
-    return
-  end
+    if buffer <= 0 or limit < 0 then
+      return nil
+    end
 
-  if buffer > Constants.MAX_TANK_SIZE then
+    if buffer > Constants.MAX_TANK_SIZE then
+      return nil
+    end
+
+    return {
+      type = type,
+      fluid = fluid,
+      buffer = buffer,
+      limit = limit,
+      temperature = temperature,
+    }
+  else
+    if type == nil or limit == nil then
+      return nil
+    end
+
+    if limit < 0 then
+      return nil
+    end
+
+    return {
+      type = type,
+      limit = limit,
+    }
+  end
+end
+
+function M.try_to_confirm(player_index)
+  local ui = GlobalState.get_ui_state(player_index)
+  local nt_ui = ui.network_tank
+
+  local config = get_config_from_network_tank_ui(nt_ui)
+  if config == nil then
     return
   end
 
@@ -232,13 +262,7 @@ function M.try_to_confirm(player_index)
     return
   end
 
-  info.config = {
-    type = type,
-    fluid = fluid,
-    buffer = buffer,
-    limit = limit,
-    temperature = temperature,
-  }
+  info.config = config
 
   M.reset(game.get_player(player_index), ui)
 end
