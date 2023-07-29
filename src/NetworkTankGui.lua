@@ -186,7 +186,9 @@ function M.set_default_buffer_and_limit(player_index)
 
   local fluid = nt_ui.fluid
   local type = nt_ui.type
-  if fluid ~= nil and type ~= nil then
+  if type == "give" then
+    M.set_limit(Constants.MAX_TANK_SIZE, nt_ui)
+  elseif fluid ~= nil and type ~= nil then
     local limit
     if type == "take" then
       limit = 0
