@@ -52,6 +52,8 @@ function M.inner_setup()
           game.fluid_prototypes[entity.config.fluid].default_temperature
       end
     end
+    game.print(
+      "Migrated Item Network fluids to include temperatures. Warning: If you provide a fluid at a non-default temperature (like steam), you will have to update every requester tank to use the new fluid temperature.")
     global.mod.has_run_fluid_temp_conversion = true
   end
 end

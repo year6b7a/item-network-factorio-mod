@@ -7,8 +7,16 @@ def get_changelog():
     cl = Changelog()
 
     v = cl.version((0, 4, 1), datetime.date(2023, 7, 29))
-    v.feature("Network Tanks now support fluids with different temperatures.")
+    v.feature(
+        "Network Tanks now support fluids with different temperatures! Make sure that if you provide fluids at non-default temperatures (like steam) you update all requester tanks with the new temperature. You can use the Network View to see which fluids are in your network to help debug."
+    )
     v.feature("Added tooltips to items and fluids in the Network View.")
+    v.change(
+        'Network Tanks that are configured as Providers now only need "limit" and will try to push any fluids into the network.'
+    )
+    v.change(
+        "Network Tanks now require a temperature when pulling fluids out of the network."
+    )
 
     v = cl.version((0, 4, 0), datetime.date(2023, 7, 28))
     v.change(
