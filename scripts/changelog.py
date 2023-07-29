@@ -6,7 +6,7 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version((0, 4, 1), datetime.date(2023, 7, 29))
+    v = cl.version((0, 5, 0), datetime.date(2023, 7, 29))
     v.feature(
         "Network Tanks now support fluids with different temperatures! Make sure that if you provide fluids at non-default temperatures (like steam) you update all requester tanks with the new temperature. You can use the Network View to see which fluids are in your network to help debug."
     )

@@ -71,9 +71,13 @@ This implementation makes it easy to buffer just one nuclear reactor at the mall
 
 ### Fluids
 
-**New!** Fluids can be transported through the network using Network Tanks. These tanks are configured exactly like Network Chests except they can only transport 1 fluid at a time.
+Fluids can be transported through the network using Network Tanks. These tanks are similar to Network Chests except they only transport 1 fluid at a time.
 
-Fluids transported through network tanks will have their temperature reset to their default temperature and there is no way to specify the final temperature of fluids.
+Network Tanks configured to Provide will try to push any fluids from the tank into the network up to the configured limit.
+
+Network Tanks configured to Request will try to take the specified fluid at the specified temperature from the network.
+
+As of 0.5.0, the network correctly handles fluids with different temperatures.
 
 ![Network Tank](/readme-pictures/network-tank.png)
 
