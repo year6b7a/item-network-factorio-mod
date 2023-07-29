@@ -97,10 +97,17 @@ function M.update_items(player_index)
       direction = "horizontal",
     })
     for _, item in ipairs(row) do
+      local item_name
+      if net_view.view_type == "item" then
+        item_name = game.item_prototypes[item.item].localised_name
+      else
+        item_name = game.fluid_prototypes[item.item].localised_name
+      end
       local item_view = item_h_stack.add({
         type = "sprite-button",
         elem_type = net_view.view_type,
         sprite = net_view.view_type .. "/" .. item.item,
+        tooltip = { "", item_name, ": ", item.count },
       })
       item_view.number = item.count
     end

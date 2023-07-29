@@ -6,6 +6,9 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version((0, 4, 1), datetime.date(2023, 7, 29))
+    v.feature("Added tooltips to items and fluids in the Network View.")
+
     v = cl.version((0, 4, 0), datetime.date(2023, 7, 28))
     v.change(
         "Changed queue update logic to be less random and more consistent. This should help smooth out performance, especially for factories with a ton of Network Chests and Tanks."
