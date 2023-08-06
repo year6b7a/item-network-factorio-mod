@@ -57,7 +57,7 @@ function M.add_loader()
     icon = Paths.graphics .. "/entities/express-loader.png",
     icon_size = 64,
     flags = { "placeable-neutral", "player-creation",
-      "fast-replaceable-no-build-while-moving", },
+      "fast-replaceable-no-build-while-moving" },
     minable = {
       mining_time = 0.2,
       result = "network-loader",
@@ -187,6 +187,7 @@ function M.add_network_tank()
     se_allow_in_space = true,
     allow_copy_paste = true,
     additional_pastable_entities = { "network-tank" },
+    max_health = 200,
   }
 
   local item = table.deepcopy(data.raw["item"][override_item_name])
