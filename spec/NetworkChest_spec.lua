@@ -82,6 +82,7 @@ describe("update_network", function()
           return max
         end
       end,
+      print = function() end,
     }
     GlobalState.inner_setup()
 
@@ -98,6 +99,7 @@ describe("update_network", function()
           return max
         end
       end,
+      print = function() end,
     }
     GlobalState.inner_setup()
 
