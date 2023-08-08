@@ -84,6 +84,9 @@ function M.generic_destroy_handler(event, opts)
   end
 
   local entity = event.entity
+  if entity.unit_number == nil then
+    return
+  end  
   if entity.name == "network-chest" then
     GlobalState.put_chest_contents_in_network(entity)
     if not opts.do_not_delete_entity then
