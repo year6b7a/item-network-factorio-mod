@@ -41,6 +41,8 @@ local function generic_create_handler(event)
       end
     end
     GlobalState.register_tank_entity(entity, config)
+  elseif GlobalState.logistic_wanted(entity.name) then
+    GlobalState.logistic_add_entity(entity)
   end
 end
 
@@ -53,20 +55,27 @@ function M.script_raised_built(event)
 end
 
 function M.on_entity_cloned(event)
-  if event.source.name == "network-chest" and event.destination.name == "network-chest" then
+  if event.source.name ~= event.destination.name then
+    return
+  end
+  local name = event.source.name
+  if name == "network-chest" then
     GlobalState.register_chest_entity(event.destination)
     local source_info = GlobalState.get_chest_info(event.source.unit_number)
     local dest_info = GlobalState.get_chest_info(event.destination.unit_number)
     if source_info ~= nil and dest_info ~= nil then
       dest_info.requests = source_info.requests
     end
-  elseif event.source.name == "network-tank" and event.destination.name == "network-tank" then
+  elseif name == "network-tank" then
     GlobalState.register_tank_entity(event.source)
     GlobalState.register_tank_entity(event.destination)
     GlobalState.copy_tank_config(
       event.source.unit_number,
       event.destination.unit_number
     )
+  elseif GlobalState.logistic_wanted(name) then
+    -- REVISIT: is this needed??
+    GlobalState.logistic_add_entity(event.destination)
   end
 end
 
@@ -98,6 +107,8 @@ function M.generic_destroy_handler(event, opts)
     if not opts.do_not_delete_entity then
       GlobalState.delete_tank_entity(entity.unit_number)
     end
+  else
+    GlobalState.logistic_del(entity.unit_number)
   end
 end
 
@@ -131,6 +142,8 @@ end
 
 function M.on_post_entity_died(event)
   if event.unit_number ~= nil then
+    GlobalState.logistic_del(event.unit_number)
+
     local original_entity = GlobalState.get_chest_info(event.unit_number)
     if original_entity ~= nil then
       if event.ghost ~= nil then
@@ -535,11 +548,54 @@ local function update_entity(unit_number)
     return update_tank_entity(unit_number, info)
   end
 
+  local entity = GlobalState.logistic_get(unit_number)
+  if entity ~= nil then
+    return M.logistic_update_entity(entity)
+  end
+
   return GlobalState.UPDATE_STATUS.INVALID
 end
 
 function M.update_queue()
   GlobalState.update_queue(update_entity)
+end
+
+function M.logistic_update_entity(entity)
+  -- sanity check
+  if not entity.valid then
+    return GlobalState.UPDATE_STATUS.INVALID
+  end
+
+  -- don't add stuff to a doomed chest
+  if entity.to_be_deconstructed() then
+    return GlobalState.UPDATE_STATUS.NOT_UPDATED
+  end
+
+  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
+
+  -- need a request to do anything
+  if entity.request_slot_count > 0 then
+    local inv = entity.get_output_inventory()
+    local contents = inv.get_contents()
+
+    for slot = 1, entity.request_slot_count do
+      local req = entity.get_request_slot(slot)
+      if req ~= nil then
+        local current_count = contents[req.name] or 0
+        local network_count = GlobalState.get_item_count(req.name)
+        local n_wanted = math.max(0, req.count - current_count)
+        local n_transfer = math.min(network_count, n_wanted)
+        if n_transfer > 0 then
+          local n_inserted = inv.insert{name=req.name, count=n_transfer}
+          if n_inserted > 0 then
+            GlobalState.set_item_count(req.name, network_count - n_inserted)
+            status = GlobalState.UPDATE_STATUS.UPDATED
+          end
+        end
+      end
+    end
+  end
+  return status
 end
 
 function M.onTick()
