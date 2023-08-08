@@ -235,7 +235,6 @@ function M.logistic_get(unit_number)
 end
 
 function M.logistic_add_entity(entity)
-  game.print(string.format("logistic_add_entity[%s]: %s @ (%s,%s)", entity.unit_number, entity.name, entity.position.x, entity.position.y))
   if global.mod.logistic[entity.unit_number] == nil then
     global.mod.logistic[entity.unit_number] = entity
     Queue.push(global.mod.scan_queue, entity.unit_number)
