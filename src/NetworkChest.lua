@@ -371,7 +371,7 @@ local function update_network_chest(info)
       end
       -- missing if the number we wanted to take was more than available
       if n_take > n_give then
-        GlobalState.missing_item_set(request.item. info.entity.unit_number, n_take - n_give)
+        GlobalState.missing_item_set(request.item, info.entity.unit_number, n_take - n_give)
       end
     else
       local n_give = current_count
