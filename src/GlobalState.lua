@@ -1,4 +1,5 @@
 local Queue = require "src.Queue"
+local constants = require "src.constants"
 
 local M = {}
 
@@ -54,6 +55,12 @@ function M.inner_setup()
   if global.mod.fluids == nil then
     global.mod.fluids = {}
   end
+  if global.mod.missing_item == nil then
+    global.mod.missing_item = {} -- missing_item[item][unit_number] = { game.tick, count }
+  end
+  if global.mod.missing_fluid == nil then
+    global.mod.missing_fluid = {} -- missing_fluid[key][unit_number] = { game.tick, count }
+  end
   if global.mod.tanks == nil then
     global.mod.tanks = {}
   end
@@ -83,6 +90,81 @@ function M.inner_setup()
       "Migrated Item Network fluids to include temperatures. Warning: If you provide a fluid at a non-default temperature (like steam), you will have to update every requester tank to use the new fluid temperature.")
     global.mod.has_run_fluid_temp_conversion = true
   end
+end
+
+-- store the missing item: mtab[item_name][unit_number] = { game.tick, count }
+local function missing_set(mtab, item_name, unit_number, count)
+  local tt = mtab[item_name]
+  if tt == nil then
+    tt = {}
+    mtab[item_name] = tt
+  end
+  tt[unit_number] = { game.tick, count }
+end
+
+-- filter the missing table and return: missing[item] = count
+local function missing_filter(tab)
+  local max_delta = constants.MAX_MISSING_TICKS
+  local missing = {}
+  local to_del = {}
+  local now = game.tick
+  for name, xx in pairs(tab) do
+    for unit_number, ii in pairs(xx) do
+      local tick = ii[1]
+      local count = ii[2]
+      if (now - tick) > max_delta then
+        table.insert(to_del, { name, unit_number })
+      else
+        missing[name] = (missing[name] or 0) + count
+      end
+    end
+  end
+  for _, ii in ipairs(to_del) do
+    local name = ii[1]
+    local unum = ii[2]
+    tab[name][unum] = nil
+    if next(tab[name]) == nil then
+      tab[name] = nil
+    end
+  end
+  return missing
+end
+
+-- mark an item as missing
+function M.missing_item_set(item_name, unit_number, count)
+  missing_set(global.mod.missing_item, item_name, unit_number, count)
+end
+
+-- drop any items that have not been missing for a while
+-- returns the (read-only) table of missing items
+function M.missing_item_filter()
+  return missing_filter(global.mod.missing_item)
+end
+
+-- create a string 'key' for a fluid@temp
+function M.fluid_temp_key_encode(fluid_name, temp)
+  return string.format("%s;%d", fluid_name, math.floor(temp * 1000))
+end
+
+-- split the key back into the fluid and temp
+function M.fluid_temp_key_decode(key)
+  local idx = string.find(key, ";")
+  if idx ~= nil then
+    return string.sub(key, 1, idx - 1), tonumber(string.sub(key, idx + 1))/1000
+  end
+  return nil, nil
+end
+
+-- mark a fluid/temp combo as missing
+function M.missing_fluid_set(name, temp, unit_number, count)
+  local key = M.fluid_temp_key_encode(name, temp)
+  missing_set(global.mod.missing_fluid, key, unit_number, count)
+end
+
+-- drop any fluids that have not been missing for a while
+-- returns the (read-only) table of missing items
+function M.missing_fluid_filter()
+  return missing_filter(global.mod.missing_fluid)
 end
 
 function M.remove_old_ui()

@@ -369,6 +369,10 @@ local function update_network_chest(info)
         contents[request.item] = current_count + n_transfer
         GlobalState.set_item_count(request.item, network_count - n_transfer)
       end
+      -- missing if the number we wanted to take was more than available
+      if n_take > n_give then
+        GlobalState.missing_item_set(request.item. info.entity.unit_number, n_take - n_give)
+      end
     else
       local n_give = current_count
       local n_take = math.max(0, request.limit - network_count)
@@ -504,6 +508,9 @@ local function update_tank(info)
         })
         assert(added == n_transfer)
       end
+      if n_take > n_give then
+        GlobalState.missing_fluid_set(fluid, temp, info.entity.unit_number, n_take - n_give)
+      end
     end
   end
 
@@ -591,6 +598,9 @@ function M.logistic_update_entity(entity)
             GlobalState.set_item_count(req.name, network_count - n_inserted)
             status = GlobalState.UPDATE_STATUS.UPDATED
           end
+        end
+        if n_transfer < n_wanted then
+          GlobalState.missing_item_set(req.name, entity.unit_number, n_wanted - n_transfer)
         end
       end
     end

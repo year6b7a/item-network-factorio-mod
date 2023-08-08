@@ -54,6 +54,13 @@ function M.open_main_frame(player_index)
   })
   header_flow.add({ type = "label", caption = "Fluids" })
 
+  local shortage_radio = header_flow.add({
+    type = "radiobutton",
+    state = false,
+    tags = { event = UiConstants.NV_SHORTAGE_RADIO },
+  })
+  header_flow.add({ type = "label", caption = "Shortages" })
+
   header_flow.add({
     type = "button",
     caption = "Refresh",
@@ -66,6 +73,7 @@ function M.open_main_frame(player_index)
     view_type = "item",
     item_radio = item_radio,
     fluid_radio = fluid_radio,
+    shortage_radio = shortage_radio,
   }
 
   M.update_items(player_index)
@@ -99,7 +107,15 @@ function M.update_items(player_index)
     for _, item in ipairs(row) do
       local item_name
       local tooltip
-      if net_view.view_type == "item" then
+      local sprite_path = net_view.view_type
+      if sprite_path == "shortage" then
+        if item.temp ~= nil then
+          sprite_path = "fluid"
+        else
+          sprite_path = "item"
+        end
+      end
+      if sprite_path == "item" then
         item_name = game.item_prototypes[item.item].localised_name
         tooltip = { "", item_name, ": ", item.count }
       else
@@ -116,7 +132,7 @@ function M.update_items(player_index)
       local item_view = item_h_stack.add({
         type = "sprite-button",
         elem_type = net_view.view_type,
-        sprite = net_view.view_type .. "/" .. item.item,
+        sprite = sprite_path .. "/" .. item.item,
         tooltip = tooltip,
       })
       item_view.number = item.count
@@ -138,16 +154,27 @@ function M.get_list_of_items(view_type)
         table.insert(items, { item = item_name, count = item_count })
       end
     end
-  else
+  elseif view_type == "fluid" then
     local fluids_to_display = GlobalState.get_fluids()
     for fluid_name, fluid_temps in pairs(fluids_to_display) do
       for temp, count in pairs(fluid_temps) do
         table.insert(items, { item = fluid_name, count = count, temp = temp })
       end
     end
+  elseif view_type == "shortage" then
+    -- add item shortages
+    local missing = GlobalState.missing_item_filter()
+    for item_name, count in pairs(missing) do
+      table.insert(items, { item = item_name, count = count })
+    end
+
+    -- add fluid shortages
+    missing = GlobalState.missing_fluid_filter()
+    for fluid_key, count in pairs(missing) do
+      local fluid_name, temp = GlobalState.fluid_temp_key_decode(fluid_key)
+      table.insert(items, { item = fluid_name, count = count, temp = temp })
+    end
   end
-
-
 
   table.sort(items, items_list_sort)
 
