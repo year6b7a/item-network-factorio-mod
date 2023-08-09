@@ -15,6 +15,12 @@ function M.main()
       setting_type = "runtime-per-user",
       default_value = true,
     },
+    {
+      type = "bool-setting",
+      name = "item-network-enable-logistic-chest",
+      setting_type = "runtime-global",
+      default_value = true,
+    },
   })
 end
 

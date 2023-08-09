@@ -563,6 +563,10 @@ function M.update_queue()
 end
 
 function M.logistic_update_entity(entity)
+  if not settings.global["item-network-enable-logistic-chest"].value then
+    return GlobalState.UPDATE_STATUS.NOT_UPDATED
+  end
+
   -- sanity check
   if not entity.valid then
     return GlobalState.UPDATE_STATUS.INVALID
