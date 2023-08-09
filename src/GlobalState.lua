@@ -13,6 +13,24 @@ function M.setup()
   M.inner_setup()
 end
 
+-- non-recursive comparison of the keys of two tables
+local function table_same_keys(tab1, tab2)
+  if tab1 == nil or tab2 == nil then
+    return false
+  end
+  for k1, _ in pairs(tab1) do
+    if tab2[k1] == nil then
+      return false
+    end
+  end
+  for k2, _ in pairs(tab2) do
+    if tab1[k2] == nil then
+      return false
+    end
+  end
+  return true
+end
+
 function M.inner_setup()
   if global.mod == nil then
     global.mod = {
@@ -20,6 +38,8 @@ function M.inner_setup()
       chests = {},
       scan_queue = Queue.new(),
       items = {},
+      logistic = {},      -- key=unit_number, val=entity
+      logistic_names = {} -- key=item name, val=logistic_mode from prototype
     }
   end
   M.remove_old_ui()
@@ -36,6 +56,13 @@ function M.inner_setup()
   end
   if global.mod.tanks == nil then
     global.mod.tanks = {}
+  end
+
+  local logistic_names = M.logistic_scan_prototypes()
+  if not table_same_keys(logistic_names, global.mod.logistic_names) then
+    global.mod.logistic_names = logistic_names
+    global.mod.logistic = {}
+    M.logistic_scan_surfaces()
   end
 
   if not global.mod.has_run_fluid_temp_conversion then
@@ -88,6 +115,53 @@ function M.shuffle(list)
     local j = global.mod.rand(i)
     list[i], list[j] = list[j], list[i]
   end
+end
+
+-- get a table of all logistic item names that we should supply
+-- called once at each startup to see if the chest list changed
+function M.logistic_scan_prototypes()
+  local info = {} -- key=name, val=logistic_mode
+  -- find all with type="logistic-container" and (logistic_mode="requester" or logistic_mode="buffer")
+  for name, prot in pairs(game.get_filtered_entity_prototypes{{filter="type", type="logistic-container"}}) do
+    if prot.logistic_mode == "requester" or prot.logistic_mode == "buffer" then
+      info[name] = prot.logistic_mode
+    end
+  end
+  return info
+end
+
+function M.logistic_wanted(item_name)
+  return global.mod.logistic_names[item_name] ~= nil
+end
+
+-- called once at startup if the chest list changed
+function M.logistic_scan_surfaces()
+  local name_filter = {}
+  for name, _ in pairs(global.mod.logistic_names) do
+    table.insert(name_filter, name)
+  end
+  for _, surface in pairs(game.surfaces) do
+    local entities = surface.find_entities_filtered{name = name_filter}
+    for _, ent in ipairs(entities) do
+      M.logistic_add_entity(ent)
+    end
+  end
+end
+
+function M.logistic_get(unit_number)
+  return global.mod.logistic[unit_number]
+end
+
+function M.logistic_add_entity(entity)
+  game.print(string.format("logistic_add_entity[%s]: %s @ (%s,%s)", entity.unit_number, entity.name, entity.position.x, entity.position.y))
+  if global.mod.logistic[entity.unit_number] == nil then
+    global.mod.logistic[entity.unit_number] = entity
+    Queue.push(global.mod.scan_queue, entity.unit_number)
+  end
+end
+
+function M.logistic_del(unit_number)
+  global.mod.logistic[unit_number] = nil
 end
 
 function M.register_chest_entity(entity, requests)
