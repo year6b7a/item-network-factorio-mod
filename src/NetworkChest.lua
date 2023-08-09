@@ -589,7 +589,7 @@ function M.logistic_update_entity(entity)
         local n_wanted = math.max(0, req.count - current_count)
         local n_transfer = math.min(network_count, n_wanted)
         if n_transfer > 0 then
-          local n_inserted = inv.insert{name=req.name, count=n_transfer}
+          local n_inserted = inv.insert { name = req.name, count = n_transfer }
           if n_inserted > 0 then
             GlobalState.set_item_count(req.name, network_count - n_inserted)
             status = GlobalState.UPDATE_STATUS.UPDATED

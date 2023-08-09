@@ -38,8 +38,8 @@ function M.inner_setup()
       chests = {},
       scan_queue = Queue.new(),
       items = {},
-      logistic = {},      -- key=unit_number, val=entity
-      logistic_names = {} -- key=item name, val=logistic_mode from prototype
+      logistic = {},       -- key=unit_number, val=entity
+      logistic_names = {}, -- key=item name, val=logistic_mode from prototype
     }
   end
   M.remove_old_ui()
@@ -122,7 +122,10 @@ end
 function M.logistic_scan_prototypes()
   local info = {} -- key=name, val=logistic_mode
   -- find all with type="logistic-container" and (logistic_mode="requester" or logistic_mode="buffer")
-  for name, prot in pairs(game.get_filtered_entity_prototypes{{filter="type", type="logistic-container"}}) do
+  for name, prot in pairs(game.get_filtered_entity_prototypes { {
+    filter = "type",
+    type = "logistic-container",
+  } }) do
     if prot.logistic_mode == "requester" or prot.logistic_mode == "buffer" then
       info[name] = prot.logistic_mode
     end
@@ -141,7 +144,7 @@ function M.logistic_scan_surfaces()
     table.insert(name_filter, name)
   end
   for _, surface in pairs(game.surfaces) do
-    local entities = surface.find_entities_filtered{name = name_filter}
+    local entities = surface.find_entities_filtered { name = name_filter }
     for _, ent in ipairs(entities) do
       M.logistic_add_entity(ent)
     end
@@ -153,7 +156,8 @@ function M.logistic_get(unit_number)
 end
 
 function M.logistic_add_entity(entity)
-  game.print(string.format("logistic_add_entity[%s]: %s @ (%s,%s)", entity.unit_number, entity.name, entity.position.x, entity.position.y))
+  game.print(string.format("logistic_add_entity[%s]: %s @ (%s,%s)",
+    entity.unit_number, entity.name, entity.position.x, entity.position.y))
   if global.mod.logistic[entity.unit_number] == nil then
     global.mod.logistic[entity.unit_number] = entity
     Queue.push(global.mod.scan_queue, entity.unit_number)
