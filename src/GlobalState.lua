@@ -1,4 +1,6 @@
 local Queue = require "src.Queue"
+local tables_have_same_keys = require("src.tables_have_same_keys")
+  .tables_have_same_keys
 
 local M = {}
 
@@ -13,24 +15,6 @@ function M.setup()
   M.inner_setup()
 end
 
--- non-recursive comparison of the keys of two tables
-local function table_same_keys(tab1, tab2)
-  if tab1 == nil or tab2 == nil then
-    return false
-  end
-  for k1, _ in pairs(tab1) do
-    if tab2[k1] == nil then
-      return false
-    end
-  end
-  for k2, _ in pairs(tab2) do
-    if tab1[k2] == nil then
-      return false
-    end
-  end
-  return true
-end
-
 function M.inner_setup()
   if global.mod == nil then
     global.mod = {
@@ -38,8 +22,6 @@ function M.inner_setup()
       chests = {},
       scan_queue = Queue.new(),
       items = {},
-      logistic = {},       -- key=unit_number, val=entity
-      logistic_names = {}, -- key=item name, val=logistic_mode from prototype
     }
   end
   M.remove_old_ui()
@@ -58,8 +40,14 @@ function M.inner_setup()
     global.mod.tanks = {}
   end
 
+  if global.mod.logistic == nil then
+    global.mod.logistic = {} -- key=unit_number, val=entity
+  end
+  if global.mod.logistic_names == nil then
+    global.mod.logistic_names = {} -- key=item name, val=logistic_mode from prototype
+  end
   local logistic_names = M.logistic_scan_prototypes()
-  if not table_same_keys(logistic_names, global.mod.logistic_names) then
+  if not tables_have_same_keys(logistic_names, global.mod.logistic_names) then
     global.mod.logistic_names = logistic_names
     global.mod.logistic = {}
     M.logistic_scan_surfaces()
@@ -137,7 +125,7 @@ function M.logistic_wanted(item_name)
   return global.mod.logistic_names[item_name] ~= nil
 end
 
--- called once at startup if the chest list changed
+-- called once at startup if the logistc entity prototype list changed
 function M.logistic_scan_surfaces()
   local name_filter = {}
   for name, _ in pairs(global.mod.logistic_names) do
