@@ -61,14 +61,18 @@ function M.inner_setup()
       new_fluids[fluid][default_temp] = count
     end
     global.mod.fluids = new_fluids
+    local n_tanks = 0
     for _, entity in pairs(global.mod.tanks) do
+      n_tanks = n_tanks + 1
       if entity.config ~= nil then
         entity.config.temperature =
           game.fluid_prototypes[entity.config.fluid].default_temperature
       end
     end
-    game.print(
-      "Migrated Item Network fluids to include temperatures. Warning: If you provide a fluid at a non-default temperature (like steam), you will have to update every requester tank to use the new fluid temperature.")
+    if n_tanks > 0 then
+      game.print(
+        "Migrated Item Network fluids to include temperatures. Warning: If you provide a fluid at a non-default temperature (like steam), you will have to update every requester tank to use the new fluid temperature.")
+    end
     global.mod.has_run_fluid_temp_conversion = true
   end
 end
