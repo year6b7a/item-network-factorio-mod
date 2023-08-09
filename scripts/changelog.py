@@ -8,6 +8,9 @@ def get_changelog():
 
     v = cl.version((0, 5, 1))
     v.change("Increased Network Tank health from 10 -> 200.")
+    v.feature(
+        "Logistic Requester and Buffer chests now pull items from the Item Network. This can be disabled in settings. Huge thanks to bengardner for the idea and implementation, as well as being the first external contributor to this mod. Thanks!"
+    )
 
     v = cl.version((0, 5, 0), datetime.date(2023, 7, 29))
     v.feature(
