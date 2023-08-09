@@ -41,7 +41,7 @@ local function generic_create_handler(event)
       end
     end
     GlobalState.register_tank_entity(entity, config)
-  elseif GlobalState.logistic_wanted(entity.name) then
+  elseif GlobalState.is_logistic_entity(entity.name) then
     GlobalState.logistic_add_entity(entity)
   end
 end
@@ -73,8 +73,7 @@ function M.on_entity_cloned(event)
       event.source.unit_number,
       event.destination.unit_number
     )
-  elseif GlobalState.logistic_wanted(name) then
-    -- REVISIT: is this needed??
+  elseif GlobalState.is_logistic_entity(name) then
     GlobalState.logistic_add_entity(event.destination)
   end
 end
@@ -110,7 +109,7 @@ function M.generic_destroy_handler(event, opts)
     if not opts.do_not_delete_entity then
       GlobalState.delete_tank_entity(entity.unit_number)
     end
-  else
+  elseif GlobalState.is_logistic_entity(entity.name) then
     GlobalState.logistic_del(entity.unit_number)
   end
 end
@@ -551,7 +550,7 @@ local function update_entity(unit_number)
     return update_tank_entity(unit_number, info)
   end
 
-  local entity = GlobalState.logistic_get(unit_number)
+  local entity = GlobalState.get_logistic_entity(unit_number)
   if entity ~= nil then
     return M.logistic_update_entity(entity)
   end

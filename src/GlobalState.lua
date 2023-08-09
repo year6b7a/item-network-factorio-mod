@@ -121,7 +121,7 @@ function M.logistic_scan_prototypes()
   return info
 end
 
-function M.logistic_wanted(item_name)
+function M.is_logistic_entity(item_name)
   return global.mod.logistic_names[item_name] ~= nil
 end
 
@@ -139,13 +139,11 @@ function M.logistic_scan_surfaces()
   end
 end
 
-function M.logistic_get(unit_number)
+function M.get_logistic_entity(unit_number)
   return global.mod.logistic[unit_number]
 end
 
 function M.logistic_add_entity(entity)
-  game.print(string.format("logistic_add_entity[%s]: %s @ (%s,%s)",
-    entity.unit_number, entity.name, entity.position.x, entity.position.y))
   if global.mod.logistic[entity.unit_number] == nil then
     global.mod.logistic[entity.unit_number] = entity
     Queue.push(global.mod.scan_queue, entity.unit_number)
