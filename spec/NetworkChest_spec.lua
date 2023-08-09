@@ -73,16 +73,29 @@ local function create_mock_chest(opts)
   return entity
 end
 
+
 describe("update_network", function()
+  local function get_filtered_entity_prototypes()
+    return {
+      ["logistic-requester-chest"] = { logistic_mode = "requester" },
+      ["logistic-buffer-chest"] = { logistic_mode = "buffer" },
+      ["logistic-provider-chest"] = { logistic_mode = "provider" },
+    }
+  end
+
+  local function create_random_generator()
+    return function(max)
+      return max
+    end
+  end
+
   it("empty queue", function()
     _G.global = {}
     _G.game = {
-      create_random_generator = function()
-        return function(max)
-          return max
-        end
-      end,
+      create_random_generator = create_random_generator,
       print = function() end,
+      get_filtered_entity_prototypes = get_filtered_entity_prototypes,
+      surfaces = {},
     }
     GlobalState.inner_setup()
 
@@ -94,12 +107,10 @@ describe("update_network", function()
   it("single entity", function()
     _G.global = {}
     _G.game = {
-      create_random_generator = function()
-        return function(max)
-          return max
-        end
-      end,
+      create_random_generator = create_random_generator,
       print = function() end,
+      get_filtered_entity_prototypes = get_filtered_entity_prototypes,
+      surfaces = {},
     }
     GlobalState.inner_setup()
 
