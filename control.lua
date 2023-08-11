@@ -1,8 +1,6 @@
 local NetworkChest = require "src.NetworkChest"
 
-
-
-function main()
+local function main()
   -- create
   script.on_event(
     defines.events.on_built_entity,
