@@ -37,8 +37,19 @@ function M.inner_setup()
   if global.mod.fluids == nil then
     global.mod.fluids = {}
   end
+  if global.mod.missing_item == nil then
+    global.mod.missing_item = {} -- missing_item[item][unit_number] = { game.tick, count }
+  end
+  if global.mod.missing_fluid == nil then
+    global.mod.missing_fluid = {} -- missing_fluid[key][unit_number] = { game.tick, count }
+  end
   if global.mod.tanks == nil then
     global.mod.tanks = {}
+  end
+
+  if global.mod.vehicles == nil then
+    global.mod.vehicles = {} -- vehicles[unit_number] = entity
+    M.vehicle_scan_surfaces()
   end
 
   if global.mod.logistic == nil then
@@ -80,6 +91,80 @@ function M.inner_setup()
     end
     global.mod.has_run_fluid_temp_conversion = true
   end
+end
+
+-- store the missing item: mtab[item_name][unit_number] = { game.tick, count }
+local function missing_set(mtab, item_name, unit_number, count)
+  local tt = mtab[item_name]
+  if tt == nil then
+    tt = {}
+    mtab[item_name] = tt
+  end
+  tt[unit_number] = { game.tick, count }
+end
+
+-- filter the missing table and return: missing[item] = count
+local function missing_filter(tab)
+  local deadline = game.tick - constants.MAX_MISSING_TICKS
+  local missing = {}
+  local to_del = {}
+  for name, xx in pairs(tab) do
+    for unit_number, ii in pairs(xx) do
+      local tick = ii[1]
+      local count = ii[2]
+      if tick < deadline then
+        table.insert(to_del, { name, unit_number })
+      else
+        missing[name] = (missing[name] or 0) + count
+      end
+    end
+  end
+  for _, ii in ipairs(to_del) do
+    local name = ii[1]
+    local unum = ii[2]
+    tab[name][unum] = nil
+    if next(tab[name]) == nil then
+      tab[name] = nil
+    end
+  end
+  return missing
+end
+
+-- mark an item as missing
+function M.missing_item_set(item_name, unit_number, count)
+  missing_set(global.mod.missing_item, item_name, unit_number, count)
+end
+
+-- drop any items that have not been missing for a while
+-- returns the (read-only) table of missing items
+function M.missing_item_filter()
+  return missing_filter(global.mod.missing_item)
+end
+
+-- create a string 'key' for a fluid@temp
+function M.fluid_temp_key_encode(fluid_name, temp)
+  return string.format("%s@%d", fluid_name, math.floor(temp * 1000))
+end
+
+-- split the key back into the fluid and temp
+function M.fluid_temp_key_decode(key)
+  local idx = string.find(key, "@")
+  if idx ~= nil then
+    return string.sub(key, 1, idx - 1), tonumber(string.sub(key, idx + 1)) / 1000
+  end
+  return nil, nil
+end
+
+-- mark a fluid/temp combo as missing
+function M.missing_fluid_set(name, temp, unit_number, count)
+  local key = M.fluid_temp_key_encode(name, temp)
+  missing_set(global.mod.missing_fluid, key, unit_number, count)
+end
+
+-- drop any fluids that have not been missing for a while
+-- returns the (read-only) table of missing items
+function M.missing_fluid_filter()
+  return missing_filter(global.mod.missing_fluid)
 end
 
 function M.remove_old_ui()
@@ -186,6 +271,35 @@ end
 
 function M.logistic_del(unit_number)
   global.mod.logistic[unit_number] = nil
+end
+
+function M.is_vehicle_entity(name)
+  return name == "spidertron"
+end
+
+function M.vehicle_scan_surfaces()
+  for _, surface in pairs(game.surfaces) do
+    local entities = surface.find_entities_filtered { name = "spidertron" }
+    for _, entity in ipairs(entities) do
+      M.vehicle_add_entity(entity)
+    end
+  end
+end
+
+function M.get_vehicle_entity(unit_number)
+  return global.mod.vehicles[unit_number]
+end
+
+-- add a vehicle, assume the caller knows what he is doing
+function M.vehicle_add_entity(entity)
+  if global.mod.vehicles[entity.unit_number] == nil then
+    global.mod.vehicles[entity.unit_number] = entity
+    Queue.push(global.mod.scan_queue, entity.unit_number)
+  end
+end
+
+function M.vehicle_del(unit_number)
+  global.mod.vehicles[unit_number] = nil
 end
 
 function M.register_chest_entity(entity, requests)

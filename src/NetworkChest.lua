@@ -43,6 +43,8 @@ local function generic_create_handler(event)
     GlobalState.register_tank_entity(entity, config)
   elseif GlobalState.is_logistic_entity(entity.name) then
     GlobalState.logistic_add_entity(entity)
+  elseif GlobalState.is_vehicle_entity(entity.name) then
+    GlobalState.vehicle_add_entity(entity)
   end
 end
 
@@ -75,6 +77,8 @@ function M.on_entity_cloned(event)
     )
   elseif GlobalState.is_logistic_entity(name) then
     GlobalState.logistic_add_entity(event.destination)
+  elseif GlobalState.is_vehicle_entity(name) then
+    GlobalState.vehicle_add_entity(event.destination)
   end
 end
 
@@ -94,7 +98,7 @@ function M.generic_destroy_handler(event, opts)
   local entity = event.entity
   if entity.unit_number == nil then
     return
-  end  
+  end
   if entity.name == "network-chest" then
     GlobalState.put_chest_contents_in_network(entity)
     if not opts.do_not_delete_entity then
@@ -111,6 +115,8 @@ function M.generic_destroy_handler(event, opts)
     end
   elseif GlobalState.is_logistic_entity(entity.name) then
     GlobalState.logistic_del(entity.unit_number)
+  elseif GlobalState.is_vehicle_entity(entity.name) then
+    GlobalState.vehicle_del(entity.unit_number)
   end
 end
 
@@ -276,6 +282,15 @@ function M.on_entity_settings_pasted(event)
   end
 end
 
+function M.trash_to_network(trash_inv)
+  if trash_inv ~= nil then
+    for name, count in pairs(trash_inv.get_contents()) do
+      GlobalState.increment_item_count(name, count)
+    end
+    trash_inv.clear()
+  end
+end
+
 function M.updatePlayers()
   if not global.mod.network_chest_has_been_placed then
     return
@@ -287,13 +302,7 @@ function M.updatePlayers()
 
     if enable_trash then
       -- put all trash into network
-      local trash_inv = player.get_inventory(defines.inventory.character_trash)
-      if trash_inv ~= nil then
-        for name, count in pairs(trash_inv.get_contents()) do
-          GlobalState.increment_item_count(name, count)
-        end
-        trash_inv.clear()
-      end
+      M.trash_to_network(player.get_inventory(defines.inventory.character_trash))
 
       -- get contents of player inventory
       local main_inv = player.get_inventory(defines.inventory.character_main)
@@ -333,6 +342,55 @@ function M.updatePlayers()
   end
 end
 
+function M.update_vehicle(entity, inv_trash, inv_trunk)
+  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
+
+  -- move trash to the item network
+  M.trash_to_network(inv_trash)
+
+  -- fulfill reqeusts
+  if inv_trunk == nil or entity.request_slot_count < 1 then
+    return status
+  end
+
+  local contents = inv_trunk.get_contents()
+  for slot = 1, entity.request_slot_count do
+    local req = entity.get_request_slot(slot)
+    if req ~= nil then
+      local current_count = contents[req.name] or 0
+      local network_count = GlobalState.get_item_count(req.name)
+      local n_wanted = math.max(0, req.count - current_count)
+      local n_transfer = math.min(network_count, n_wanted)
+      if n_transfer > 0 then
+        local n_inserted = inv_trunk.insert{name=req.name, count=n_transfer}
+        if n_inserted > 0 then
+          GlobalState.set_item_count(req.name, network_count - n_inserted)
+          status = GlobalState.UPDATE_STATUS.UPDATED
+        end
+      end
+      if n_transfer < n_wanted then
+        GlobalState.missing_item_set(req.name, entity.unit_number, n_wanted - n_transfer)
+      end
+    end
+  end
+  return status
+end
+
+function M.vehicle_update_entity(entity)
+  -- only 1 logistic vehicle right now
+  if entity.name ~= "spidertron" then
+    return GlobalState.UPDATE_STATUS.INVALID
+  end
+
+  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
+  if entity.vehicle_logistic_requests_enabled then
+    status = M.update_vehicle(entity,
+      entity.get_inventory(defines.inventory.spider_trash),
+      entity.get_inventory(defines.inventory.spider_trunk))
+  end
+  return status
+end
+
 function M.is_request_valid(request)
   return request.item ~= nil and request.buffer_size ~= nil and
     request.limit ~= nil
@@ -370,6 +428,11 @@ local function update_network_chest(info)
         status = GlobalState.UPDATE_STATUS.UPDATED
         contents[request.item] = current_count + n_transfer
         GlobalState.set_item_count(request.item, network_count - n_transfer)
+      end
+      -- missing if the number we wanted to take was more than available
+      if n_take > n_give then
+        GlobalState.missing_item_set(request.item, info.entity.unit_number,
+          n_take - n_give)
       end
     else
       local n_give = current_count
@@ -506,6 +569,10 @@ local function update_tank(info)
         })
         assert(added == n_transfer)
       end
+      if n_take > n_give then
+        GlobalState.missing_fluid_set(fluid, temp, info.entity.unit_number,
+          n_take - n_give)
+      end
     end
   end
 
@@ -555,6 +622,11 @@ local function update_entity(unit_number)
     return M.logistic_update_entity(entity)
   end
 
+  entity = GlobalState.get_vehicle_entity(unit_number)
+  if entity ~= nil then
+    return M.vehicle_update_entity(entity)
+  end
+
   return GlobalState.UPDATE_STATUS.INVALID
 end
 
@@ -597,6 +669,10 @@ function M.logistic_update_entity(entity)
             GlobalState.set_item_count(req.name, network_count - n_inserted)
             status = GlobalState.UPDATE_STATUS.UPDATED
           end
+        end
+        if n_transfer < n_wanted then
+          GlobalState.missing_item_set(req.name, entity.unit_number,
+            n_wanted - n_transfer)
         end
       end
     end
@@ -687,6 +763,10 @@ end
 
 function M.on_gui_confirmed(event)
   UiHandlers.handle_generic_gui_event(event, "on_gui_confirmed")
+end
+
+function M.on_gui_selected_tab_changed(event)
+  UiHandlers.handle_generic_gui_event(event, "on_gui_selected_tab_changed")
 end
 
 function M.add_take_btn_enabled()

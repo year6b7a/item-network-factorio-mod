@@ -250,25 +250,19 @@ M.event_handlers = {
     end,
   },
   {
-    name = UiConstants.NV_ITEM_RADIO,
-    event = "on_gui_click",
+    name = UiConstants.NV_TABBED_PANE,
+    event = "on_gui_selected_tab_changed",
     handler = function(event, element)
-      local ui = GlobalState.get_ui_state(event.player_index)
-      ui.net_view.fluid_radio.state = false
-      ui.net_view.view_type = "item"
       NetworkViewUi.update_items(event.player_index)
     end,
   },
   {
-    name = UiConstants.NV_FLUID_RADIO,
+    name = UiConstants.NV_CLOSE_BTN,
     event = "on_gui_click",
     handler = function(event, element)
-      local ui = GlobalState.get_ui_state(event.player_index)
-      ui.net_view.item_radio.state = false
-      ui.net_view.view_type = "fluid"
-      NetworkViewUi.update_items(event.player_index)
-    end,
-  },
+      NetworkViewUi.on_gui_closed(event)
+    end
+  }
 }
 
 M.handler_map = {}
