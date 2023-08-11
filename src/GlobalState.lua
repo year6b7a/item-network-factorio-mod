@@ -141,7 +141,7 @@ end
 function M.fluid_temp_key_decode(key)
   local idx = string.find(key, "@")
   if idx ~= nil then
-    return string.sub(key, 1, idx - 1), tonumber(string.sub(key, idx + 1))/1000
+    return string.sub(key, 1, idx - 1), tonumber(string.sub(key, idx + 1)) / 1000
   end
   return nil, nil
 end
