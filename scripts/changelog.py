@@ -6,6 +6,11 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version()
+    v.feature(
+        'Added a new "Shortages" tab to the Network View that displays item shortages to help find bottlenecks. Big thanks to bengardner for implemting this feature!'
+    )
+
     v = cl.version((0, 6, 0), datetime.date(2023, 8, 8))
     v.feature(
         "Logistic Requester and Buffer chests now pull items from the Item Network. This can be disabled in settings. Huge thanks to bengardner for the idea and implementation, as well as being the first external contributor to this mod. Thanks!"
