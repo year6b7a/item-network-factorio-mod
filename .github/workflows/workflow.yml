@@ -10,3 +10,9 @@ jobs:
           python-version: "3.10"
       - name: "Build Mod Zip"
         run: IGNORE_VERSION_CHECK=TRUE python3 scripts/package.py
+      - uses: leafo/gh-actions-lua@v9
+        with:
+          luaVersion: "5.4"
+      - uses: leafo/gh-actions-luarocks@v4
+        with:
+          luarocksVersion: "3.9.2"
