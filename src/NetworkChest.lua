@@ -285,7 +285,6 @@ end
 function M.trash_to_network(trash_inv)
   if trash_inv ~= nil then
     for name, count in pairs(trash_inv.get_contents()) do
-      -- FIXME: check global network item limits? (no?)
       GlobalState.increment_item_count(name, count)
     end
     trash_inv.clear()
@@ -370,10 +369,7 @@ function M.update_vehicle(entity, inv_trash, inv_trunk)
         end
       end
       if n_transfer < n_wanted then
-        -- FIXME: remove check after missing stuff is merged
-        if GlobalState.missing_item_set ~= nil then
-          GlobalState.missing_item_set(req.name, entity.unit_number, n_wanted - n_transfer)
-        end
+        GlobalState.missing_item_set(req.name, entity.unit_number, n_wanted - n_transfer)
       end
     end
   end
