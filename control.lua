@@ -1,8 +1,6 @@
 local NetworkChest = require "src.NetworkChest"
 
-
-
-function main()
+local function main()
   -- create
   script.on_event(
     defines.events.on_built_entity,
@@ -93,6 +91,10 @@ function main()
   script.on_event(
     defines.events.on_gui_confirmed,
     NetworkChest.on_gui_confirmed
+  )
+  script.on_event(
+    defines.events.on_gui_selected_tab_changed,
+    NetworkChest.on_gui_selected_tab_changed
   )
 
   -- custom events

@@ -646,6 +646,10 @@ function M.on_gui_confirmed(event)
   UiHandlers.handle_generic_gui_event(event, "on_gui_confirmed")
 end
 
+function M.on_gui_selected_tab_changed(event)
+  UiHandlers.handle_generic_gui_event(event, "on_gui_selected_tab_changed")
+end
+
 function M.add_take_btn_enabled()
   local takes = GlobalState.get_chest_info(global.mod.network_chest_gui.entity
     .unit_number).takes
