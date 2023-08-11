@@ -47,6 +47,11 @@ function M.inner_setup()
     global.mod.tanks = {}
   end
 
+  if global.mod.vehicles == nil then
+    global.mod.vehicles = {} -- vehicles[unit_number] = entity
+    M.vehicle_scan_surfaces()
+  end
+
   if global.mod.logistic == nil then
     global.mod.logistic = {} -- key=unit_number, val=entity
   end
@@ -237,6 +242,35 @@ end
 
 function M.logistic_del(unit_number)
   global.mod.logistic[unit_number] = nil
+end
+
+function M.is_vehicle_entity(name)
+  return name == "spidertron"
+end
+
+function M.vehicle_scan_surfaces()
+  for _, surface in pairs(game.surfaces) do
+    local entities = surface.find_entities_filtered { name = "spidertron" }
+    for _, entity in ipairs(entities) do
+      M.vehicle_add_entity(entity)
+    end
+  end
+end
+
+function M.get_vehicle_entity(unit_number)
+  return global.mod.vehicles[unit_number]
+end
+
+-- add a vehicle, assume the caller knows what he is doing
+function M.vehicle_add_entity(entity)
+  if global.mod.vehicles[entity.unit_number] == nil then
+    global.mod.vehicles[entity.unit_number] = entity
+    Queue.push(global.mod.scan_queue, entity.unit_number)
+  end
+end
+
+function M.vehicle_del(unit_number)
+  global.mod.vehicles[unit_number] = nil
 end
 
 function M.register_chest_entity(entity, requests)
