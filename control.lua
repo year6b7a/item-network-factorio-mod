@@ -92,6 +92,10 @@ local function main()
     defines.events.on_gui_confirmed,
     NetworkChest.on_gui_confirmed
   )
+  script.on_event(
+    defines.events.on_gui_selected_tab_changed,
+    NetworkChest.on_gui_selected_tab_changed
+  )
 
   -- custom events
   script.on_event(
