@@ -55,20 +55,6 @@ For example, here's how to prioritize sending coal to power generation. When the
 
 Recipes can be copied from assamblers just like requester logistic chests which makes it easy to build a mall.
 
-### Integration with Personal Logistics
-
-Every second, this mod tries to fulfull personal logistic requests from the item network and push trashed items into the network.
-
-### Underlying Implementation
-
-Network chests are implemented as a normal chest with 48 slots. Each of the chest's requests has a buffer size and filtered item slots are used to reserve space for that item. For example if the request buffers 51 coal, the mod will filter 2 chest slots for coal.
-
-Since 2 slots of coal can hold 100 coal, the mod will set the chest bar to prevent inserting more coal if the number of coal equals or exceeds 51.
-
-The mod won't let you add requests that buffer more than can be stored in the network chest.
-
-This implementation makes it easy to buffer just one nuclear reactor at the mall or buffer 1000 iron ore for bulk transport.
-
 ### Fluids
 
 Fluids can be transported through the network using Network Tanks. These tanks are similar to Network Chests except they only transport 1 fluid at a time.
@@ -85,6 +71,8 @@ As of 0.5.0, the network correctly handles fluids with different temperatures. C
 
 Pressing `Ctrl + Shift + N` will bring up the Network View to see items and fluids currently in the network.
 
+In addition to displaying items and fluids in the network, there is also a "Shortages" tab that displays the number of unsatisfied item requests for the past 5 seconds.
+
 ![Network View window showing items and fluids in network](/readme-pictures/network-view.png)
 
 ### Logistics Integrations
@@ -95,6 +83,16 @@ Pressing `Ctrl + Shift + N` will bring up the Network View to see items and flui
 - The mod will try to give items to logistic networks that need items for construction.
 
 Some of these integrations can be disabled in settings but please open an issue if you want to disable something else.
+
+### Underlying Implementation
+
+Network chests are implemented as a normal chest with 48 slots. Each of the chest's requests has a buffer size and filtered item slots are used to reserve space for that item. For example if the request buffers 51 coal, the mod will filter 2 chest slots for coal.
+
+Since 2 slots of coal can hold 100 coal, the mod will set the chest bar to prevent inserting more coal if the number of coal equals or exceeds 51.
+
+The mod won't let you add requests that buffer more than can be stored in the network chest.
+
+This implementation makes it easy to buffer just one nuclear reactor at the mall or buffer 1000 iron ore for bulk transport.
 
 ### Performance
 
