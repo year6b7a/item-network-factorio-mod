@@ -1,8 +1,6 @@
 local NetworkChest = require "src.NetworkChest"
 
-
-
-function main()
+local function main()
   -- create
   script.on_event(
     defines.events.on_built_entity,
@@ -94,6 +92,10 @@ function main()
     defines.events.on_gui_confirmed,
     NetworkChest.on_gui_confirmed
   )
+  script.on_event(
+    defines.events.on_gui_selected_tab_changed,
+    NetworkChest.on_gui_selected_tab_changed
+  )
 
   -- custom events
   script.on_event(
@@ -110,7 +112,7 @@ function main()
   )
 
   script.on_nth_tick(1, NetworkChest.onTick)
-  script.on_nth_tick(60, NetworkChest.updatePlayers)
+  script.on_nth_tick(60, NetworkChest.onTick_60)
   -- script.on_nth_tick(60 * 3, NetworkChest.on_every_5_seconds)
 
   script.on_init(function()

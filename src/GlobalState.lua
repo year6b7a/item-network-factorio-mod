@@ -47,6 +47,11 @@ function M.inner_setup()
     global.mod.tanks = {}
   end
 
+  if global.mod.vehicles == nil then
+    global.mod.vehicles = {} -- vehicles[unit_number] = entity
+    M.vehicle_scan_surfaces()
+  end
+
   if global.mod.logistic == nil then
     global.mod.logistic = {} -- key=unit_number, val=entity
   end
@@ -58,6 +63,10 @@ function M.inner_setup()
     global.mod.logistic_names = logistic_names
     global.mod.logistic = {}
     M.logistic_scan_surfaces()
+  end
+
+  if global.mod.alert_trans == nil then
+    global.mod.alert_trans = {} -- alert_trans[unit_number] = game.tick
   end
 
   if not global.mod.has_run_fluid_temp_conversion then
@@ -175,6 +184,31 @@ function M.remove_old_ui()
   end
 end
 
+-- this tracks that we already transferred an item for the request
+function M.alert_transfer_set(unit_number)
+  global.mod.alert_trans[unit_number] = game.tick
+end
+
+-- get whether we have already transferred for this alert
+-- the item won't necessarily go where we want it
+function M.alert_transfer_get(unit_number)
+  return global.mod.alert_trans[unit_number] ~= nil
+end
+
+-- throw out stale entries, allowing another transfer
+function M.alert_transfer_cleanup()
+  local deadline = game.tick - constants.ALERT_TRANSFER_TICKS
+  local to_del = {}
+  for unum, tick in pairs(global.mod.alert_trans) do
+    if tick < deadline then
+      table.insert(to_del, unum)
+    end
+  end
+  for _, unum in ipairs(to_del) do
+    global.mod.alert_trans[unum] = nil
+  end
+end
+
 function M.rand_hex(len)
   local chars = {}
   for _ = 1, len do
@@ -237,6 +271,35 @@ end
 
 function M.logistic_del(unit_number)
   global.mod.logistic[unit_number] = nil
+end
+
+function M.is_vehicle_entity(name)
+  return name == "spidertron"
+end
+
+function M.vehicle_scan_surfaces()
+  for _, surface in pairs(game.surfaces) do
+    local entities = surface.find_entities_filtered { name = "spidertron" }
+    for _, entity in ipairs(entities) do
+      M.vehicle_add_entity(entity)
+    end
+  end
+end
+
+function M.get_vehicle_entity(unit_number)
+  return global.mod.vehicles[unit_number]
+end
+
+-- add a vehicle, assume the caller knows what he is doing
+function M.vehicle_add_entity(entity)
+  if global.mod.vehicles[entity.unit_number] == nil then
+    global.mod.vehicles[entity.unit_number] = entity
+    Queue.push(global.mod.scan_queue, entity.unit_number)
+  end
+end
+
+function M.vehicle_del(unit_number)
+  global.mod.vehicles[unit_number] = nil
 end
 
 function M.register_chest_entity(entity, requests)

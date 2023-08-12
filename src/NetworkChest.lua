@@ -43,6 +43,8 @@ local function generic_create_handler(event)
     GlobalState.register_tank_entity(entity, config)
   elseif GlobalState.is_logistic_entity(entity.name) then
     GlobalState.logistic_add_entity(entity)
+  elseif GlobalState.is_vehicle_entity(entity.name) then
+    GlobalState.vehicle_add_entity(entity)
   end
 end
 
@@ -75,6 +77,8 @@ function M.on_entity_cloned(event)
     )
   elseif GlobalState.is_logistic_entity(name) then
     GlobalState.logistic_add_entity(event.destination)
+  elseif GlobalState.is_vehicle_entity(name) then
+    GlobalState.vehicle_add_entity(event.destination)
   end
 end
 
@@ -111,6 +115,8 @@ function M.generic_destroy_handler(event, opts)
     end
   elseif GlobalState.is_logistic_entity(entity.name) then
     GlobalState.logistic_del(entity.unit_number)
+  elseif GlobalState.is_vehicle_entity(entity.name) then
+    GlobalState.vehicle_del(entity.unit_number)
   end
 end
 
@@ -276,6 +282,15 @@ function M.on_entity_settings_pasted(event)
   end
 end
 
+function M.trash_to_network(trash_inv)
+  if trash_inv ~= nil then
+    for name, count in pairs(trash_inv.get_contents()) do
+      GlobalState.increment_item_count(name, count)
+    end
+    trash_inv.clear()
+  end
+end
+
 function M.updatePlayers()
   if not global.mod.network_chest_has_been_placed then
     return
@@ -287,13 +302,7 @@ function M.updatePlayers()
 
     if enable_trash then
       -- put all trash into network
-      local trash_inv = player.get_inventory(defines.inventory.character_trash)
-      if trash_inv ~= nil then
-        for name, count in pairs(trash_inv.get_contents()) do
-          GlobalState.increment_item_count(name, count)
-        end
-        trash_inv.clear()
-      end
+      M.trash_to_network(player.get_inventory(defines.inventory.character_trash))
 
       -- get contents of player inventory
       local main_inv = player.get_inventory(defines.inventory.character_main)
@@ -331,6 +340,55 @@ function M.updatePlayers()
       end
     end
   end
+end
+
+function M.update_vehicle(entity, inv_trash, inv_trunk)
+  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
+
+  -- move trash to the item network
+  M.trash_to_network(inv_trash)
+
+  -- fulfill reqeusts
+  if inv_trunk == nil or entity.request_slot_count < 1 then
+    return status
+  end
+
+  local contents = inv_trunk.get_contents()
+  for slot = 1, entity.request_slot_count do
+    local req = entity.get_request_slot(slot)
+    if req ~= nil then
+      local current_count = contents[req.name] or 0
+      local network_count = GlobalState.get_item_count(req.name)
+      local n_wanted = math.max(0, req.count - current_count)
+      local n_transfer = math.min(network_count, n_wanted)
+      if n_transfer > 0 then
+        local n_inserted = inv_trunk.insert{name=req.name, count=n_transfer}
+        if n_inserted > 0 then
+          GlobalState.set_item_count(req.name, network_count - n_inserted)
+          status = GlobalState.UPDATE_STATUS.UPDATED
+        end
+      end
+      if n_transfer < n_wanted then
+        GlobalState.missing_item_set(req.name, entity.unit_number, n_wanted - n_transfer)
+      end
+    end
+  end
+  return status
+end
+
+function M.vehicle_update_entity(entity)
+  -- only 1 logistic vehicle right now
+  if entity.name ~= "spidertron" then
+    return GlobalState.UPDATE_STATUS.INVALID
+  end
+
+  local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
+  if entity.vehicle_logistic_requests_enabled then
+    status = M.update_vehicle(entity,
+      entity.get_inventory(defines.inventory.spider_trash),
+      entity.get_inventory(defines.inventory.spider_trunk))
+  end
+  return status
 end
 
 function M.is_request_valid(request)
@@ -564,6 +622,11 @@ local function update_entity(unit_number)
     return M.logistic_update_entity(entity)
   end
 
+  entity = GlobalState.get_vehicle_entity(unit_number)
+  if entity ~= nil then
+    return M.vehicle_update_entity(entity)
+  end
+
   return GlobalState.UPDATE_STATUS.INVALID
 end
 
@@ -622,6 +685,62 @@ function M.onTick()
   M.update_queue()
 end
 
+function M.onTick_60()
+  M.updatePlayers()
+  M.check_alerts()
+end
+
+function M.handle_missing_material(entity, name)
+  -- did we already transfer something for this ghost/upgrade?
+  if GlobalState.alert_transfer_get(entity.unit_number) ~= true then
+    -- We can only do something about entities in a network
+    -- REVISIT: assuming "player" force only
+    local net = entity.surface.find_logistic_network_by_position(entity.position, "player")
+    if net ~= nil and net.available_construction_robots > 0 then
+      local network_count = GlobalState.get_item_count(name)
+      if network_count > 0 then
+        local n_inserted = net.insert({name=name, count=1})
+        if n_inserted > 0 then
+          GlobalState.set_item_count(name, network_count - 1)
+          GlobalState.alert_transfer_set(entity.unit_number)
+        end
+      else
+        -- FIXME: remove check after missing stuff is merged
+        if GlobalState.missing_item_set ~= nil then
+          GlobalState.missing_item_set(name, entity.unit_number, 1)
+        end
+      end
+    end
+  end
+end
+
+function M.check_alerts()
+  GlobalState.alert_transfer_cleanup()
+
+  -- process all the alerts for all players
+  for _, player in pairs(game.players) do
+    local alerts = player.get_alerts{type=defines.alert_type.no_material_for_construction}
+    for surface_idx, xxx in pairs(alerts) do
+      for alert_type, alert_array in pairs(xxx) do
+        for _, alert in ipairs(alert_array) do
+          if alert.target ~= nil then
+            local entity = alert.target
+            -- we only care about ghosts and items that are set to upgrade
+            if entity.name == "entity-ghost" or entity.name == "tile-ghost" then
+              M.handle_missing_material(entity, entity.ghost_name)
+            else
+              local tent = entity.get_upgrade_target()
+              if tent ~= nil then
+                M.handle_missing_material(entity, tent.name)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
 -------------------------------------------
 -- GUI Section
 -------------------------------------------
@@ -644,6 +763,10 @@ end
 
 function M.on_gui_confirmed(event)
   UiHandlers.handle_generic_gui_event(event, "on_gui_confirmed")
+end
+
+function M.on_gui_selected_tab_changed(event)
+  UiHandlers.handle_generic_gui_event(event, "on_gui_selected_tab_changed")
 end
 
 function M.add_take_btn_enabled()
