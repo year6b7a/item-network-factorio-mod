@@ -7,6 +7,9 @@ def get_changelog():
     cl = Changelog()
 
     v = cl.version((0, 7, 0), datetime.date(2023, 8, 11))
+    v.fix("Removed flib reference and made the Network View header draggable.")
+
+    v = cl.version((0, 7, 0), datetime.date(2023, 8, 11))
     v.feature(
         'Added a new "Shortages" tab to the Network View that displays item shortages to help find bottlenecks. Big thanks to bengardner for implementing this feature!'
     )

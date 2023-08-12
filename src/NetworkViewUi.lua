@@ -70,21 +70,22 @@ function M.open_main_frame(player_index)
   local header_flow = main_flow.add({
     type = "flow",
     direction = "horizontal",
-    style = "dialog_buttons_horizontal_flow",
   })
+  header_flow.drag_target = frame
 
   header_flow.add {
     type = "label",
     caption = "Network View",
     style = "frame_title",
+    ignored_by_interaction = true,
   }
 
-  header_flow.add {
+  local header_drag = header_flow.add {
     type = "empty-widget",
-    --style = "draggable_space_header"
+    style = "draggable_space",
     ignored_by_interaction = true,
-    style = "flib_titlebar_drag_handle",
   }
+  header_drag.style.size = { M.WIDTH - 210, 20 }
 
   header_flow.add {
     type = "sprite-button",
