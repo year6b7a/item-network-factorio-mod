@@ -261,8 +261,8 @@ M.event_handlers = {
     event = "on_gui_click",
     handler = function(event, element)
       NetworkViewUi.on_gui_closed(event)
-    end
-  }
+    end,
+  },
 }
 
 M.handler_map = {}

@@ -70,48 +70,48 @@ function M.open_main_frame(player_index)
   local header_flow = main_flow.add({
     type = "flow",
     direction = "horizontal",
-    style = "dialog_buttons_horizontal_flow"
+    style = "dialog_buttons_horizontal_flow",
   })
 
-  header_flow.add{
+  header_flow.add {
     type = "label",
     caption = "Network View",
     style = "frame_title",
   }
 
-  header_flow.add{
+  header_flow.add {
     type = "empty-widget",
     --style = "draggable_space_header"
     ignored_by_interaction = true,
-    style = "flib_titlebar_drag_handle"
+    style = "flib_titlebar_drag_handle",
   }
 
-  header_flow.add{
+  header_flow.add {
     type = "sprite-button",
-    sprite = 'utility/refresh',
+    sprite = "utility/refresh",
     style = "frame_action_button",
     tooltip = { "gui.refresh" },
     tags = { event = UiConstants.NV_REFRESH_BTN },
   }
 
-  header_flow.add{
+  header_flow.add {
     type = "sprite-button",
-    sprite = 'utility/close_white',
-    hovered_sprite = 'utility/close_black',
-    clicked_sprite = 'utility/close_black',
+    sprite = "utility/close_white",
+    hovered_sprite = "utility/close_black",
+    clicked_sprite = "utility/close_black",
     style = "close_button",
     tags = { event = UiConstants.NV_CLOSE_BTN },
   }
 
   -- add tabbed stuff
-  local tabbed_pane = main_flow.add{
+  local tabbed_pane = main_flow.add {
     type = "tabbed-pane",
     tags = { event = UiConstants.NV_TABBED_PANE },
   }
 
-  local tab_item = tabbed_pane.add{type="tab", caption="Items"}
-  local tab_fluid = tabbed_pane.add{type="tab", caption="Fluids"}
-  local tab_shortage = tabbed_pane.add{type="tab", caption="Shortages"}
+  local tab_item = tabbed_pane.add { type = "tab", caption = "Items" }
+  local tab_fluid = tabbed_pane.add { type = "tab", caption = "Fluids" }
+  local tab_shortage = tabbed_pane.add { type = "tab", caption = "Shortages" }
 
   tabbed_pane.add_tab(tab_item, build_item_page(tabbed_pane))
   tabbed_pane.add_tab(tab_fluid, build_item_page(tabbed_pane))

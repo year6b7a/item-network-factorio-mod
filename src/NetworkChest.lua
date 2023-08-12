@@ -362,14 +362,15 @@ function M.update_vehicle(entity, inv_trash, inv_trunk)
       local n_wanted = math.max(0, req.count - current_count)
       local n_transfer = math.min(network_count, n_wanted)
       if n_transfer > 0 then
-        local n_inserted = inv_trunk.insert{name=req.name, count=n_transfer}
+        local n_inserted = inv_trunk.insert { name = req.name, count = n_transfer }
         if n_inserted > 0 then
           GlobalState.set_item_count(req.name, network_count - n_inserted)
           status = GlobalState.UPDATE_STATUS.UPDATED
         end
       end
       if n_transfer < n_wanted then
-        GlobalState.missing_item_set(req.name, entity.unit_number, n_wanted - n_transfer)
+        GlobalState.missing_item_set(req.name, entity.unit_number,
+          n_wanted - n_transfer)
       end
     end
   end
@@ -695,11 +696,12 @@ function M.handle_missing_material(entity, name)
   if GlobalState.alert_transfer_get(entity.unit_number) ~= true then
     -- We can only do something about entities in a network
     -- REVISIT: assuming "player" force only
-    local net = entity.surface.find_logistic_network_by_position(entity.position, "player")
+    local net = entity.surface.find_logistic_network_by_position(entity.position,
+      "player")
     if net ~= nil and net.available_construction_robots > 0 then
       local network_count = GlobalState.get_item_count(name)
       if network_count > 0 then
-        local n_inserted = net.insert({name=name, count=1})
+        local n_inserted = net.insert({ name = name, count = 1 })
         if n_inserted > 0 then
           GlobalState.set_item_count(name, network_count - 1)
           GlobalState.alert_transfer_set(entity.unit_number)
@@ -719,7 +721,8 @@ function M.check_alerts()
 
   -- process all the alerts for all players
   for _, player in pairs(game.players) do
-    local alerts = player.get_alerts{type=defines.alert_type.no_material_for_construction}
+    local alerts = player.get_alerts { type = defines.alert_type
+      .no_material_for_construction }
     for surface_idx, xxx in pairs(alerts) do
       for alert_type, alert_array in pairs(xxx) do
         for _, alert in ipairs(alert_array) do
