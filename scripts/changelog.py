@@ -110,7 +110,11 @@ class Changelog:
     def __init__(self):
         self.__versions: list[ChangelogVersion] = []
 
-    def version(self, version: tuple[int] = None, date: datetime.date = None):
+    def version(
+        self,
+        version: tuple[int] = (999, 999, 999),
+        date: datetime.date = datetime.date(1000, 1, 1),
+    ):
         # call with no arguments to create the unreleased changelog
         ver = ChangelogVersion(version, date)
         self.__versions.append(ver)

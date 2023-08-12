@@ -2,6 +2,7 @@
 import json
 from subprocess import Popen
 import re
+import os
 
 from changelog import get_changelog
 
@@ -44,9 +45,16 @@ def main():
 def build_changelog(mod_info, contents_path):
     cl = get_changelog()
 
-    cl_ver = cl.get_most_recent_version()
-    cl_ver = ".".join(str(n) for n in cl_ver)
-    assert cl_ver == mod_info["version"]
+    check_version = not (
+        os.environ.get("IGNORE_VERSION_CHECK", "false").lower() == "true"
+    )
+
+    if check_version:
+        cl_ver = cl.get_most_recent_version()
+        cl_ver = ".".join(str(n) for n in cl_ver)
+        assert (
+            cl_ver == mod_info["version"]
+        ), f"Most recent changelog version={cl_ver} does not match mod version={mod_info['version']}"
 
     with open(f"{contents_path}/changelog.txt", "w") as fid:
         fid.write(cl.to_str())
