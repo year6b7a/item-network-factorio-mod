@@ -693,24 +693,26 @@ end
 
 function M.handle_missing_material(entity, name)
   -- did we already transfer something for this ghost/upgrade?
-  if GlobalState.alert_transfer_get(entity.unit_number) ~= true then
-    -- We can only do something about entities in a network
-    -- REVISIT: assuming "player" force only
-    local net = entity.surface.find_logistic_network_by_position(entity.position,
-      "player")
-    if net ~= nil and net.available_construction_robots > 0 then
-      local network_count = GlobalState.get_item_count(name)
-      if network_count > 0 then
-        local n_inserted = net.insert({ name = name, count = 1 })
-        if n_inserted > 0 then
-          GlobalState.set_item_count(name, network_count - 1)
-          GlobalState.alert_transfer_set(entity.unit_number)
-        end
-      else
-        -- FIXME: remove check after missing stuff is merged
-        if GlobalState.missing_item_set ~= nil then
-          GlobalState.missing_item_set(name, entity.unit_number, 1)
-        end
+  if GlobalState.alert_transfer_get(entity.unit_number) == true then
+    return
+  end
+
+  -- do we have an item to send?
+  local network_count = GlobalState.get_item_count(name)
+  if network_count < 1 then
+    GlobalState.missing_item_set(name, entity.unit_number, 1)
+    return
+  end
+
+  -- Find the construction network(s) that covers this position
+  local nets = entity.surface.find_logistic_networks_by_construction_area(entity.position, "player")
+  for _, net in ipairs(nets) do
+    if net.all_construction_robots > 0 then
+      local n_inserted = net.insert({name=name, count=1})
+      if n_inserted > 0 then
+        GlobalState.increment_item_count(name, -1)
+        GlobalState.alert_transfer_set(entity.unit_number)
+        return
       end
     end
   end
@@ -721,10 +723,10 @@ function M.check_alerts()
 
   -- process all the alerts for all players
   for _, player in pairs(game.players) do
-    local alerts = player.get_alerts { type = defines.alert_type
-      .no_material_for_construction }
-    for surface_idx, xxx in pairs(alerts) do
-      for alert_type, alert_array in pairs(xxx) do
+    local alerts = player.get_alerts {
+      type = defines.alert_type.no_material_for_construction }
+    for _, xxx in pairs(alerts) do
+      for _, alert_array in pairs(xxx) do
         for _, alert in ipairs(alert_array) do
           if alert.target ~= nil then
             local entity = alert.target
