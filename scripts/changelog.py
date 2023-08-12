@@ -6,9 +6,18 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version()
+    v = cl.version((0, 7, 0), datetime.date(2023, 8, 11))
     v.feature(
-        'Added a new "Shortages" tab to the Network View that displays item shortages to help find bottlenecks. Big thanks to bengardner for implemting this feature!'
+        'Added a new "Shortages" tab to the Network View that displays item shortages to help find bottlenecks. Big thanks to bengardner for implementing this feature!'
+    )
+    v.feature(
+        "Added support for supplying Spitertron logistic requests from the Item Network. Big thanks to bengardner for implementing this feature!"
+    )
+    v.feature(
+        "Added support for automatically transferring items to a logistic network if it is missing items to construct ghosts or upgrades. Big thanks to bengardner for implementing this feature!"
+    )
+    v.change(
+        "The Network View now has tabs instead of radio buttons for the each view. Big thanks to bengardner for implementing this feature!"
     )
 
     v = cl.version((0, 6, 0), datetime.date(2023, 8, 8))
