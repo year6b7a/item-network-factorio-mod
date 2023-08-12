@@ -77,7 +77,7 @@ Network Tanks configured to Provide will try to push any fluids from the tank in
 
 Network Tanks configured to Request will try to take the specified fluid at the specified temperature from the network.
 
-As of 0.5.0, the network correctly handles fluids with different temperatures.
+As of 0.5.0, the network correctly handles fluids with different temperatures. Currently only whole-number temperatures are supported so please reach out if you have a use case for temperatures with decimals.
 
 ![Network Tank](/readme-pictures/network-tank.png)
 
@@ -86,6 +86,15 @@ As of 0.5.0, the network correctly handles fluids with different temperatures.
 Pressing `Ctrl + Shift + N` will bring up the Network View to see items and fluids currently in the network.
 
 ![Network View window showing items and fluids in network](/readme-pictures/network-view.png)
+
+### Logistics Integrations
+
+- The mod will try to fulfill logistic and trash requests from players.
+- The mod will try to fulfill logistic and trash requests from spidertrons.
+- The mod will try to fulfill logistic requests from Requester and Buffer chests.
+- The mod will try to give items to logistic networks that need items for construction.
+
+Some of these integrations can be disabled in settings but please open an issue if you want to disable something else.
 
 ### Performance
 
