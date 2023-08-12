@@ -6,7 +6,7 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version((0, 7, 0), datetime.date(2023, 8, 11))
+    v = cl.version((0, 7, 1), datetime.date(2023, 8, 11))
     v.fix("Removed flib reference and made the Network View header draggable.")
 
     v = cl.version((0, 7, 0), datetime.date(2023, 8, 11))
