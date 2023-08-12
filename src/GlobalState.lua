@@ -65,6 +65,10 @@ function M.inner_setup()
     M.logistic_scan_surfaces()
   end
 
+  if global.mod.alert_trans == nil then
+    global.mod.alert_trans = {} -- alert_trans[unit_number] = game.tick
+  end
+
   if not global.mod.has_run_fluid_temp_conversion then
     local new_fluids = {}
     for fluid, count in pairs(global.mod.fluids) do
@@ -177,6 +181,31 @@ function M.remove_old_ui()
         main_frame.destroy()
       end
     end
+  end
+end
+
+-- this tracks that we already transferred an item for the request
+function M.alert_transfer_set(unit_number)
+  global.mod.alert_trans[unit_number] = game.tick
+end
+
+-- get whether we have already transferred for this alert
+-- the item won't necessarily go where we want it
+function M.alert_transfer_get(unit_number)
+  return global.mod.alert_trans[unit_number] ~= nil
+end
+
+-- throw out stale entries, allowing another transfer
+function M.alert_transfer_cleanup()
+  local deadline = game.tick - constants.ALERT_TRANSFER_TICKS
+  local to_del = {}
+  for unum, tick in pairs(global.mod.alert_trans) do
+    if tick < deadline then
+      table.insert(to_del, unum)
+    end
+  end
+  for _, unum in ipairs(to_del) do
+    global.mod.alert_trans[unum] = nil
   end
 end
 
