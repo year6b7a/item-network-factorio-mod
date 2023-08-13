@@ -705,10 +705,11 @@ function M.handle_missing_material(entity, name)
   end
 
   -- Find the construction network(s) that covers this position
-  local nets = entity.surface.find_logistic_networks_by_construction_area(entity.position, "player")
+  local nets = entity.surface.find_logistic_networks_by_construction_area(
+    entity.position, "player")
   for _, net in ipairs(nets) do
     if net.all_construction_robots > 0 then
-      local n_inserted = net.insert({name=name, count=1})
+      local n_inserted = net.insert({ name = name, count = 1 })
       if n_inserted > 0 then
         GlobalState.increment_item_count(name, -1)
         GlobalState.alert_transfer_set(entity.unit_number)

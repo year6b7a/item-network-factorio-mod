@@ -6,6 +6,11 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version()
+    v.fix(
+        "Requests for constructing missing items in the construction zone of roboports and players will now be satisfied. Before, only request for missing items in the logistic zone of roboports were satisfied. Thanks to bengardner for implementing this feature!"
+    )
+
     v = cl.version((0, 7, 1), datetime.date(2023, 8, 11))
     v.fix("Removed flib reference and made the Network View header draggable.")
 
