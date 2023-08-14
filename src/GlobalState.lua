@@ -510,4 +510,29 @@ function M.update_queue(update_entity)
   Queue.swap_random_to_front(global.mod.scan_queue, global.mod.rand)
 end
 
+-- translate a tile name to the item name ("stone-path" => "stone-brick")
+function M.resolve_name(name)
+  if game.item_prototypes[name] ~= nil or game.fluid_prototypes[name] ~= nil then
+    return name
+  end
+
+  local prot = game.tile_prototypes[name]
+  if prot ~= nil then
+    local mp = prot.mineable_properties
+    if mp.minable and #mp.products == 1 then
+      return mp.products[1].name
+    end
+  end
+
+  -- FIXME: figure out how to not hard-code this
+  if name == "curved-rail" then
+    return "rail", 4
+  end
+  if name == "straight-rail" then
+    return "rail", 1
+  end
+
+  return nil
+end
+
 return M
