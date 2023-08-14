@@ -691,28 +691,41 @@ function M.onTick_60()
   M.check_alerts()
 end
 
-function M.handle_missing_material(entity, name)
+function M.handle_missing_material(entity, missing_name)
+  -- a cliff doesn't have a unit_number, so fake one base on the position
+  local key = entity.unit_number
+  if key == nil then
+    key = string.format("%s,%s", entity.position.x, entity.position.y)
+  end
+
   -- did we already transfer something for this ghost/upgrade?
-  if GlobalState.alert_transfer_get(entity.unit_number) == true then
+  if GlobalState.alert_transfer_get(key) == true then
     return
   end
+
+  -- make sure it is something we can handle
+  local name, count = GlobalState.resolve_name(missing_name)
+  if name == nil then
+    return
+  end
+  count = count or 1
 
   -- do we have an item to send?
   local network_count = GlobalState.get_item_count(name)
-  if network_count < 1 then
-    GlobalState.missing_item_set(name, entity.unit_number, 1)
+  if network_count < count then
+    GlobalState.missing_item_set(name, key, count)
     return
   end
 
-  -- Find the construction network(s) that covers this position
+  -- Find a construction network with a construction robot that covers this position
   local nets = entity.surface.find_logistic_networks_by_construction_area(
     entity.position, "player")
   for _, net in ipairs(nets) do
     if net.all_construction_robots > 0 then
-      local n_inserted = net.insert({ name = name, count = 1 })
+      local n_inserted = net.insert({ name = name, count = count })
       if n_inserted > 0 then
-        GlobalState.increment_item_count(name, -1)
-        GlobalState.alert_transfer_set(entity.unit_number)
+        GlobalState.increment_item_count(name, -n_inserted)
+        GlobalState.alert_transfer_set(key)
         return
       end
     end
@@ -734,6 +747,8 @@ function M.check_alerts()
             -- we only care about ghosts and items that are set to upgrade
             if entity.name == "entity-ghost" or entity.name == "tile-ghost" then
               M.handle_missing_material(entity, entity.ghost_name)
+            elseif entity.name == "cliff" then
+              M.handle_missing_material(entity, "cliff-explosives")
             else
               local tent = entity.get_upgrade_target()
               if tent ~= nil then
