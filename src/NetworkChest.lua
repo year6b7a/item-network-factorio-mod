@@ -691,8 +691,9 @@ function M.onTick_60()
   M.check_alerts()
 end
 
-function M.handle_missing_material(entity, missing_name)
-  -- a cliff doesn't have a unit_number, so fake one base on the position
+function M.handle_missing_material(entity, missing_name, item_count)
+  item_count = item_count or 1
+  -- a cliff doesn't have a unit_number, so fake one based on the position
   local key = entity.unit_number
   if key == nil then
     key = string.format("%s,%s", entity.position.x, entity.position.y)
@@ -708,7 +709,7 @@ function M.handle_missing_material(entity, missing_name)
   if name == nil then
     return
   end
-  count = count or 1
+  count = count or item_count
 
   -- do we have an item to send?
   local network_count = GlobalState.get_item_count(name)
@@ -749,12 +750,31 @@ function M.check_alerts()
               M.handle_missing_material(entity, entity.ghost_name)
             elseif entity.name == "cliff" then
               M.handle_missing_material(entity, "cliff-explosives")
+            elseif entity.name == "item-request-proxy" then
+              for k, v in pairs(entity.item_requests) do
+                M.handle_missing_material(entity, k, v)
+              end
             else
               local tent = entity.get_upgrade_target()
               if tent ~= nil then
                 M.handle_missing_material(entity, tent.name)
               end
             end
+          end
+        end
+      end
+    end
+  end
+
+  -- send repair packs
+  for _, player in pairs(game.players) do
+    local alerts = player.get_alerts {
+      type = defines.alert_type.not_enough_repair_packs }
+    for _, xxx in pairs(alerts) do
+      for _, alert_array in pairs(xxx) do
+        for _, alert in ipairs(alert_array) do
+          if alert.target ~= nil then
+            M.handle_missing_material(alert.target, "repair-pack")
           end
         end
       end
