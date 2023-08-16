@@ -6,9 +6,15 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version()
+    v = cl.version((0, 7, 2), datetime.date(2023, 8, 15))
     v.fix(
         "Requests for constructing missing items in the construction zone of roboports and players will now be satisfied. Before, only request for missing items in the logistic zone of roboports were satisfied. Thanks to bengardner for implementing this feature!"
+    )
+    v.feature(
+        "Added support for rails, cliff explosives, stone brick paths, repair packs and modules to be automatically supplied to logistic networks. Thanks to bengardner for implementing this feature!"
+    )
+    v.fix(
+        "Fixed the bug where the shortages tab would crash when there are invalid item names."
     )
 
     v = cl.version((0, 7, 1), datetime.date(2023, 8, 11))
