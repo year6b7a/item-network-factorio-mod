@@ -230,7 +230,10 @@ function M.get_list_of_items(view_type)
     -- add item shortages
     local missing = GlobalState.missing_item_filter()
     for item_name, count in pairs(missing) do
-      table.insert(items, { item = item_name, count = count })
+      -- sometime shortages can have invalid item names.
+      if game.item_prototypes[item_name] ~= nil then
+        table.insert(items, { item = item_name, count = count })
+      end
     end
 
     -- add fluid shortages
