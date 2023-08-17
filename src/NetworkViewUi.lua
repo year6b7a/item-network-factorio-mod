@@ -212,18 +212,24 @@ end
 function M.get_list_of_items(view_type)
   local items = {}
 
+  function add_item(item)
+    if game.item_prototypes[item.item] ~= nil or game.fluid_prototypes[item.item] ~= nil then
+      table.insert(items, item)
+    end
+  end
+
   if view_type == "item" then
     local items_to_display = GlobalState.get_items()
     for item_name, item_count in pairs(items_to_display) do
       if item_count > 0 then
-        table.insert(items, { item = item_name, count = item_count })
+        add_item({ item = item_name, count = item_count })
       end
     end
   elseif view_type == "fluid" then
     local fluids_to_display = GlobalState.get_fluids()
     for fluid_name, fluid_temps in pairs(fluids_to_display) do
       for temp, count in pairs(fluid_temps) do
-        table.insert(items, { item = fluid_name, count = count, temp = temp })
+        add_item({ item = fluid_name, count = count, temp = temp })
       end
     end
   elseif view_type == "shortage" then
@@ -231,16 +237,14 @@ function M.get_list_of_items(view_type)
     local missing = GlobalState.missing_item_filter()
     for item_name, count in pairs(missing) do
       -- sometime shortages can have invalid item names.
-      if game.item_prototypes[item_name] ~= nil then
-        table.insert(items, { item = item_name, count = count })
-      end
+      add_item({ item = item_name, count = count })
     end
 
     -- add fluid shortages
     missing = GlobalState.missing_fluid_filter()
     for fluid_key, count in pairs(missing) do
       local fluid_name, temp = GlobalState.fluid_temp_key_decode(fluid_key)
-      table.insert(items, { item = fluid_name, count = count, temp = temp })
+      add_item({ item = fluid_name, count = count, temp = temp })
     end
   end
 
