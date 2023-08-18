@@ -212,7 +212,7 @@ end
 function M.get_list_of_items(view_type)
   local items = {}
 
-  function add_item(item)
+  local function add_item(item)
     if game.item_prototypes[item.item] ~= nil or game.fluid_prototypes[item.item] ~= nil then
       table.insert(items, item)
     end
