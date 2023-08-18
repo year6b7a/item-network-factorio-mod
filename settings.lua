@@ -21,6 +21,13 @@ function M.main()
       setting_type = "runtime-global",
       default_value = true,
     },
+    {
+      type = "int-setting",
+      name = "item-network-number-of-entities-per-tick",
+      setting_type = "runtime-global",
+      default_value = 20,
+      minimum_value = 1,
+    },
   })
 end
 

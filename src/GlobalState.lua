@@ -481,7 +481,9 @@ M.UPDATE_STATUS = {
 }
 
 function M.update_queue(update_entity)
-  local MAX_ENTITIES_TO_UPDATE = 20
+  local MAX_ENTITIES_TO_UPDATE = settings.global
+    ["item-network-number-of-entities-per-tick"]
+    .value
   local updated_entities = {}
 
   local function inner_update_entity(unit_number)
