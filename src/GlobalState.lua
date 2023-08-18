@@ -176,7 +176,7 @@ function M.remove_old_ui()
         main_frame.destroy()
       end
 
-      local main_frame = player.gui.screen["add-request"]
+      main_frame = player.gui.screen["add-request"]
       if main_frame ~= nil then
         main_frame.destroy()
       end
@@ -490,8 +490,7 @@ function M.update_queue(update_entity)
     end
     updated_entities[unit_number] = true
 
-    status = update_entity(unit_number)
-    return status
+    return update_entity(unit_number)
   end
 
   for _ = 1, MAX_ENTITIES_TO_UPDATE do
