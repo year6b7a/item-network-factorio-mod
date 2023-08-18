@@ -6,6 +6,9 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version()
+    v.fix("Hopefully fixed bug when viewing shortages tab.")
+
     v = cl.version((0, 7, 2), datetime.date(2023, 8, 15))
     v.fix(
         "Requests for constructing missing items in the construction zone of roboports and players will now be satisfied. Before, only request for missing items in the logistic zone of roboports were satisfied. Thanks to bengardner for implementing this feature!"

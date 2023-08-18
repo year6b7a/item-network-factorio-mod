@@ -136,6 +136,24 @@ local tab_idx_to_view_type = {
   "shortage",
 }
 
+local function get_item_localized_name(item)
+  local info = game.item_prototypes[item]
+  if info == nil then
+    return item or "Unknown Item"
+  end
+
+  return info.localised_name
+end
+
+local function get_fluid_localized_name(fluid)
+  local info = game.fluid_prototypes[fluid]
+  if info == nil then
+    return fluid or "Unknown Fluid"
+  end
+
+  return info.localised_name
+end
+
 function M.update_items(player_index)
   local ui = GlobalState.get_ui_state(player_index)
   local net_view = ui.net_view
@@ -172,19 +190,27 @@ function M.update_items(player_index)
     for _, item in ipairs(row) do
       local item_name
       local tooltip
-      local sprite_path = net_view.view_type
-      if sprite_path == "shortage" then
-        if item.temp ~= nil then
-          sprite_path = "fluid"
+      local sprite_path
+      local elem_type
+      if item.temp == nil then
+        elem_type = "item"
+        if game.item_prototypes[item.item] == nil then
+          item_name = item.item or "Unknown Item"
+          sprite_path = nil
         else
-          sprite_path = "item"
+          item_name = game.item_prototypes[item.item].localised_name
+          sprite_path = "item/" .. item.item
         end
-      end
-      if sprite_path == "item" then
-        item_name = game.item_prototypes[item.item].localised_name
         tooltip = { "", item_name, ": ", item.count }
       else
-        item_name = game.fluid_prototypes[item.item].localised_name
+        elem_type = "fluid"
+        if game.fluid_prototypes[item.item] == nil then
+          item_name = item.item or "Unknown Fluid"
+          sprite_path = nil
+        else
+          item_name = game.fluid_prototypes[item.item].localised_name
+          sprite_path = "fluid/" .. item.item
+        end
         tooltip = {
           "",
           item_name,
@@ -196,8 +222,8 @@ function M.update_items(player_index)
       end
       local item_view = item_h_stack.add({
         type = "sprite-button",
-        elem_type = net_view.view_type,
-        sprite = sprite_path .. "/" .. item.item,
+        elem_type = elem_type,
+        sprite = sprite_path,
         tooltip = tooltip,
       })
       item_view.number = item.count
