@@ -250,11 +250,18 @@ M.event_handlers = {
     end,
   },
   {
-    name = UiConstants.NV_ITEM_SPRITE,
+    name = UiConstants.NV_DEPOSIT_ITEM_SPRITE_BUTTON,
     event = "on_gui_click",
     handler = function(event, element)
       NetworkViewUi.on_gui_click_item(event, element)
-    end
+    end,
+  },
+  {
+    name = UiConstants.NV_ITEM_SPRITE_BUTTON,
+    event = "on_gui_click",
+    handler = function(event, element)
+      NetworkViewUi.on_gui_click_item(event, element)
+    end,
   },
   {
     name = UiConstants.NV_TABBED_PANE,

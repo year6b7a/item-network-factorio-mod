@@ -136,45 +136,53 @@ local tab_idx_to_view_type = {
   "shortage",
 }
 
-local function get_item_localized_name(item)
-  local info = game.item_prototypes[item]
+
+local function get_item_tooltip(name, count)
+  local info = game.item_prototypes[name]
   if info == nil then
-    return item or "Unknown Item"
+    return {
+      "",
+      name or "Unknown Item",
+      ": ",
+      count,
+    }
+  else
+    return {
+      "in_nv.item_sprite_btn_tooltip",
+      info.localised_name,
+      count,
+    }
   end
-
-  return info.localised_name
 end
 
-local function get_fluid_localized_name(fluid)
-  local info = game.fluid_prototypes[fluid]
+local function get_fluid_tooltip(name, temp, count)
+  local localised_name
+  local info = game.fluid_prototypes[name]
   if info == nil then
-    return fluid or "Unknown Fluid"
+    localised_name = name or "Unknown Fluid"
+  else
+    localised_name = info.localised_name
   end
-
-  return info.localised_name
-end
-
-local function item_tooltip(name, count, show_transfer)
-  local tooltip = {
-    "",
-    get_item_localized_name(name),
-    ": ",
-    count
-  }
-  if show_transfer == true then
-    table.insert(tooltip, "\nLeft click to transfer to character inventory")
-  end
-  return tooltip
-end
-
-local function fluid_tooltip(name, temp, count)
   return {
-    "",
-    get_fluid_localized_name(name),
-    ": ",
+    "in_nv.fluid_sprite_btn_tooltip",
+    localised_name,
     string.format("%.0f", count),
-    " at ",
     { "format-degrees-c", string.format("%.0f", temp) },
+  }
+end
+
+local function get_item_shortage_tooltip(name, count)
+  local info = game.item_prototypes[name]
+  local localised_name
+  if info == nil then
+    localised_name = name or "Unknown Item"
+  else
+    localised_name = info.localised_name
+  end
+  return {
+    "in_nv.item_shortage_sprite_btn_tooltip",
+    localised_name,
+    count,
   }
 end
 
@@ -198,7 +206,6 @@ function M.update_items(player_index)
   end
 
   local view_type = net_view.view_type
-  local is_item = view_type == "item"
 
   item_flow = main_flow.add({
     type = "scroll-pane",
@@ -217,40 +224,57 @@ function M.update_items(player_index)
   for _, row in ipairs(rows) do
     local item_h_stack = item_flow.add(h_stack_def)
     for _, item in ipairs(row) do
-      -- -1 is filtered out and used to mean an "add" slot
-      if item.count < 0 then
-        item_h_stack.add({
-          type = "sprite-button",
-          sprite = "utility/slot_icon_resource_black",
-          tags = { event = UiConstants.NV_ITEM_SPRITE },
-          -- FIXME: needs translation tag
-          tooltip = { "", "Left-click with an item stack to add to the network" },
-        })
+      local sprite_button = M.get_sprite_button_def(item, view_type)
+      local sprite_button_inst = item_h_stack.add(sprite_button)
+      sprite_button_inst.number = item.count
+    end
+  end
+end
+
+function M.get_sprite_button_def(item, view_type)
+  if item.is_deposit_slot then
+    return {
+      type = "sprite-button",
+      sprite = "utility/slot_icon_resource_black",
+      tags = { event = UiConstants.NV_DEPOSIT_ITEM_SPRITE_BUTTON },
+      -- FIXME: needs translation tag
+      tooltip = { "in_nv.deposit_item_sprite_btn_tooltip" },
+    }
+  else
+    local tooltip
+    local sprite_path
+    local elem_type
+    local tags
+    if item.temp == nil then
+      elem_type = "item"
+      if view_type == "shortage" then
+        tooltip = get_item_shortage_tooltip(item.item, item.count)
       else
-        local sprite_path = view_type
-        if sprite_path == "shortage" then
-          if item.temp ~= nil then
-            sprite_path = "fluid"
-          else
-            sprite_path = "item"
-          end
-        end
-        local def = {
-          type = "sprite-button",
-          sprite = sprite_path .. "/" .. item.item,
-        }
-        if sprite_path == "item" then
-          def.tooltip = item_tooltip(item.item, item.count, is_item)
-          if is_item then
-            def.tags = { event = UiConstants.NV_ITEM_SPRITE, item = item.item }
-          end
-        else
-          def.tooltip = fluid_tooltip(item.item, item.temp, item.count)
-        end
-        local item_view = item_h_stack.add(def)
-        item_view.number = item.count
+        tooltip = get_item_tooltip(item.item, item.count)
+        tags = { event = UiConstants.NV_ITEM_SPRITE_BUTTON, item = item.item }
+      end
+      if game.item_prototypes[item.item] == nil then
+        sprite_path = nil
+      else
+        sprite_path = "item/" .. item.item
+      end
+    else
+      elem_type = "fluid"
+      tags = { event = UiConstants.NV_FLUID_SPRITE_BUTTON }
+      tooltip = get_fluid_tooltip(item.item, item.temp, item.count)
+      if game.fluid_prototypes[item.item] == nil then
+        sprite_path = nil
+      else
+        sprite_path = "fluid/" .. item.item
       end
     end
+    return {
+      type = "sprite-button",
+      elem_type = elem_type,
+      sprite = sprite_path,
+      tooltip = tooltip,
+      tags = tags,
+    }
   end
 end
 
@@ -268,6 +292,9 @@ function M.on_gui_click_item(event, element)
     return
   end
   local inv = player.get_main_inventory()
+  if inv == nil then
+    return
+  end
 
   -- if we have an empty cursor, then we are taking items, which requires a valid target
   if player.is_cursor_empty() then
@@ -287,35 +314,37 @@ function M.on_gui_click_item(event, element)
       elseif event.control then
         n_transfer = network_count
       end
-      -- move one item or stack to player inventory
       n_transfer = math.min(network_count, n_transfer)
+      -- move one item or stack to player inventory
       if n_transfer > 0 then
-        local n_moved = inv.insert({name = item_name, count = n_transfer})
+        local n_moved = inv.insert({ name = item_name, count = n_transfer })
         if n_moved > 0 then
           GlobalState.set_item_count(item_name, network_count - n_moved)
-          element.number = GlobalState.get_item_count(item_name)
-          element.tooltip = item_tooltip(item_name, element.number, true)
+          local count = GlobalState.get_item_count(item_name)
+          element.number = count
+          element.tooltip = get_item_tooltip(item_name, count)
         end
       end
     end
     return
-
   else
     -- There is a stack in the cursor. Deposit it.
-    local cs = player.cursor_stack
-    if not cs or not cs.valid_for_read then
+    local cursor_stack = player.cursor_stack
+    if not cursor_stack or not cursor_stack.valid_for_read then
       return
     end
 
     -- don't deposit tracked entities (can be unique)
-    if cs.item_number ~= nil then
-      game.print(string.format("Refusing to deposit %s", cs.name))
+    if cursor_stack.item_number ~= nil then
+      game.print(string.format(
+        "Unable to deposit %s because it might be a vehicle with items that will be lost.",
+        cursor_stack.name))
       return
     end
 
     if event.button == defines.mouse_button_type.left then
-      GlobalState.increment_item_count(cs.name, cs.count)
-      cs.clear()
+      GlobalState.increment_item_count(cursor_stack.name, cursor_stack.count)
+      cursor_stack.clear()
       player.clear_cursor()
       M.update_items(event.player_index)
     end
@@ -323,6 +352,12 @@ function M.on_gui_click_item(event, element)
 end
 
 local function items_list_sort(left, right)
+  if left.is_deposit_slot then
+    return true
+  end
+  if right.is_deposit_slot then
+    return false
+  end
   return left.count > right.count
 end
 
@@ -330,6 +365,9 @@ function M.get_list_of_items(view_type)
   local items = {}
 
   if view_type == "item" then
+    -- manually insert a slot for players to deposit items
+    table.insert(items, { is_deposit_slot = true })
+
     local items_to_display = GlobalState.get_items()
     for item_name, item_count in pairs(items_to_display) do
       if item_count > 0 then

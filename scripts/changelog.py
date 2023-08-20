@@ -8,6 +8,9 @@ def get_changelog():
 
     v = cl.version((0, 7, 4))
     v.feature("Added setting to change the number of updates per tick.")
+    v.feature(
+        "Added ability to deposit and retrieve items in the Network View. Thanks to bengardner for implementing this feature!"
+    )
 
     v = cl.version((0, 7, 3), datetime.date(2023, 8, 18))
     v.fix("Hopefully fixed bug when viewing shortages tab.")
