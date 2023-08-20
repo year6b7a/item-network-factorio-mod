@@ -91,6 +91,10 @@ function M.inner_setup()
     end
     global.mod.has_run_fluid_temp_conversion = true
   end
+
+  if global.mod.active_scan_queue == nil then
+    global.mod.active_scan_queue = Queue.new()
+  end
 end
 
 -- store the missing item: mtab[item_name][unit_number] = { game.tick, count }
@@ -479,6 +483,43 @@ M.UPDATE_STATUS = {
   NOT_UPDATED = 2,
   ALREADY_UPDATED = 3,
 }
+
+function M.get_queue_counts(
+  n_active,
+  n_inactive,
+  n_entities,
+  active_weight
+)
+  local total_entities = n_active + n_inactive
+  if total_entities < n_entities then
+    return { active = n_active, inactive = n_inactive }
+  end
+  n_entities = math.min(n_entities, total_entities)
+  n_entities = math.max(n_entities, 2)
+  local n_active_update = math.floor(
+    0.5 + n_entities * active_weight / (active_weight + 1)
+  )
+  n_active_update = math.min(n_active_update, n_active)
+  local n_inactive_update = n_entities - n_active_update
+
+  if n_active_update < 1 then
+    n_active_update = math.min(1, n_active)
+    n_inactive_update = math.max(1, n_entities - n_active_update)
+  elseif n_inactive_update < 1 then
+    n_inactive_update = math.min(1, n_inactive)
+    n_active_update = math.max(1, n_entities - n_inactive_update)
+  end
+
+  if n_active_update > n_active then
+    n_active_update = n_active
+    n_inactive_update = n_entities - n_active
+  elseif n_inactive_update > n_inactive then
+    n_inactive_update = n_inactive
+    n_active_update = n_entities - n_inactive
+  end
+
+  return { active = n_active_update, inactive = n_inactive_update }
+end
 
 function M.update_queue(update_entity)
   local MAX_ENTITIES_TO_UPDATE = settings.global
