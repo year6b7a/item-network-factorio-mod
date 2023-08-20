@@ -89,6 +89,12 @@ describe("update_network", function()
     end
   end
 
+  local settings = {
+    global = {
+      ["item-network-number-of-entities-per-tick"] = { value = 20 },
+    },
+  }
+
   it("empty queue", function()
     _G.global = {}
     _G.game = {
@@ -97,6 +103,7 @@ describe("update_network", function()
       get_filtered_entity_prototypes = get_filtered_entity_prototypes,
       surfaces = {},
     }
+    _G.settings = settings
     GlobalState.inner_setup()
 
     assert.are.same(global.mod.scan_queue.size, 0)
@@ -112,6 +119,7 @@ describe("update_network", function()
       get_filtered_entity_prototypes = get_filtered_entity_prototypes,
       surfaces = {},
     }
+    _G.settings = settings
     GlobalState.inner_setup()
 
     NetworkChest.on_create({}, create_mock_chest({ unit_number = 100 }))
