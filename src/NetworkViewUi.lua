@@ -154,8 +154,17 @@ local function get_fluid_localized_name(fluid)
   return info.localised_name
 end
 
-local function item_tooltip(name, count)
-  return { "", get_item_localized_name(name), ": ", count }
+local function item_tooltip(name, count, show_transfer)
+  local tooltip = {
+    "",
+    get_item_localized_name(name),
+    ": ",
+    count
+  }
+  if show_transfer == true then
+    table.insert(tooltip, "\nLeft click to transfer to character inventory")
+  end
+  return tooltip
 end
 
 local function fluid_tooltip(name, temp, count)
@@ -204,53 +213,44 @@ function M.update_items(player_index)
     direction = "horizontal",
   }
 
-  -- pad the item row so there is a slot to dump items from the cursor
-  local did_pad = false
-  local function pad_item_row(item_h_stack, count)
-    if is_item then
-      for _ = 1, count do
-        item_h_stack.add({
-          type = "sprite-button",
-          sprite = "utility/slot_icon_resource_black",
-          tags = { event = UiConstants.NV_ITEM_SPRITE },
-        })
-        did_pad = true
-      end
-    end
-  end
-
   local rows = M.get_rows_of_items(view_type)
   for _, row in ipairs(rows) do
     local item_h_stack = item_flow.add(h_stack_def)
     for _, item in ipairs(row) do
-      local sprite_path = view_type
-      if sprite_path == "shortage" then
-        if item.temp ~= nil then
-          sprite_path = "fluid"
-        else
-          item_name = game.item_prototypes[item.item].localised_name
-          sprite_path = "item/" .. item.item
-        end
-      end
-      local def = {
-        type = "sprite-button",
-        sprite = sprite_path .. "/" .. item.item,
-      }
-      if sprite_path == "item" then
-        def.tooltip = item_tooltip(item.item, item.count)
-        if is_item then
-          def.tags = { event = UiConstants.NV_ITEM_SPRITE, item = item.item }
-        end
+      -- -1 is filtered out and used to mean an "add" slot
+      if item.count < 0 then
+        item_h_stack.add({
+          type = "sprite-button",
+          sprite = "utility/slot_icon_resource_black",
+          tags = { event = UiConstants.NV_ITEM_SPRITE },
+          -- FIXME: needs translation tag
+          tooltip = { "", "Left-click with an item stack to add to the network" },
+        })
       else
-        def.tooltip = fluid_tooltip(item.item, item.temp, item.count)
+        local sprite_path = view_type
+        if sprite_path == "shortage" then
+          if item.temp ~= nil then
+            sprite_path = "fluid"
+          else
+            sprite_path = "item"
+          end
+        end
+        local def = {
+          type = "sprite-button",
+          sprite = sprite_path .. "/" .. item.item,
+        }
+        if sprite_path == "item" then
+          def.tooltip = item_tooltip(item.item, item.count, is_item)
+          if is_item then
+            def.tags = { event = UiConstants.NV_ITEM_SPRITE, item = item.item }
+          end
+        else
+          def.tooltip = fluid_tooltip(item.item, item.temp, item.count)
+        end
+        local item_view = item_h_stack.add(def)
+        item_view.number = item.count
       end
-      local item_view = item_h_stack.add(def)
-      item_view.number = item.count
     end
-    pad_item_row(item_h_stack, 10 - #row)
-  end
-  if not did_pad then
-    pad_item_row(item_flow.add(h_stack_def), 10)
   end
 end
 
@@ -294,7 +294,7 @@ function M.on_gui_click_item(event, element)
         if n_moved > 0 then
           GlobalState.set_item_count(item_name, network_count - n_moved)
           element.number = GlobalState.get_item_count(item_name)
-          element.tooltip = item_tooltip(item_name, element.number)
+          element.tooltip = item_tooltip(item_name, element.number, true)
         end
       end
     end
