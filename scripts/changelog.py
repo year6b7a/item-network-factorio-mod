@@ -6,7 +6,7 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version((0, 7, 4))
+    v = cl.version((0, 7, 4), datetime.date(2023, 8, 20))
     v.feature("Added setting to change the number of updates per tick.")
     v.feature(
         "Added ability to deposit and retrieve items in the Network View. Thanks to bengardner for implementing this feature!"
