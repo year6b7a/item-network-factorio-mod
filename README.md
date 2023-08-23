@@ -1,5 +1,7 @@
 # Item Network Factorio Mod
 
+Do you have questions, comments or bugs? Stop by the [Discord server](https://discord.gg/aNPW2YWRcf), make a [Github Issue](https://github.com/year6b7a/item-network-factorio-mod/issues/) or start a discussion in the mod portal.
+
 ### Overview
 
 This mod adds a new transportation mechanic to move items and fluids as quickly as possible.
