@@ -478,13 +478,24 @@ function Modal.try_to_confirm(player_index)
   local used_slots = 0
   for _, request in ipairs(chest_ui.requests) do
     local stack_size = game.item_prototypes[request.item].stack_size
-    local slots = math.ceil(request.buffer / stack_size)
+
+    local request_buffer
+    if modal_type == "edit" and request.item == item then
+      request_buffer = buffer
+    else
+      request_buffer = request.buffer
+    end
+
+    local slots = math.ceil(request_buffer / stack_size)
     used_slots = used_slots + slots
   end
-  assert(used_slots <= Constants.NUM_INVENTORY_SLOTS)
-  local new_inv_slots = math.ceil(buffer /
-    game.item_prototypes[item].stack_size)
-  if used_slots + new_inv_slots > Constants.NUM_INVENTORY_SLOTS then
+
+  if modal_type == "add" then
+    used_slots = used_slots + math.ceil(buffer /
+      game.item_prototypes[item].stack_size)
+  end
+
+  if used_slots > Constants.NUM_INVENTORY_SLOTS then
     return
   end
 
