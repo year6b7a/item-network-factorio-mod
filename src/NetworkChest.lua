@@ -474,9 +474,15 @@ local function update_network_chest(info)
           n_take - n_give)
       end
     else
-      local n_give = current_count
-      local n_take = math.max(0, request.limit - network_count)
-      local n_transfer = math.min(n_take, n_give)
+      local n_transfer
+      if request.no_limit then
+        n_transfer = current_count
+      else
+        n_transfer = math.min(
+          current_count,
+          math.max(0, request.limit - network_count)
+        )
+      end
       if n_transfer > 0 then
         status = GlobalState.UPDATE_STATUS.UPDATED
         contents[request.item] = current_count - n_transfer

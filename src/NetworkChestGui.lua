@@ -121,11 +121,18 @@ function M.update_request_element(request, element)
     )
   else
     before_item_label = "Provide"
-    after_item_label = string.format(
-      "when network has less than %d and buffer %d.",
-      request.limit,
-      request.buffer
-    )
+    if request.no_limit then
+      after_item_label = string.format(
+        "with no limit and buffer %d.",
+        request.buffer
+      )
+    else
+      after_item_label = string.format(
+        "when network has less than %d and buffer %d.",
+        request.limit,
+        request.buffer
+      )
+    end
   end
   element[UiConstants.BEFORE_ITEM_NAME].caption = before_item_label
   element[UiConstants.AFTER_ITEM_NAME].caption = after_item_label
@@ -140,6 +147,7 @@ function M.get_ui_requests_from_chest_requests(chest_requests)
       item = request.item,
       buffer = request.buffer,
       limit = request.limit,
+      no_limit = request.no_limit,
     })
   end
   return requests
@@ -198,6 +206,7 @@ function M.close_main_frame(player, save_requests)
           item = request.item,
           buffer = request.buffer,
           limit = request.limit,
+          no_limit = request.no_limit,
         })
     end
     if ui.network_chest.chest_entity.valid then
@@ -250,6 +259,7 @@ function M.open_modal(player, type, request_id)
   local default_item = nil
   local default_buffer = nil
   local default_limit = nil
+  local default_no_limit = false
 
   local request = M.get_request_by_id(player, request_id)
   if request ~= nil then
@@ -257,6 +267,7 @@ function M.open_modal(player, type, request_id)
     default_item = request.item
     default_buffer = request.buffer
     default_limit = request.limit
+    default_no_limit = request.no_limit or false
   end
 
   local ui = GlobalState.get_ui_state(player.index)
@@ -334,6 +345,16 @@ function M.open_modal(player, type, request_id)
   end
   limit_input.style.width = 50
 
+  local no_limit_flow = limit_flow.add({ type = "flow", direction = "horizontal" })
+  no_limit_flow.add({
+    type = "checkbox",
+    state = default_no_limit,
+    tags = { event = UiConstants.MODAL_NO_LIMIT_CHECKBOX },
+  })
+  no_limit_flow.add({
+    type = "label", caption = "No Limit",
+  })
+
   local save_cancel_flow = main_flow.add({
     type = "flow",
     direction = "horizontal",
@@ -373,13 +394,22 @@ function M.open_modal(player, type, request_id)
     disable_set_defaults_on_change = type == "edit",
     modal_type = type,
     request_id = request_id, -- only defined for edit events
+    no_limit = default_no_limit,
+    no_limit_flow = no_limit_flow,
   }
+  M.update_no_limit(modal)
 
   -- the order is is important since setting player.opened = frame
   -- will trigger a "on_gui_closed" event that needs to be ignored.
   ui.network_chest.modal = modal
   ui.close_type = "open modal"
   player.opened = frame
+end
+
+function M.update_no_limit(modal)
+  local no_limit = modal.no_limit or false
+  modal.no_limit_flow.visible = modal.request_type == "give"
+  modal.limit_input.enabled = modal.request_type == "take" or not no_limit
 end
 
 function M.in_confirm_dialog(event)
@@ -455,6 +485,7 @@ function Modal.try_to_confirm(player_index)
   local item = modal.item
   local buffer = modal.buffer
   local limit = modal.limit
+  local no_limit = modal.no_limit
 
   if request_type == nil or item == nil or buffer == nil or limit == nil then
     return
@@ -506,6 +537,7 @@ function Modal.try_to_confirm(player_index)
       item = item,
       buffer = buffer,
       limit = limit,
+      no_limit = no_limit,
     }
     table.insert(chest_ui.requests, request)
     M.add_request_element(request, chest_ui.requests_scroll)
@@ -518,6 +550,7 @@ function Modal.try_to_confirm(player_index)
       request.item = item
       request.buffer = buffer
       request.limit = limit
+      request.no_limit = no_limit
     end
     local request_elem = chest_ui.requests_scroll[request_id]
     M.update_request_element(request, request_elem)

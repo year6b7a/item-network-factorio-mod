@@ -27,6 +27,7 @@ M.event_handlers = {
         .modal
       modal.request_type = "take"
       modal.choose_give_btn.state = false
+      NetworkChestGui.update_no_limit(modal)
       if modal.limit ~= nil and modal.limit > 0 then
         NetworkChestGui.Modal.set_default_limit(event.player_index)
       end
@@ -41,6 +42,7 @@ M.event_handlers = {
         .modal
       modal.request_type = "give"
       modal.choose_take_btn.state = false
+      NetworkChestGui.update_no_limit(modal)
       if modal.limit == 0 then
         NetworkChestGui.Modal.set_default_limit(event.player_index)
       end
@@ -88,6 +90,16 @@ M.event_handlers = {
       local modal = GlobalState.get_ui_state(event.player_index).network_chest
         .modal
       modal.limit = tonumber(element.text)
+    end,
+  },
+  {
+    name = UiConstants.MODAL_NO_LIMIT_CHECKBOX,
+    event = "on_gui_checked_state_changed",
+    handler = function(event, element)
+      local modal = GlobalState.get_ui_state(event.player_index).network_chest
+        .modal
+      modal.no_limit = element.state
+      NetworkChestGui.update_no_limit(modal)
     end,
   },
   {
