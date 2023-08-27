@@ -9,7 +9,9 @@ def get_changelog():
     v = cl.version((0, 7, 5))
     v.fix("Fixed bug where using ReStack to lower stack size would crash.")
     v.fix("Fixed bug where unable to set large buffers using UI.")
-    v.feature('Added "No Limit" option when providing items from Network Chests.')
+    v.feature(
+        'Added "No Limit" option when providing items from Network Chests and Tanks.'
+    )
 
     v = cl.version((0, 7, 4), datetime.date(2023, 8, 20))
     v.feature("Added setting to change the number of updates per tick.")

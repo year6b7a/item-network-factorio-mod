@@ -523,6 +523,7 @@ local function update_tank(info)
   local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
   local type = info.config.type
   local limit = info.config.limit
+  local no_limit = info.config.no_limit or false
   local buffer = info.config.buffer
   local fluid = info.config.fluid
   local temp = info.config.temperature
@@ -537,7 +538,12 @@ local function update_tank(info)
           fluid_instance.temperature
         )
         local n_give = math.max(0, fluid_instance.amount)
-        local n_take = math.max(0, limit - current_count)
+        local n_take
+        if no_limit then
+          n_take = fluid_instance.amount
+        else
+          n_take = math.max(0, limit - current_count)
+        end
         local n_transfer = math.floor(math.min(n_give, n_take))
         if n_transfer > 0 then
           status = GlobalState.UPDATE_STATUS.UPDATED

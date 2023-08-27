@@ -20,6 +20,7 @@ function M.on_gui_opened(player, entity)
   local default_buffer = nil
   local default_limit = nil
   local default_temp = nil
+  local default_no_limit = nil
 
   if tank_info.config ~= nil then
     default_is_take = tank_info.config.type == "take"
@@ -27,6 +28,7 @@ function M.on_gui_opened(player, entity)
     default_buffer = tank_info.config.buffer
     default_limit = tank_info.config.limit
     default_temp = tank_info.config.temperature
+    default_no_limit = tank_info.config.no_limit
   end
 
   local width = 600
@@ -110,6 +112,16 @@ function M.on_gui_opened(player, entity)
   end
   limit_input.style.width = 100
 
+  local no_limit_flow = limit_flow.add({ type = "flow", direction = "horizontal" })
+  no_limit_flow.add({
+    type = "checkbox",
+    state = default_no_limit or false,
+    tags = { event = UiConstants.NT_NO_LIMIT_CHECKBOX },
+  })
+  no_limit_flow.add({
+    type = "label", caption = "No Limit",
+  })
+
   local save_cancel_flow = main_flow.add({
     type = "flow",
     direction = "horizontal",
@@ -137,6 +149,8 @@ function M.on_gui_opened(player, entity)
     buffer_size_input = buffer_size_input,
     temperature_input = temperature_input,
     limit_input = limit_input,
+    no_limit_flow = no_limit_flow,
+    no_limit = default_no_limit,
     type = default_is_take and "take" or "give",
     fluid = default_fluid,
     buffer = default_buffer,
@@ -175,9 +189,12 @@ end
 function M.update_input_visibility(player_index)
   local nt_ui = GlobalState.get_ui_state(player_index).network_tank
   local visible = nt_ui.type == "take"
+  local no_limit = nt_ui.no_limit or false
   nt_ui.fluid_flow.visible = visible
   nt_ui.temp_flow.visible = visible
   nt_ui.buffer_flow.visible = visible
+  nt_ui.no_limit_flow.visible = nt_ui.type == "give"
+  nt_ui.limit_input.enabled = not no_limit
 end
 
 function M.set_default_buffer_and_limit(player_index)
@@ -225,6 +242,7 @@ local function get_config_from_network_tank_ui(nt_ui)
   local buffer = nt_ui.buffer
   local limit = nt_ui.limit
   local temperature = nt_ui.temperature
+  local no_limit = nt_ui.no_limit
 
   if type == "take" then
     if type == nil or fluid == nil or temperature == nil or buffer == nil or limit == nil then
@@ -258,6 +276,7 @@ local function get_config_from_network_tank_ui(nt_ui)
     return {
       type = type,
       limit = limit,
+      no_limit = no_limit,
     }
   end
 end

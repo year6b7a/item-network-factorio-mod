@@ -239,6 +239,15 @@ M.event_handlers = {
     end,
   },
   {
+    name = UiConstants.NT_NO_LIMIT_CHECKBOX,
+    event = "on_gui_checked_state_changed",
+    handler = function(event, element)
+      local nt_ui = GlobalState.get_ui_state(event.player_index).network_tank
+      nt_ui.no_limit = element.state
+      NetworkTankGui.update_input_visibility(event.player_index)
+    end,
+  },
+  {
     name = UiConstants.NT_CONFIRM_EVENT,
     event = "on_gui_click",
     handler = function(event, element)
