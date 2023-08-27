@@ -5,6 +5,7 @@ local NetworkViewUi = require "src.NetworkViewUi"
 local UiConstants = require "src.UiConstants"
 local NetworkTankGui = require "src.NetworkTankGui"
 local constants = require "src.constants"
+local Helpers = require "src.Helpers"
 
 local M = {}
 
@@ -466,6 +467,16 @@ local function update_network_chest(info)
     })
   end
   table.sort(requests, request_list_sort)
+
+  -- round n_slots if they exceed total
+  local current_slots = {}
+  for _, request in ipairs(requests) do
+    table.insert(current_slots, request.n_slots)
+  end
+  local new_slots = Helpers.int_partition(current_slots, #inv)
+  for idx, request in ipairs(requests) do
+    request.n_slots = new_slots[idx]
+  end
 
 
   -- flatten sorted requests into slots
