@@ -6,6 +6,10 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version((0, 7, 5))
+    v.fix("Fixed bug where using ReStack to lower stack size would crash.")
+    v.fix("Fixed bug where unable to set large buffers using UI.")
+
     v = cl.version((0, 7, 4), datetime.date(2023, 8, 20))
     v.feature("Added setting to change the number of updates per tick.")
     v.feature(
