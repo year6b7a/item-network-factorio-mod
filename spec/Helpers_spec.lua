@@ -50,4 +50,11 @@ describe("int_partition", function()
       { 1, 1, 0, 0 }
     )
   end)
+
+  it("real example", function()
+    assert.are.same(
+      Helpers.int_partition({ 240, 130, 110 }, 48),
+      { 23, 13, 12 }
+    )
+  end)
 end)

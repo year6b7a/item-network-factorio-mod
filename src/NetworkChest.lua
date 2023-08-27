@@ -405,6 +405,43 @@ local function request_list_sort(left, right)
   return left.sort_count < right.sort_count
 end
 
+function M.update_hv_network_chest(info)
+  local inv = info.entity.get_output_inventory()
+  local contents = inv.get_contents()
+
+  for _, request in info.config.requests do
+    local current_count = contents[request.item] or 0
+    local network_count = GlobalState.get_item_count(request.item)
+    if request.type == "take" then
+      local n_take = math.max(0, network_count - request.limit)
+      local n_give = math.max(0, request.buffer - current_count)
+      local n_transfer = math.min(n_take, n_give)
+      if n_transfer > 0 then
+        local n_transfered = inv.insert({
+          name = request.item,
+          count = n_transfer,
+        })
+        if n_transfered > 0 then
+          GlobalState.increment_item_count(request.item, -n_transfered)
+        end
+      end
+    else
+      local n_transfer = math.min(
+        math.max(0, current_count),
+        math.max(0, request.limit - network_count)
+      )
+      if n_transfer > 0 then
+        local n_transfered = inv.remove({
+          name = request.item,
+          count = n_transfer,
+        })
+        if n_transfered > 0 then
+          GlobalState.increment_item_count(request.item, n_transfered)
+        end
+      end
+    end
+  end
+end
 
 local function update_network_chest(info)
   local inv = info.entity.get_output_inventory()
