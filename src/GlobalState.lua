@@ -69,6 +69,10 @@ function M.inner_setup()
     global.mod.alert_trans = {} -- alert_trans[unit_number] = game.tick
   end
 
+  if global.mod.sensors == nil then
+    global.mod.sensors = {}
+  end
+
   if not global.mod.has_run_fluid_temp_conversion then
     local new_fluids = {}
     for fluid, count in pairs(global.mod.fluids) do
@@ -304,6 +308,18 @@ end
 
 function M.vehicle_del(unit_number)
   global.mod.vehicles[unit_number] = nil
+end
+
+function M.sensor_add(entity)
+  global.mod.sensors[entity.unit_number] = entity
+end
+
+function M.sensor_del(unit_number)
+  global.mod.sensors[unit_number] = nil
+end
+
+function M.sensor_get_list()
+  return global.mod.sensors
 end
 
 function M.register_chest_entity(entity, requests)

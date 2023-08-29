@@ -46,6 +46,8 @@ local function generic_create_handler(event)
     GlobalState.logistic_add_entity(entity)
   elseif GlobalState.is_vehicle_entity(entity.name) then
     GlobalState.vehicle_add_entity(entity)
+  elseif entity.name == "network-sensor" then
+    GlobalState.sensor_add(entity)
   end
 end
 
@@ -80,6 +82,8 @@ function M.on_entity_cloned(event)
     GlobalState.logistic_add_entity(event.destination)
   elseif GlobalState.is_vehicle_entity(name) then
     GlobalState.vehicle_add_entity(event.destination)
+  elseif name == "network-sensor" then
+    GlobalState.sensor_add(event.destination)
   end
 end
 
@@ -118,6 +122,8 @@ function M.generic_destroy_handler(event, opts)
     GlobalState.logistic_del(entity.unit_number)
   elseif GlobalState.is_vehicle_entity(entity.name) then
     GlobalState.vehicle_del(entity.unit_number)
+  elseif entity.name == "network-sensor" then
+    GlobalState.sensor_del(entity.unit_number)
   end
 end
 
@@ -893,6 +899,46 @@ end
 
 function M.on_every_5_seconds(event)
   NetworkViewUi.on_every_5_seconds(event)
+end
+
+-- want a consistent sort order (sort by signal.type and then signal.name)
+local function compare_params(left, right)
+  if left.signal.type ~= right.signal.type then
+    return left.signal.type < right.signal.type
+  end
+  return left.signal.name < right.signal.name
+end
+
+function M.get_parameters()
+  local params = {}
+  for item, count in pairs(GlobalState.get_items()) do
+    table.insert(params, {
+      signal = { type = "item", name = item },
+      count = count,
+    })
+  end
+  -- have to set the index after sorting
+  table.sort(params, compare_params)
+  for index, param in ipairs(params) do
+    param.index = index
+  end
+  return params
+end
+
+function M.service_sensors()
+  local params
+  -- all sensors get the same parameters
+  for _, entity in pairs(GlobalState.sensor_get_list()) do
+    if entity.valid then
+      local cb = entity.get_control_behavior()
+      if cb ~= nil then
+        if params == nil then
+          params = M.get_parameters()
+        end
+        cb.parameters = params
+      end
+    end
+  end
 end
 
 return M
