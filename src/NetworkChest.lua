@@ -250,6 +250,9 @@ function M.on_player_setup_blueprint(event)
 end
 
 function M.on_entity_settings_pasted(event)
+end
+
+function M.on_pre_entity_settings_pasted(event)
   local source = event.source
   local dest = event.destination
   if dest.name == "network-chest" then
@@ -258,12 +261,64 @@ function M.on_entity_settings_pasted(event)
     else
       local recipe = source.get_recipe()
       if recipe ~= nil then
+        local chest_info = GlobalState.get_chest_info(dest.unit_number)
+        if chest_info ~= nil then
+          local requests = {}
+          local current_items = {}
+          local buffer_size = settings.global
+            ["item-network-stack-size-on-assembler-paste"].value
+
+          -- copy existing requests
+          for _, request in ipairs(chest_info.requests) do
+            table.insert(requests, request)
+            current_items[request.item] = true
+          end
+
+          -- add in recipe requests
+          for _, product in ipairs(recipe.products) do
+            if product.type == "item" and current_items[product.name] == nil then
+              current_items[product.name] = true
+              local stack_size = game.item_prototypes[product.name].stack_size
+              local buffer = math.min(buffer_size, stack_size)
+              table.insert(requests, {
+                type = "give",
+                item = product.name,
+                buffer = buffer,
+                limit = buffer,
+              })
+            end
+          end
+
+          GlobalState.set_chest_requests(dest.unit_number, requests)
+        end
+      end
+    end
+  elseif dest.name == "network-tank" then
+    if source.name == "network-tank" then
+      GlobalState.copy_tank_config(source.unit_number, dest.unit_number)
+    end
+  elseif source.name == "network-chest" then
+    local recipe = dest.get_recipe()
+    if recipe ~= nil then
+      local chest_info = GlobalState.get_chest_info(source.unit_number)
+      if chest_info ~= nil then
         local requests = {}
+        local current_items = {}
         local buffer_size = settings.global
           ["item-network-stack-size-on-assembler-paste"].value
+
+        -- copy existing requests
+        for _, request in ipairs(chest_info.requests) do
+          table.insert(requests, request)
+          current_items[request.item] = true
+        end
+
+        -- add in recipe ingredients
         for _, ingredient in ipairs(recipe.ingredients) do
-          if ingredient.type == "item" then
-            local stack_size = game.item_prototypes[ingredient.name].stack_size
+          if ingredient.type == "item" and current_items[ingredient.name] == nil then
+            current_items[ingredient.name] = true
+            local stack_size = game.item_prototypes[ingredient.name]
+              .stack_size
             local buffer = math.min(buffer_size, stack_size)
             table.insert(requests, {
               type = "take",
@@ -273,12 +328,9 @@ function M.on_entity_settings_pasted(event)
             })
           end
         end
-        GlobalState.set_chest_requests(dest.unit_number, requests)
+
+        GlobalState.set_chest_requests(source.unit_number, requests)
       end
-    end
-  elseif dest.name == "network-tank" then
-    if source.name == "network-tank" then
-      GlobalState.copy_tank_config(source.unit_number, dest.unit_number)
     end
   end
 end

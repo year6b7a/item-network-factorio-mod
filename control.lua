@@ -56,6 +56,10 @@ local function main()
     defines.events.on_entity_settings_pasted,
     NetworkChest.on_entity_settings_pasted
   )
+  script.on_event(
+    defines.events.on_pre_entity_settings_pasted,
+    NetworkChest.on_pre_entity_settings_pasted
+  )
 
 
   script.on_event(

@@ -6,7 +6,15 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version((0, 7, 5))
+    v = cl.version()
+    v.feature(
+        "Enhanced copy-paste behavior between Network Chests and assemblers. If you copy from a Network Chest and paste on an assembler, it add requests for recipe ingredients for the recipe. If you copy from an assembler and paste on a Network Chest, it will provide recipe products from the chest."
+    )
+    v.change(
+        "Changed network chest copy-past behavior so subsequent copies and pastes to the same Network Chest append items rather than overrite items. This should make it easier to have one chest supply multiple assemblers."
+    )
+
+    v = cl.version((0, 7, 5), datetime.date(2023, 8, 28))
     v.fix("Fixed bug where using ReStack to lower stack size would crash.")
     v.fix("Fixed bug where unable to set large buffers using UI.")
     v.feature(
