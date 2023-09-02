@@ -1,3 +1,4 @@
+local NetworkLoaderUi = require "src.NetworkLoaderUi"
 local GlobalState = require "src.GlobalState"
 local NetworkChestGui = require "src.NetworkChestGui"
 local UiHandlers = require "src.UiHandlers"
@@ -917,6 +918,14 @@ function M.on_gui_opened(event)
     end
 
     NetworkTankGui.on_gui_opened(player, entity)
+  elseif event.gui_type == defines.gui_type.entity and event.entity.name == "network-loader" then
+    local entity = event.entity
+    local player = game.get_player(event.player_index)
+    if player == nil then
+      return
+    end
+
+    NetworkLoaderUi.on_gui_opened(player, entity)
   end
 end
 
@@ -928,6 +937,8 @@ function M.on_gui_closed(event)
     NetworkTankGui.on_gui_closed(event)
   elseif frame ~= nil and (frame.name == UiConstants.MAIN_FRAME_NAME or frame.name == UiConstants.MODAL_FRAME_NAME) then
     NetworkChestGui.on_gui_closed(event)
+  elseif frame ~= nil and frame.name == UiConstants.NL_MAIN_FRAME then
+    NetworkLoaderUi.on_gui_closed(event)
   end
 end
 

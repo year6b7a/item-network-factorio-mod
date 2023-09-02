@@ -3,8 +3,19 @@ local NetworkChestGui = require "src.NetworkChestGui"
 local GlobalState = require "src.GlobalState"
 local NetworkTankGui = require "src.NetworkTankGui"
 local NetworkViewUi = require "src.NetworkViewUi"
+local NetworkLoaderEventHandlers = require "src.NetworkLoaderEventHandlers"
 
 local M = {}
+
+function M.register_event_handlers()
+  M.add_event_handlers_from_module(NetworkLoaderEventHandlers)
+end
+
+function M.add_event_handlers_from_module(module)
+  for _, handler in ipairs(module.event_handlers) do
+    table.insert(M.event_handlers, handler)
+  end
+end
 
 M.event_handlers = {
   {
@@ -299,6 +310,8 @@ M.event_handlers = {
     end,
   },
 }
+
+M.register_event_handlers()
 
 M.handler_map = {}
 for _, handler in ipairs(M.event_handlers) do
