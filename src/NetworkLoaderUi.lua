@@ -1,5 +1,6 @@
 local GlobalState = require "src.GlobalState"
 local UiConstants = require "src.UiConstants"
+local Utils = require "src.Utils"
 
 local M = {}
 
@@ -34,8 +35,7 @@ function M.on_gui_opened(player, entity)
     end
   end
 
-
-  local width = 600
+  local width = 490
   local height = 500
 
   local frame = player.gui.screen.add({
@@ -61,19 +61,33 @@ function M.on_gui_opened(player, entity)
 
   main_flow.add({ type = "label", caption = "Set Filter from Attached Container:" })
 
-  local attached_filters_flow = main_flow.add({
-    type = "flow",
-    direction = "horizontal",
+  local suggested_filters_rows = Utils.split_list_by_batch_size(
+    suggested_filters, 10
+  )
+  local suggested_filters_flow = main_flow.add({
+    type = "scroll-pane",
+    direction = "vertical",
+    vertical_scroll_policy = "always",
   })
-  for _, item_name in ipairs(suggested_filters) do
-    attached_filters_flow.add({
-      type = "sprite-button",
-      sprite = "item/" .. item_name,
-      tags = {
-        event = UiConstants.NL_SUGGESTED_FILTER_BTN,
-        item = item_name,
-      },
+  suggested_filters_flow.style.size = {
+    width = width - 30,
+    height = height - 130,
+  }
+  for _, row in ipairs(suggested_filters_rows) do
+    local suggested_filter_flow = suggested_filters_flow.add({
+      type = "flow",
+      direction = "horizontal",
     })
+    for _, item_name in ipairs(row) do
+      suggested_filter_flow.add({
+        type = "sprite-button",
+        sprite = "item/" .. item_name,
+        tags = {
+          event = UiConstants.NL_SUGGESTED_FILTER_BTN,
+          item = item_name,
+        },
+      })
+    end
   end
 
   player.opened = frame
@@ -97,6 +111,7 @@ end
 
 function M.reset(player, ui)
   M.destroy_frame(player, UiConstants.NL_MAIN_FRAME)
+  ui.loader = nil
 end
 
 function M.destroy_frame(player, frame_name)

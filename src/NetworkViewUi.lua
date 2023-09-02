@@ -1,5 +1,6 @@
 local GlobalState = require "src.GlobalState"
 local UiConstants = require "src.UiConstants"
+local Utils = require "src.Utils"
 
 local M = {}
 
@@ -407,20 +408,7 @@ end
 function M.get_rows_of_items(view_type)
   local items = M.get_list_of_items(view_type)
   local max_row_count = 10
-  local rows = {}
-  local row = {}
-
-  for _, item in ipairs(items) do
-    if #row == max_row_count then
-      table.insert(rows, row)
-      row = {}
-    end
-    table.insert(row, item)
-  end
-
-  if #row > 0 then
-    table.insert(rows, row)
-  end
+  local rows = Utils.split_list_by_batch_size(items, max_row_count)
   return rows
 end
 
