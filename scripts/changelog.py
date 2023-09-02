@@ -13,6 +13,9 @@ def get_changelog():
     v.change(
         "Changed network chest copy-past behavior so subsequent copies and pastes to the same Network Chest append items rather than overrite items. This should make it easier to have one chest supply multiple assemblers."
     )
+    v.feature(
+        "Network Chest Loaders now have a list of suggested filters when attached to a Network Chest."
+    )
 
     v = cl.version((0, 7, 5), datetime.date(2023, 8, 28))
     v.fix("Fixed bug where using ReStack to lower stack size would crash.")
