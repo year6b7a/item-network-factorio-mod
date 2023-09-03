@@ -16,6 +16,9 @@ def get_changelog():
     v.feature(
         "Network Chest Loaders now have a list of suggested filters when attached to a Network Chest."
     )
+    v.change(
+        "All fluids with non-integer temperatures now round up to the nearest temperature when inserted into the network. This makes it possible to request those fluid temps from a Network Tank using the rounded temperature. Please submit a bug if this breaks an existing factory."
+    )
 
     v = cl.version((0, 7, 5), datetime.date(2023, 8, 28))
     v.fix("Fixed bug where using ReStack to lower stack size would crash.")

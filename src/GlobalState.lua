@@ -95,6 +95,21 @@ function M.inner_setup()
   if global.mod.active_scan_queue == nil then
     global.mod.active_scan_queue = Queue.new()
   end
+
+  if not global.mod.has_run_fluid_temp_rounding_conversion then
+    local new_fluids = {}
+    for fluid, temp_map in pairs(global.mod.fluids) do
+      local new_temp_map = {}
+      new_fluids[fluid] = new_temp_map
+      for temp, count in pairs(temp_map) do
+        local new_temp = math.ceil(temp)
+        local existing_count = new_temp_map[new_temp] or 0
+        new_temp_map[new_temp] = existing_count + count
+      end
+    end
+    global.mod.fluids = new_fluids
+    global.mod.has_run_fluid_temp_rounding_conversion = true
+  end
 end
 
 -- store the missing item: mtab[item_name][unit_number] = { game.tick, count }
@@ -398,6 +413,7 @@ function M.get_item_count(item_name)
 end
 
 function M.get_fluid_count(fluid_name, temp)
+  temp = math.ceil(temp)
   local fluid_temps = global.mod.fluids[fluid_name]
   if fluid_temps == nil then
     return 0
@@ -422,6 +438,7 @@ function M.set_item_count(item_name, count)
 end
 
 function M.set_fluid_count(fluid_name, temp, count)
+  temp = math.ceil(temp)
   if count <= 0 then
     global.mod.fluids[fluid_name][temp] = nil
   else

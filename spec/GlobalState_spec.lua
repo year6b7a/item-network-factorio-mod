@@ -97,3 +97,42 @@ describe("get_queue_counts", function()
     )
   end)
 end)
+
+describe("migrations", function()
+  local function create_random_generator()
+    return function(max)
+      return max
+    end
+  end
+
+  _G.game = {
+    create_random_generator = create_random_generator,
+    surfaces = {},
+    get_filtered_entity_prototypes = function()
+      return {}
+    end,
+  }
+
+  it("runs without error", function()
+    _G.global = {}
+    GlobalState.inner_setup()
+  end)
+
+  it("fluid temp rounding", function()
+    _G.global = {}
+    GlobalState.inner_setup()
+    _G.global.mod.fluids = {
+      f0 = { [1] = 1, [2] = 5 },
+      f1 = {},
+      f2 = { [0] = 1, [0.1] = 2, [0.5] = 3, [1] = 4, [1.1] = 5 },
+    }
+    _G.global.mod.has_run_fluid_temp_rounding_conversion = nil
+    GlobalState.inner_setup()
+
+    assert.are.same(_G.global.mod.fluids, {
+      f0 = { [1] = 1, [2] = 5 },
+      f1 = {},
+      f2 = { [0] = 1, [1] = 9, [2] = 5 },
+    })
+  end)
+end)
