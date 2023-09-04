@@ -6,6 +6,11 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version((0, 8, 1), datetime.date(2023, 9, 4))
+    v.fix(
+        "Fixed bug where game would crash when copying to/from a Network Chest to a non-assembler entity like a normal chest."
+    )
+
     v = cl.version((0, 8, 0), datetime.date(2023, 9, 3))
     v.feature(
         "Enhanced copy-paste behavior between Network Chests and assemblers. If you copy from a Network Chest and paste on an assembler, it add requests for recipe ingredients for the recipe. If you copy from an assembler and paste on a Network Chest, it will provide recipe products from the chest."

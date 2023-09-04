@@ -259,7 +259,7 @@ function M.on_pre_entity_settings_pasted(event)
   if dest.name == "network-chest" then
     if source.name == "network-chest" then
       GlobalState.copy_chest_requests(source.unit_number, dest.unit_number)
-    else
+    elseif source.type == "assembling-machine" then
       local recipe = source.get_recipe()
       if recipe ~= nil then
         local chest_info = GlobalState.get_chest_info(dest.unit_number)
@@ -298,7 +298,7 @@ function M.on_pre_entity_settings_pasted(event)
     if source.name == "network-tank" then
       GlobalState.copy_tank_config(source.unit_number, dest.unit_number)
     end
-  elseif source.name == "network-chest" then
+  elseif source.name == "network-chest" and dest.type == "assembling-machine" then
     local recipe = dest.get_recipe()
     if recipe ~= nil then
       local chest_info = GlobalState.get_chest_info(source.unit_number)
