@@ -1,3 +1,4 @@
+local Timer = require "src.Timer"
 local NetworkLoaderUi = require "src.NetworkLoaderUi"
 local GlobalState = require "src.GlobalState"
 local NetworkChestGui = require "src.NetworkChestGui"
@@ -5,7 +6,6 @@ local UiHandlers = require "src.UiHandlers"
 local NetworkViewUi = require "src.NetworkViewUi"
 local UiConstants = require "src.UiConstants"
 local NetworkTankGui = require "src.NetworkTankGui"
-local constants = require "src.constants"
 local Helpers = require "src.Helpers"
 
 local M = {}
@@ -445,9 +445,11 @@ function M.vehicle_update_entity(entity)
 
   local status = GlobalState.UPDATE_STATUS.NOT_UPDATED
   if entity.vehicle_logistic_requests_enabled then
+    GlobalState.start_timer("update_vehicle")
     status = M.update_vehicle(entity,
       entity.get_inventory(defines.inventory.spider_trash),
       entity.get_inventory(defines.inventory.spider_trunk))
+    GlobalState.stop_timer("update_vehicle")
   end
   return status
 end
@@ -671,7 +673,10 @@ local function update_chest_entity(unit_number, info)
     return GlobalState.UPDATE_STATUS.NOT_UPDATED
   end
 
-  return update_network_chest(info)
+  GlobalState.start_timer("update_network_chest")
+  result = update_network_chest(info)
+  GlobalState.stop_timer("update_network_chest")
+  return result
 end
 
 local function update_tank_entity(unit_number, info)
@@ -684,7 +689,9 @@ local function update_tank_entity(unit_number, info)
     return GlobalState.UPDATE_STATUS.NOT_UPDATED
   end
 
-  return update_tank(info)
+  GlobalState.start_timer("update_tank")
+  result = update_tank(info)
+  GlobalState.stop_timer("update_tank")
 end
 
 local function update_entity(unit_number)
@@ -720,6 +727,8 @@ function M.logistic_update_entity(entity)
   if not settings.global["item-network-enable-logistic-chest"].value then
     return GlobalState.UPDATE_STATUS.NOT_UPDATED
   end
+
+  GlobalState.start_timer("logistic_update_entity")
 
   -- sanity check
   if not entity.valid then
@@ -759,17 +768,30 @@ function M.logistic_update_entity(entity)
       end
     end
   end
+
+  GlobalState.stop_timer("logistic_update_entity")
+
   return status
 end
 
 function M.onTick()
+  GlobalState.start_timer("GlobalState.setup")
   GlobalState.setup()
+  GlobalState.stop_timer("GlobalState.setup")
+
+  GlobalState.start_timer("update_queue")
   M.update_queue()
+  GlobalState.stop_timer("update_queue")
 end
 
 function M.onTick_60()
+  GlobalState.start_timer("updatePlayers")
   M.updatePlayers()
+  GlobalState.stop_timer("updatePlayers")
+
+  GlobalState.start_timer("check_alerts")
   M.check_alerts()
+  GlobalState.stop_timer("check_alerts")
 end
 
 function M.handle_missing_material(entity, missing_name, item_count)
@@ -996,6 +1018,7 @@ function M.service_sensors()
   local params
   -- all sensors get the same parameters
   for _, entity in pairs(GlobalState.sensor_get_list()) do
+    GlobalState.start_timer("sensor_update")
     if entity.valid then
       local cb = entity.get_control_behavior()
       if cb ~= nil then
@@ -1005,6 +1028,7 @@ function M.service_sensors()
         cb.parameters = params
       end
     end
+    GlobalState.stop_timer("sensor_update")
   end
 end
 

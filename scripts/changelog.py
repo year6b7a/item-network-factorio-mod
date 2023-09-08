@@ -13,6 +13,12 @@ def get_changelog():
     v.fix(
         "Fixed bug where the setting to disable logistic integrations didn't work for missing items."
     )
+    v.feature(
+        "Added a Network Sensor that outputs the count of items in the network and updates every 2 seconds."
+    )
+    v.feature(
+        'Added a "Performance" Tab hidden behind a setting that displays durations for performance-critical parts of the mod. Should help while optimizing the mod.'
+    )
 
     v = cl.version((0, 8, 0), datetime.date(2023, 9, 3))
     v.feature(

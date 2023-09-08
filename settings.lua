@@ -28,6 +28,12 @@ function M.main()
       default_value = 20,
       minimum_value = 1,
     },
+    {
+      type = "bool-setting",
+      name = "item-network-enable-performance-tab",
+      setting_type = "runtime-per-user",
+      default_value = false,
+    },
   })
 end
 

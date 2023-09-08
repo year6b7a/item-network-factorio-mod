@@ -1,6 +1,7 @@
 local GlobalState = require "src.GlobalState"
 local UiConstants = require "src.UiConstants"
 local Utils = require "src.Utils"
+local Timer = require "src.Timer"
 
 local M = {}
 
@@ -115,9 +116,17 @@ function M.open_main_frame(player_index)
   local tab_fluid = tabbed_pane.add { type = "tab", caption = "Fluids" }
   local tab_shortage = tabbed_pane.add { type = "tab", caption = "Shortages" }
 
+
   tabbed_pane.add_tab(tab_item, build_item_page(tabbed_pane))
   tabbed_pane.add_tab(tab_fluid, build_item_page(tabbed_pane))
   tabbed_pane.add_tab(tab_shortage, build_item_page(tabbed_pane))
+
+  local enable_perf_tab = settings.get_player_settings(player.index)
+    ["item-network-enable-performance-tab"].value
+  if enable_perf_tab then
+    local tab_info = tabbed_pane.add { type = "tab", caption = "Performance" }
+    tabbed_pane.add_tab(tab_info, build_item_page(tabbed_pane))
+  end
 
   -- select "items" (not really needed, as that is the default)
   tabbed_pane.selected_tab_index = 1
@@ -135,6 +144,7 @@ local tab_idx_to_view_type = {
   "item",
   "fluid",
   "shortage",
+  "performance",
 }
 
 
@@ -201,12 +211,37 @@ function M.update_items(player_index)
     return
   end
 
+
   local item_flow = main_flow[UiConstants.NV_ITEM_FLOW]
   if item_flow ~= nil then
     item_flow.destroy()
   end
 
   local view_type = net_view.view_type
+
+  if view_type == "performance" then
+    local info_flow = main_flow.add({
+      type = "flow",
+      direction = "vertical",
+      name = UiConstants.NV_ITEM_FLOW,
+    })
+    for _, timer_info in ipairs(GlobalState.get_timers()) do
+      local timer_flow = info_flow.add({ type = "flow", direction = "horizontal" })
+      timer_flow.add({
+        type = "label",
+        caption = {
+          "",
+          timer_info.name,
+          " (",
+          timer_info.timer.count,
+          "):",
+        },
+      })
+      local timer_label = timer_flow.add({ type = "label" })
+      timer_label.caption = Timer.get_average(timer_info.timer)
+    end
+    return
+  end
 
   item_flow = main_flow.add({
     type = "scroll-pane",

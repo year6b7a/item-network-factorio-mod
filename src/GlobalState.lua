@@ -1,3 +1,4 @@
+local Timer = require "src.Timer"
 local Queue = require "src.Queue"
 local tables_have_same_keys = require("src.tables_have_same_keys")
   .tables_have_same_keys
@@ -114,6 +115,38 @@ function M.inner_setup()
     global.mod.fluids = new_fluids
     global.mod.has_run_fluid_temp_rounding_conversion = true
   end
+
+  -- always reset timers on load since they don't save state
+  global.mod.timers = {}
+end
+
+function M.start_timer(name)
+  local timer = global.mod.timers[name]
+  if timer == nil then
+    timer = Timer.new()
+    global.mod.timers[name] = timer
+  end
+  Timer.start(timer)
+end
+
+function M.stop_timer(name)
+  local timer = global.mod.timers[name]
+  if timer ~= nil then
+    Timer.stop(timer)
+  end
+end
+
+local function sort_timers(left, right)
+  return left.timer.count > right.timer.count
+end
+
+function M.get_timers()
+  local result = {}
+  for timer_name, timer in pairs(global.mod.timers) do
+    table.insert(result, { name = timer_name, timer = timer })
+  end
+  table.sort(result, sort_timers)
+  return result
 end
 
 -- store the missing item: mtab[item_name][unit_number] = { game.tick, count }
