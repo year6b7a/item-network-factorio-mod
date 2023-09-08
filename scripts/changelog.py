@@ -6,7 +6,7 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version((0, 8, 1), datetime.date(2023, 9, 4))
+    v = cl.version((0, 8, 1), datetime.date(2023, 9, 8))
     v.fix(
         "Fixed bug where game would crash when copying to/from a Network Chest to a non-assembler entity like a normal chest."
     )
