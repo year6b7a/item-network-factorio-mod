@@ -811,6 +811,10 @@ end
 function M.check_alerts()
   GlobalState.alert_transfer_cleanup()
 
+  if not settings.global["item-network-enable-logistic-chest"].value then
+    return
+  end
+
   -- process all the alerts for all players
   for _, player in pairs(game.players) do
     local alerts = player.get_alerts {

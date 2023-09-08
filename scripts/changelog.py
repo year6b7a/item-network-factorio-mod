@@ -10,6 +10,9 @@ def get_changelog():
     v.fix(
         "Fixed bug where game would crash when copying to/from a Network Chest to a non-assembler entity like a normal chest."
     )
+    v.fix(
+        "Fixed bug where the setting to disable logistic integrations didn't work for missing items."
+    )
 
     v = cl.version((0, 8, 0), datetime.date(2023, 9, 3))
     v.feature(
