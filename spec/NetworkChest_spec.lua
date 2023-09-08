@@ -73,6 +73,13 @@ local function create_mock_chest(opts)
   return entity
 end
 
+local function create_mock_profiler()
+  return {
+    restart = function() end,
+    stop = function() end,
+  }
+end
+
 
 describe("update_network", function()
   local function get_filtered_entity_prototypes()
@@ -102,6 +109,7 @@ describe("update_network", function()
       print = function() end,
       get_filtered_entity_prototypes = get_filtered_entity_prototypes,
       surfaces = {},
+      create_profiler = create_mock_profiler,
     }
     _G.settings = settings
     GlobalState.inner_setup()
@@ -118,6 +126,7 @@ describe("update_network", function()
       print = function() end,
       get_filtered_entity_prototypes = get_filtered_entity_prototypes,
       surfaces = {},
+      create_profiler = create_mock_profiler,
     }
     _G.settings = settings
     GlobalState.inner_setup()
