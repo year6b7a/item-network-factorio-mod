@@ -692,6 +692,7 @@ local function update_tank_entity(unit_number, info)
   GlobalState.start_timer("update_tank")
   result = update_tank(info)
   GlobalState.stop_timer("update_tank")
+  return result
 end
 
 local function update_entity(unit_number)

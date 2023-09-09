@@ -6,6 +6,9 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
+    v = cl.version()
+    v.fix("Fixed bug where Network Tanks stopped updating.")
+
     v = cl.version((0, 8, 2), datetime.datetime(2023, 9, 8))
     v.fix("Fixed bug where unable to load games due to timer bug.")
 
