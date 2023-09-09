@@ -775,9 +775,7 @@ function M.logistic_update_entity(entity)
 end
 
 function M.onTick()
-  GlobalState.start_timer("GlobalState.setup")
   GlobalState.setup()
-  GlobalState.stop_timer("GlobalState.setup")
 
   GlobalState.start_timer("update_queue")
   M.update_queue()
