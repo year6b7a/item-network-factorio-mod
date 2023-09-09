@@ -674,7 +674,7 @@ local function update_chest_entity(unit_number, info)
   end
 
   GlobalState.start_timer("update_network_chest")
-  result = update_network_chest(info)
+  local result = update_network_chest(info)
   GlobalState.stop_timer("update_network_chest")
   return result
 end
@@ -690,7 +690,7 @@ local function update_tank_entity(unit_number, info)
   end
 
   GlobalState.start_timer("update_tank")
-  result = update_tank(info)
+  local result = update_tank(info)
   GlobalState.stop_timer("update_tank")
   return result
 end
@@ -709,7 +709,7 @@ local function update_entity(unit_number)
 
   local entity = GlobalState.get_logistic_entity(unit_number)
   if entity ~= nil then
-    return M.logistic_update_entity(entity)
+    return M.outer_logistic_update_entity(entity)
   end
 
   entity = GlobalState.get_vehicle_entity(unit_number)
@@ -724,12 +724,17 @@ function M.update_queue()
   GlobalState.update_queue(update_entity)
 end
 
+function M.outer_logistic_update_entity(entity)
+  GlobalState.start_timer("logistic_update_entity")
+  local result = M.logistic_update_entity(entity)
+  GlobalState.stop_timer("logistic_update_entity")
+  return result
+end
+
 function M.logistic_update_entity(entity)
   if not settings.global["item-network-enable-logistic-chest"].value then
     return GlobalState.UPDATE_STATUS.NOT_UPDATED
   end
-
-  GlobalState.start_timer("logistic_update_entity")
 
   -- sanity check
   if not entity.valid then
@@ -769,8 +774,6 @@ function M.logistic_update_entity(entity)
       end
     end
   end
-
-  GlobalState.stop_timer("logistic_update_entity")
 
   return status
 end
