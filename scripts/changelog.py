@@ -6,7 +6,7 @@ from typing import Optional
 def get_changelog():
     cl = Changelog()
 
-    v = cl.version()
+    v = cl.version((0, 8, 4), datetime.date(2023, 9, 11))
     v.fix("Fixed bug when deconstructing logistic entities.")
 
     v = cl.version((0, 8, 3), datetime.date(2023, 9, 8))
