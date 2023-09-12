@@ -9,6 +9,7 @@ function M.main()
   M.add_loader()
   M.add_network_tank()
   M.add_network_sensor()
+  M.add_large_network_chest()
 
   data:extend(Hotkeys.hotkeys)
 end
@@ -231,6 +232,114 @@ function M.add_network_sensor()
   recipe.name = name
   recipe.result = name
   recipe.enabled = true
+
+  data:extend({ entity, item, recipe })
+end
+
+function M.add_large_network_chest()
+  local name = "large-network-chest"
+
+  local reference_entity = data.raw["container"]["iron-chest"]
+
+  local entity = {
+    type = "container",
+    name = name,
+    icon = "__base__/graphics/icons/iron-chest.png",
+    icon_size = 64,
+    icon_mipmaps = 4,
+    flags = { "placeable-neutral", "player-creation" },
+    minable = { mining_time = 0.2, result = "large-network-chest" },
+    max_health = 200,
+    open_sound = {
+      filename = "__base__/sound/metallic-chest-open.ogg",
+      volume = 0.43,
+    },
+    close_sound = {
+      filename = "__base__/sound/metallic-chest-close.ogg",
+      volume = 0.43,
+    },
+    resistances =
+    {
+      {
+        type = "fire",
+        percent = 80,
+      },
+      {
+        type = "impact",
+        percent = 30,
+      },
+    },
+    collision_box = { { -1.35, -1.35 }, { 1.35, 1.35 } },
+    selection_box = { { -1.5, -1.5 }, { 1.5, 1.5 } },
+    fast_replaceable_group = "container",
+    inventory_size = 128,
+    picture =
+    {
+      layers =
+      {
+        {
+          filename = "__base__/graphics/entity/iron-chest/iron-chest.png",
+          priority = "extra-high",
+          width = 34,
+          height = 38,
+          shift = util.by_pixel(0, -0.5),
+          hr_version =
+          {
+            filename = "__base__/graphics/entity/iron-chest/hr-iron-chest.png",
+            priority = "extra-high",
+            width = 66,
+            height = 76,
+            shift = util.by_pixel(-0.5, -0.5),
+            scale = 0.5,
+          },
+        },
+        {
+          filename = "__base__/graphics/entity/iron-chest/iron-chest-shadow.png",
+          priority = "extra-high",
+          width = 56,
+          height = 26,
+          shift = util.by_pixel(10, 6.5),
+          draw_as_shadow = true,
+          hr_version =
+          {
+            filename =
+            "__base__/graphics/entity/iron-chest/hr-iron-chest-shadow.png",
+            priority = "extra-high",
+            width = 110,
+            height = 50,
+            shift = util.by_pixel(10.5, 6),
+            draw_as_shadow = true,
+            scale = 0.5,
+          },
+        },
+      },
+    },
+    circuit_wire_connection_point = reference_entity
+      .circuit_wire_connection_point,
+    circuit_connector_sprites = reference_entity.circuit_connector_sprites,
+    circuit_wire_max_distance = reference_entity.circuit_wire_max_distance,
+  }
+
+  local item = {
+    name = name,
+    type = "item",
+    place_result = name,
+    icon = data.raw["item"]["iron-chest"].icon,
+    icon_size = 64,
+    stack_size = 50,
+    subgroup = data.raw["item"]["iron-chest"].subgroup,
+    order = data.raw["item"]["iron-chest"].order,
+  }
+
+  local recipe = {
+    name = name,
+    type = "recipe",
+    enabled = true,
+    energy_required = 0.5,
+    ingredients = {},
+    result = name,
+    result_count = 1,
+  }
 
   data:extend({ entity, item, recipe })
 end
