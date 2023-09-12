@@ -53,9 +53,18 @@ For example, here's how to prioritize sending coal to power generation. When the
 
 ![Coal Prioritization](/readme-pictures/coal-priorities.png)
 
-### Copy Recipes from Assemblers
+### Easier ways to configure Network Chests
 
-Recipes can be copied from assamblers just like requester logistic chests which makes it easy to build a mall.
+While it's always possible to configure Network Chests manually, it's often easier to copy ingredients from an assembler's recipe. The mod supports copy-pasting both ingredients and results from an assembler to a chest.
+
+Copy-paste behavior follow the direction of items:
+
+- If items flow from the chest to the assembler, you copy from the chest and paste to the assembler.
+- If items flow from the assembler to the chest, you copy from the assembler and paste in the chest.
+
+This copy-paste behavior appends items to the Network Chest's configuration which makes it easier to supply multiple recipes from a single chest.
+
+Network Loaders also have an easier configuration method. If a Network Loader is placed next to a Network Chest, it will read the provided items from the chest and suggest those items when you set the loader's filter.
 
 ### Fluids
 
