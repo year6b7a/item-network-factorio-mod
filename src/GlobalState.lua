@@ -26,13 +26,18 @@ function M.inner_setup()
       items = {},
     }
   end
+
+  if global.mod.scan_queue_inactive == nil then
+    global.mod.scan_queue_inactive = Queue.new()
+  end
+
   M.remove_old_ui()
   if global.mod.player_info == nil then
     global.mod.player_info = {}
   end
 
   if global.mod.network_chest_has_been_placed == nil then
-    global.mod.network_chest_has_been_placed = global.mod.scan_queue.size > 0
+    global.mod.network_chest_has_been_placed = (global.mod.scan_queue.size + global.mod.scan_queue_inactive.size) > 0
   end
 
   if global.mod.fluids == nil then
@@ -510,18 +515,6 @@ function M.increment_item_count(item_name, delta)
   global.mod.items[item_name] = count + delta
 end
 
-function M.get_scan_queue_size()
-  return global.mod.scan_queue.size
-end
-
-function M.scan_queue_pop()
-  return Queue.pop_random(global.mod.scan_queue, global.mod.rand)
-end
-
-function M.scan_queue_push(unit_number)
-  Queue.push(global.mod.scan_queue, unit_number)
-end
-
 function M.get_player_info(player_index)
   local info = global.mod.player_info[player_index]
   if info == nil then
@@ -547,7 +540,6 @@ M.UPDATE_STATUS = {
   INVALID = 0,
   UPDATED = 1,
   NOT_UPDATED = 2,
-  ALREADY_UPDATED = 3,
 }
 
 function M.get_queue_counts(
@@ -593,29 +585,45 @@ function M.update_queue(update_entity)
     .value
   local updated_entities = {}
 
-  local function inner_update_entity(unit_number)
-    if updated_entities[unit_number] ~= nil then
-      return M.UPDATE_STATUS.ALREADY_UPDATED
+  -- peek the first entry. If we haven't processed it, then pop and return it.
+  local function pop_from_q(q)
+    local unum = Queue.get_front(q)
+    if unum ~= nil and updated_entities[unum] == nil then
+      updated_entities[unum] = true
+      return Queue.pop(q)
     end
-    updated_entities[unit_number] = true
-
-    return update_entity(unit_number)
+    return nil
   end
 
+  local toggle = true
   for _ = 1, MAX_ENTITIES_TO_UPDATE do
-    local unit_number = Queue.pop(global.mod.scan_queue)
-    if unit_number == nil then
-      break
+    local unit_number
+    if toggle then
+      unit_number = pop_from_q(global.mod.scan_queue)
+      if unit_number == nil then
+        unit_number = pop_from_q(global.mod.scan_queue_inactive)
+        if unit_number == nil then
+          break
+        end
+      end
+    else
+      unit_number = pop_from_q(global.mod.scan_queue_inactive)
+      if unit_number == nil then
+        unit_number = pop_from_q(global.mod.scan_queue)
+        if unit_number == nil then
+          break
+        end
+      end
     end
+    toggle = not toggle
 
-    local status = inner_update_entity(unit_number)
-    if status == M.UPDATE_STATUS.NOT_UPDATED or status == M.UPDATE_STATUS.UPDATED or status == M.UPDATE_STATUS.ALREADY_UPDATED then
+    local status = update_entity(unit_number)
+    if status == M.UPDATE_STATUS.UPDATED then
       Queue.push(global.mod.scan_queue, unit_number)
+    elseif status == M.UPDATE_STATUS.NOT_UPDATED then
+      Queue.push(global.mod.scan_queue_inactive, unit_number)
     end
   end
-
-  -- finally, swap a random entity to the front of the queue to introduce randomness in update order.
-  Queue.swap_random_to_front(global.mod.scan_queue, global.mod.rand)
 end
 
 -- translate a tile name to the item name ("stone-path" => "stone-brick")
