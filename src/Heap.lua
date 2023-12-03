@@ -1,6 +1,6 @@
-local self = {}
+local Heap = {}
 
-function self.new()
+function Heap.new()
   return {
     keys = {},
     values = {},
@@ -27,7 +27,7 @@ local function heapify_down(heap, idx)
 end
 
 local function heapify_up(heap, idx)
-  assert(heap.size == #heap.keys)
+  -- assert(heap.size == #heap.keys)
   while true do
     local next_idx0 = 2 * idx
     local next_idx1 = next_idx0 + 1
@@ -57,14 +57,18 @@ local function heapify_up(heap, idx)
   end
 end
 
-function self.insert(heap, key, value)
+function Heap.insert(heap, key, value)
+  -- assert(heap.size == #heap.keys)
+  -- assert(heap.size == #heap.values)
   table.insert(heap.keys, key)
   table.insert(heap.values, value)
   heap.size = heap.size + 1
   heapify_down(heap, heap.size)
+  -- assert(heap.size == #heap.keys)
+  -- assert(heap.size == #heap.values)
 end
 
-function self.peek(heap)
+function Heap.peek(heap)
   if heap.size == 0 then
     return nil
   end
@@ -72,11 +76,12 @@ function self.peek(heap)
   return { key = heap.keys[1], value = heap.values[1] }
 end
 
-function self.pop(heap)
+function Heap.pop(heap)
+  -- assert(heap.size == #heap.keys)
+  -- assert(heap.size == #heap.values)
   if heap.size == 0 then
     return
   end
-
 
   if heap.size >= 2 then
     swap(heap, 1, heap.size)
@@ -90,13 +95,11 @@ function self.pop(heap)
     heap.size = heap.size - 1
   end
 
-
-
-  assert(heap.size == #heap.keys)
-  assert(heap.size == #heap.values)
+  -- assert(heap.size == #heap.keys)
+  -- assert(heap.size == #heap.values)
 end
 
-function self.debug(heap)
+function Heap.debug(heap)
   print("--------------------")
   for idx, key in pairs(heap.keys) do
     print(key, heap.values[idx])
@@ -104,4 +107,4 @@ function self.debug(heap)
   print("------------------")
 end
 
-return self
+return Heap

@@ -37,4 +37,43 @@ function Helpers.int_partition(values, max)
   return new_values
 end
 
+function Helpers.split_list_by_batch_size(elements, batch_size)
+  local batches = {}
+  local batch = {}
+
+  for _, elem in ipairs(elements) do
+    if #batch > 0 and #batch >= batch_size then
+      table.insert(batches, batch)
+      batch = {}
+    end
+    table.insert(batch, elem)
+  end
+
+  if #batch > 0 then
+    table.insert(batches, batch)
+  end
+
+  return batches
+end
+
+function Helpers.shallow_copy(t)
+  local t2 = {}
+  for k, v in pairs(t) do
+    t2[k] = v
+  end
+  return t2
+end
+
+function Helpers.deep_copy(datatable)
+  local res = {}
+  if type(datatable) == "table" then
+    for k, v in pairs(datatable) do
+      res[k] = Helpers.deep_copy(v)
+    end
+  else
+    res = datatable
+  end
+  return res
+end
+
 return Helpers

@@ -1,5 +1,7 @@
+local Heap = require "src.Heap"
 local Timer = require "src.Timer"
 local Queue = require "src.Queue"
+local Helpers = require "src.Helpers"
 local tables_have_same_keys = require("src.tables_have_same_keys")
   .tables_have_same_keys
 local constants = require "src.constants"
@@ -118,6 +120,20 @@ function M.inner_setup()
 
   -- always reset timers on load since they don't save state
   global.mod.timers = {}
+
+  if global.mod.update_queue == nil then
+    -- A priority queue sorted by update time
+    -- that stores an entity id to update.
+    global.mod.update_queue = Heap.new()
+
+    -- A map from material ID -> info about the material.
+    -- An item's material ID is just the item's name.
+    -- A fluid's material ID is the fluid name @ temperature.
+    global.mod.materials = {}
+
+    -- A map from entity ID to info about the entity.
+    global.mod.entities = {}
+  end
 end
 
 function M.start_timer(name)
@@ -370,26 +386,93 @@ function M.sensor_get_list()
   return global.mod.sensors
 end
 
+function M.get_updates_per_tick()
+  return 20
+end
+
+function M.get_update_period()
+  return math.ceil(global.mod.update_queue.size / M.get_updates_per_tick())
+end
+
+function M.get_default_update_period()
+  return 3 * M.get_update_period()
+end
+
+function M.register_entity(entity_id, info)
+  if global.mod.entities[entity_id] ~= nil then
+    return
+  end
+
+  global.mod.entities[entity_id] = info
+end
+
+function M.unregister_entity(entity_id)
+  global.mod.entities[entity_id] = nil
+end
+
 function M.register_chest_entity(entity, requests)
   if requests == nil then
     requests = {}
   end
 
-  if global.mod.chests[entity.unit_number] ~= nil then
-    return
-  end
-
-  Queue.push(global.mod.scan_queue, entity.unit_number)
-  global.mod.chests[entity.unit_number] = {
+  local info = {
     entity = entity,
     requests = requests,
   }
 
+  M.register_entity(entity.unit_number, info)
   global.mod.network_chest_has_been_placed = true
 end
 
-function M.delete_chest_entity(unit_number)
-  global.mod.chests[unit_number] = nil
+function M.get_material_info(material)
+  local info = global.mod.materials[material]
+  if info == nil then
+    info = {
+      amount = 0,
+      deposit_limit = 1,
+    }
+    global.mod.materials[material] = info
+  end
+  return info
+end
+
+local function increment_material_amount(info, delta)
+  info.amount = (info.amount or 0) + delta
+  if info.amount >= info.deposit_limit then
+    info.has_been_full = true
+  elseif info.amount == 0 and info.has_been_full then
+    info.has_been_full = false
+    local next_limit = math.ceil(1.5 * (1 + info.deposit_limit))
+    info.deposit_limit = next_limit
+  end
+end
+
+function M.deposit_material_to_limit(material, amount)
+  local info = M.get_material_info(material)
+  local current_amount = info.amount
+  local limit = info.deposit_limit
+  local max_deposit = math.max(0, limit - current_amount)
+  local deposited = math.min(amount, max_deposit)
+  increment_material_amount(info, deposited)
+  return deposited
+end
+
+function M.deposit_material(material, amount)
+  local info = M.get_material_info(material)
+  increment_material_amount(info, amount)
+end
+
+function M.get_material_available_to_withdraw(material)
+  local info = M.get_material_info(material)
+  return info.amount or 0
+end
+
+function M.withdraw_material(material, amount)
+  local info = M.get_material_info(material)
+  local current_amount = info.amount or 0
+  local withdrawn = math.min(current_amount, amount)
+  increment_material_amount(info, -withdrawn)
+  return withdrawn
 end
 
 function M.put_chest_contents_in_network(entity)
@@ -398,10 +481,14 @@ function M.put_chest_contents_in_network(entity)
   if inv ~= nil then
     local contents = inv.get_contents()
     for item, count in pairs(contents) do
-      M.increment_item_count(item, count)
+      M.deposit_material(item, count)
     end
     inv.clear()
   end
+end
+
+function M.get_entity_info(entity_id)
+  return global.mod.entities[entity_id]
 end
 
 function M.register_tank_entity(entity, config)
@@ -437,6 +524,12 @@ end
 
 function M.get_tank_info(unit_number)
   return global.mod.tanks[unit_number]
+end
+
+function M.copy_entity_config(source_id, dest_id)
+  local source_config = global.mod.entities[source_id].config
+  local dest_config = Helpers.deep_copy(source_config)
+  global.mod.entities[dest_id].config = dest_config
 end
 
 function M.copy_chest_requests(source_unit_number, dest_unit_number)
@@ -529,6 +622,17 @@ function M.get_player_info(player_index)
     global.mod.player_info[player_index] = info
   end
   return info
+end
+
+function M.get_window_state(player_index, window_name)
+  local info = M.get_player_info(player_index)
+  if info.window_states == nil then
+    info.window_states = {}
+  end
+  if info.window_states[window_name] == nil then
+    info.window_states[window_name] = {}
+  end
+  return info.window_states[window_name]
 end
 
 function M.get_player_info_map()
@@ -641,6 +745,15 @@ function M.resolve_name(name)
   end
 
   return nil
+end
+
+function M.get_entities_to_update_on_tick(tick)
+  local result = {}
+  while global.mod.update_queue.size > 0 and #result < 20 do
+    table.insert(result, Heap.peek(global.mod.update_queue))
+    Heap.pop(global.mod.update_queue)
+  end
+  return result
 end
 
 return M

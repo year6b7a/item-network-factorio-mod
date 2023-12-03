@@ -1,6 +1,6 @@
 local GlobalState = require "src.GlobalState"
 local UiConstants = require "src.UiConstants"
-local Utils = require "src.Utils"
+local Helpers = require "src.Helpers"
 
 local M = {}
 
@@ -61,7 +61,7 @@ function M.on_gui_opened(player, entity)
 
   main_flow.add({ type = "label", caption = "Set Filter from Attached Container:" })
 
-  local suggested_filters_rows = Utils.split_list_by_batch_size(
+  local suggested_filters_rows = Helpers.split_list_by_batch_size(
     suggested_filters, 10
   )
   local suggested_filters_flow = main_flow.add({

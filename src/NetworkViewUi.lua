@@ -1,6 +1,6 @@
 local GlobalState = require "src.GlobalState"
 local UiConstants = require "src.UiConstants"
-local Utils = require "src.Utils"
+local Helpers = require "src.Helpers"
 local Timer = require "src.Timer"
 
 local M = {}
@@ -443,7 +443,7 @@ end
 function M.get_rows_of_items(view_type)
   local items = M.get_list_of_items(view_type)
   local max_row_count = 10
-  local rows = Utils.split_list_by_batch_size(items, max_row_count)
+  local rows = Helpers.split_list_by_batch_size(items, max_row_count)
   return rows
 end
 
