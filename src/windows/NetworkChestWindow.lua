@@ -95,7 +95,6 @@ table.insert(M.elem_handlers, {
 function M.on_open_window(state, player, entity)
   local entity_info = GlobalState.get_entity_info(entity.unit_number)
   assert(entity_info ~= nil)
-  assert(entity_info.type == "network-chest")
   local requests = entity_info.config.requests
 
   local window_requests = {}

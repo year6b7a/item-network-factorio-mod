@@ -5,7 +5,7 @@ local Hotkeys = require "src.Hotkeys"
 local M = {}
 
 function M.main()
-  M.add_network_chest()
+  M.add_network_chests()
   M.add_loader()
   M.add_network_tank()
   M.add_network_sensor()
@@ -13,8 +13,7 @@ function M.main()
   data:extend(Hotkeys.hotkeys)
 end
 
-function M.add_network_chest()
-  local name = "network-chest"
+local function inner_add_network_chest(name, size)
   local override_item_name = "iron-chest"
   local overwrite_prototype = "container"
 
@@ -24,11 +23,26 @@ function M.add_network_chest()
   entity.picture = {
     filename = Paths.graphics .. "/entities/network-chest.png",
     size = 64,
-    scale = 0.5,
+    scale = size * 0.5,
   }
   entity.inventory_size = constants.NUM_INVENTORY_SLOTS
   entity.inventory_type = "with_filters_and_bar"
   entity.minable.result = name
+  local collision_size = size * 0.5 - 0.05
+  entity.collision_box = {
+    { -collision_size, -collision_size },
+    { collision_size,  collision_size },
+  }
+  local selection_size = size * 0.5
+  entity.selection_box = {
+    { -selection_size, -selection_size },
+    { selection_size,  selection_size },
+  }
+  local drawing_size = size * 0.5
+  entity.drawing_box = {
+    { -drawing_size, -drawing_size },
+    { drawing_size,  drawing_size },
+  }
 
   local item = table.deepcopy(data.raw["item"][override_item_name])
   item.name = name
@@ -47,6 +61,12 @@ function M.add_network_chest()
   }
 
   data:extend({ entity, item, recipe })
+end
+
+function M.add_network_chests()
+  inner_add_network_chest("network-chest", 1)
+  inner_add_network_chest("medium-network-chest", 3)
+  inner_add_network_chest("large-network-chest", 5)
 end
 
 function M.add_loader()

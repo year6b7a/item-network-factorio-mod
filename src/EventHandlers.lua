@@ -1,3 +1,6 @@
+local LargeNetworkChestEntity = require "src.entities.LargeNetworkChestEntity"
+local LargeNetworkChestWindow = require "src.windows.LargeNetworkChestWindow"
+local MediumNetworkChestEntity = require "src.entities.MediumNetworkChestEntity"
 local MediumNetworkChestWindow = require "src.windows.MediumNetworkChestWindow"
 local Heap = require "src.Heap"
 local NetworkChestWindow = require "src.windows.NetworkChestWindow"
@@ -9,10 +12,13 @@ local M = {}
 local WINDOWS = {
   NetworkChestWindow,
   MediumNetworkChestWindow,
+  LargeNetworkChestWindow,
 }
 
 local ENTITIES = {
   NetworkChestEntity,
+  MediumNetworkChestEntity,
+  LargeNetworkChestEntity,
 }
 
 local entity_name_to_window_map = {}
@@ -304,7 +310,7 @@ function M.on_player_setup_blueprint(event)
     local entity_def = entity_name_to_entity_map[entity.name]
     if entity_def ~= nil then
       local real_entity = event.surface.find_entity(
-        "network-chest",
+        entity.name,
         entity.position
       )
       local config = entity_def.copy_config(real_entity.unit_number)

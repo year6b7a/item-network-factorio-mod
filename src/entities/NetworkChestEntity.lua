@@ -58,6 +58,10 @@ function M.on_paste_settings(source, dest)
       dest_info.config.requests = new_requests
       dest_info.config.has_been_updated = false
     end
+  elseif source.name == "network-chest" or source.name == "medium-network-chest" or source.name == "large-network-chest" then
+    local dest_info = GlobalState.get_entity_info(dest.unit_number)
+    dest_info.config = M.copy_config(source.unit_number)
+    dest_info.config.has_been_updated = false
   end
 end
 
