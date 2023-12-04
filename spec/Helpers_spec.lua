@@ -1,4 +1,4 @@
-Helpers = require "src.Helpers"
+local Helpers = require "src.Helpers"
 
 describe("int_partition", function()
   it("return values when less than max", function()

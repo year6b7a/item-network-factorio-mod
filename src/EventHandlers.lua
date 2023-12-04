@@ -1,3 +1,4 @@
+local NetworkLoaderWindow = require "src.windows.NetworkLoaderWindow"
 local LargeNetworkChestEntity = require "src.entities.LargeNetworkChestEntity"
 local LargeNetworkChestWindow = require "src.windows.LargeNetworkChestWindow"
 local MediumNetworkChestEntity = require "src.entities.MediumNetworkChestEntity"
@@ -13,6 +14,7 @@ local WINDOWS = {
   NetworkChestWindow,
   MediumNetworkChestWindow,
   LargeNetworkChestWindow,
+  NetworkLoaderWindow,
 }
 
 local ENTITIES = {
