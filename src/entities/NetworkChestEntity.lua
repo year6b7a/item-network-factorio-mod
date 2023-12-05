@@ -164,6 +164,7 @@ function M.on_update(info)
     local started_at_limit
     local ended_at_limit
     local prev_delta
+    local current_delta = 0
     local runway
     local end_amount = start_amount
     if request.type == "provide" then
@@ -192,6 +193,7 @@ function M.on_update(info)
           end
           assert(deposited == actual_deposited)
           end_amount = start_amount - deposited
+          current_delta = deposited
         end
       end
       ended_at_limit = end_amount == 0
@@ -215,6 +217,7 @@ function M.on_update(info)
           count = amount_to_withdraw,
         })
         end_amount = start_amount + withdrawn
+        current_delta = withdrawn
         GlobalState.withdraw_item(request.item, withdrawn)
       end
       ended_at_limit = end_amount >= request.capacity
@@ -232,10 +235,11 @@ function M.on_update(info)
       end
       request.max_rate = max_rate
 
-      if not request.initialized and (not started_at_limit or prev_delta == 0) then
+      if not request.initialized and not started_at_limit and prev_delta > 0 then
         game.print(string.format(
-          "Initialized request type=%s, start_amount=%s, end_amount=%s, limits=[%s, %s, %s] , prev_delta=%s, ticks_since=%s, capacity=%s, max_rate=%s",
+          "Initialized request type=%s, amounts=[%s, %s, %s], limits=[%s, %s, %s] , prev_delta=%s, ticks_since=%s, capacity=%s, max_rate=%s",
           request.type,
+          request.prev_amount or "?",
           start_amount,
           end_amount,
           request.prev_at_limit,
@@ -278,38 +282,7 @@ function M.on_update(info)
       next_delay = math.min(next_delay, est_delay)
     end
 
-
-    -- request.est_delay = nil
-    -- if ticks_since ~= nil and request.prev_amount ~= nil then
-    --   local stack_size = game.item_prototypes[request.item].stack_size
-    --   local prev_delta
-    --   local next_delta
-    --   if request.type == "provide" then
-    --     prev_delta = start_amount - request.prev_amount
-    --     next_delta = request.capacity - current_amount
-    --   elseif request.type == "request" then
-    --     prev_delta = request.prev_amount - start_amount
-    --     next_delta = current_amount
-    --   else
-    --     error("unreachable")
-    --   end
-
-    --   if prev_delta > 0 and next_delta > 0 then
-    --     local max_rate = prev_delta / ticks_since
-    --     if request.max_rate ~= nil then
-    --       max_rate = math.max(max_rate, request.max_rate)
-    --     end
-    --     request.max_rate = max_rate
-
-    --     local delay_5_stack = 5 * stack_size / max_rate
-    --     local delay_80_percent = next_delta * 0.8 / max_rate
-    --     local est_delay = math.min(delay_5_stack, delay_80_percent)
-    --     request.est_delay = est_delay
-    --     next_delay = math.min(next_delay, est_delay)
-    --   end
-    -- end
-
-    if not request.initialized then
+    if not request.initialized and (prev_delta == nil or prev_delta > 0 or current_delta > 0) then
       next_delay = constants.MIN_UPDATE_TICKS
     end
 
