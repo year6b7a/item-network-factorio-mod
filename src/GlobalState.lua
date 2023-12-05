@@ -396,7 +396,7 @@ function M.get_update_period()
 end
 
 function M.get_default_update_period()
-  return 3 * M.get_update_period()
+  return math.max(constants.MIN_UPDATE_TICKS, 8 * M.get_update_period())
 end
 
 function M.register_entity(entity_id, info)

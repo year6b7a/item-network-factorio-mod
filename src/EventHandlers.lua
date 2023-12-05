@@ -340,8 +340,8 @@ function M.on_tick()
   local entities_to_update = {}
   while #entities_to_update < 20 do
     local top = Heap.peek(global.mod.update_queue)
-    -- if top == nil or top.key >= game.tick then
-    if top == nil then
+    if top == nil or top.key >= game.tick then
+      -- if top == nil then
       break
     end
     Heap.pop(global.mod.update_queue)

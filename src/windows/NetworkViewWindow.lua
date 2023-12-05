@@ -156,6 +156,7 @@ local function get_item_icon(item_name, info)
       "in_nv.item_sprite_btn_tooltip",
       item_proto.localised_name,
       info.amount,
+      info.deposit_limit,
     },
     tags = {
       elem_id = ITEM_SPRITE_BTN_ID,

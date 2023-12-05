@@ -34,6 +34,7 @@ table.insert(M.elem_handlers, {
         item = item,
       })
       state.selected_item = #state.requests
+      state.has_made_changes = true
       M.rerender_requests(state)
       M.renreder_selected_item_flow(state)
     end
@@ -69,6 +70,7 @@ table.insert(M.elem_handlers, {
       type = value,
       item = request.item,
     }
+    state.has_made_changes = true
     M.renreder_selected_item_flow(state)
   end,
 })
@@ -87,6 +89,7 @@ table.insert(M.elem_handlers, {
     end
     state.requests = new_requests
     state.selected_item = nil
+    state.has_made_changes = true
     M.rerender_requests(state)
     M.renreder_selected_item_flow(state)
   end,
@@ -231,6 +234,12 @@ function M.renreder_selected_item_flow(state)
         request.capacity or "?",
         ", Slots=",
         request.n_slots or "?",
+        ", Est. Delay=",
+        request.est_delay or "?",
+        ", Max Rate=",
+        request.max_rate or "?",
+        ", Initialized=",
+        request.initialized and "yes" or "no",
       },
     })
 
@@ -272,9 +281,11 @@ end
 
 function M.on_close_window(state)
   local entity_info = GlobalState.get_entity_info(state.entity.unit_number)
-  entity_info.config = {
-    requests = state.requests,
-  }
+  if state.has_made_changes then
+    entity_info.config = {
+      requests = state.requests,
+    }
+  end
 end
 
 return M
