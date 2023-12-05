@@ -1,5 +1,6 @@
 local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
+local Timer = require "src.Timer"
 local M = {}
 
 M.window_name = "cbe5507815be529f2ee8cc652a7d4cbe"
@@ -244,6 +245,27 @@ function M.render_selected_tab(state)
       end
     end
     render_rows_of_icons(main_flow, icons)
+  elseif selected_tab_idx == 3 then
+    -- shortages
+  elseif selected_tab_idx == 4 then
+    -- performance
+    for _, timer_info in ipairs(GlobalState.get_timers()) do
+      local timer_flow = main_flow.add({
+        type = "flow", direction = "horizontal",
+      })
+      timer_flow.add({
+        type = "label",
+        caption = {
+          "",
+          timer_info.name,
+          " (",
+          timer_info.timer.count,
+          "):",
+        },
+      })
+      local timer_label = timer_flow.add({ type = "label" })
+      timer_label.caption = Timer.get_average(timer_info.timer)
+    end
   end
 end
 

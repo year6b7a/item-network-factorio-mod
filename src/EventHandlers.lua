@@ -335,6 +335,8 @@ end
 
 function M.on_tick()
   -- called every tick
+  GlobalState.start_timer("On Tick")
+  GlobalState.start_timer("Get Entities From Queue")
   local entities_to_update = {}
   while #entities_to_update < 20 do
     local top = Heap.peek(global.mod.update_queue)
@@ -345,6 +347,7 @@ function M.on_tick()
     Heap.pop(global.mod.update_queue)
     table.insert(entities_to_update, top.value)
   end
+  GlobalState.stop_timer("Get Entities From Queue")
 
   for _, entity_id in ipairs(entities_to_update) do
     local entity_info = GlobalState.get_entity_info(entity_id)
@@ -352,15 +355,18 @@ function M.on_tick()
       local entity_name = entity_info.type
       local entity_handler = entity_name_to_entity_map[entity_name]
       if entity_handler ~= nil then
+        GlobalState.start_timer("Update Entity")
         local next_update_ticks = entity_handler.on_update(entity_info)
         Heap.insert(
           global.mod.update_queue,
           game.tick + next_update_ticks,
           entity_id
         )
+        GlobalState.stop_timer("Update Entity")
       end
     end
   end
+  GlobalState.stop_timer("On Tick")
 end
 
 function M.on_init()
