@@ -100,6 +100,7 @@ local function update_network_chest_capacity(info)
   local slot_idx = 1
   for idx, request in ipairs(requests) do
     local n_slots = slots[idx]
+    request.n_slots = n_slots
     local stack_size = game.item_prototypes[request.item].stack_size
     local real_capacity
     if request.type == "provide" then
@@ -109,7 +110,6 @@ local function update_network_chest_capacity(info)
     else
       error("unreachable")
     end
-    request.n_slots = n_slots
     request.capacity = real_capacity
     for _ = 1, n_slots do
       inv.set_filter(slot_idx, request.item)
@@ -123,10 +123,12 @@ local function update_network_chest_capacity(info)
   -- insert items back into container
   for _, request in ipairs(requests) do
     local prev_amount = contents[request.item] or 0
+    local to_insert = math.min(prev_amount, request.capacity)
     if prev_amount > 0 then
       local inserted = inv.insert(
-        { name = request.item, count = prev_amount }
+        { name = request.item, count = to_insert }
       )
+      assert(inserted == to_insert)
       contents[request.item] = prev_amount - inserted
     end
   end
@@ -169,9 +171,7 @@ function M.on_update(info)
     local end_amount = start_amount
     if request.type == "provide" then
       started_at_limit = start_amount >= request.capacity
-      assert(start_amount <= request.capacity,
-        string.format("current=%d, capacity=%d", start_amount, request
-          .capacity))
+
       if request.prev_amount ~= nil then
         prev_delta = start_amount - request.prev_amount
       end
