@@ -113,10 +113,10 @@ local function main()
   --   "in_cancel_dialog",
   --   NetworkChest.in_cancel_dialog
   -- )
-  -- script.on_event(
-  --   "in_open_network_view",
-  --   NetworkChest.in_open_network_view
-  -- )
+  script.on_event(
+    "in_open_network_view",
+    EventHandlers.in_open_network_view
+  )
 
   script.on_nth_tick(1, EventHandlers.on_tick)
   -- script.on_nth_tick(60, NetworkChest.onTick_60)

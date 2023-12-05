@@ -1,3 +1,4 @@
+local NetworkViewWindow = require "src.windows.NetworkViewWindow"
 local NetworkLoaderWindow = require "src.windows.NetworkLoaderWindow"
 local LargeNetworkChestEntity = require "src.entities.LargeNetworkChestEntity"
 local LargeNetworkChestWindow = require "src.windows.LargeNetworkChestWindow"
@@ -15,6 +16,7 @@ local WINDOWS = {
   MediumNetworkChestWindow,
   LargeNetworkChestWindow,
   NetworkLoaderWindow,
+  NetworkViewWindow,
 }
 
 local ENTITIES = {
@@ -25,7 +27,9 @@ local ENTITIES = {
 
 local entity_name_to_window_map = {}
 for _, window in ipairs(WINDOWS) do
-  entity_name_to_window_map[window.entity_name] = window
+  if window.entity_name ~= nil then
+    entity_name_to_window_map[window.entity_name] = window
+  end
 end
 
 local window_name_to_window_map = {}
@@ -63,6 +67,20 @@ local function close_current_window(player, player_state)
   player_state.window = nil
 end
 
+local function open_window(window, player, entity)
+  local player_state = GlobalState.get_player_info(player.index)
+  close_current_window(player, player_state)
+
+  local window_state = {
+    name = window.window_name,
+    entity = entity,
+  }
+  player_state.window = window_state
+  local frame = window.on_open_window(window_state, player, entity)
+  window_state.frame = frame
+  player.opened = frame
+end
+
 function M.on_gui_opened(event)
   -- if true then return end
   local player = game.get_player(event.player_index)
@@ -74,17 +92,7 @@ function M.on_gui_opened(event)
     local entity_name = event.entity.name
     local window = entity_name_to_window_map[entity_name]
     if window ~= nil then
-      local player_state = GlobalState.get_player_info(event.player_index)
-      close_current_window(player, player_state)
-
-      local window_state = {
-        name = window.window_name,
-        entity = event.entity,
-      }
-      player_state.window = window_state
-      local frame = window.on_open_window(window_state, player, event.entity)
-      window_state.frame = frame
-      player.opened = frame
+      open_window(window, player, event.entity)
     end
   end
 end
@@ -357,6 +365,13 @@ end
 
 function M.on_init()
   GlobalState.setup()
+end
+
+function M.in_open_network_view(event)
+  local player = game.get_player(event.player_index)
+  if player ~= nil then
+    open_window(NetworkViewWindow, player, nil)
+  end
 end
 
 return M

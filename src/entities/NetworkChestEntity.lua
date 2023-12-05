@@ -126,7 +126,7 @@ local function update_network_chest_capacity(info)
   for item, count in pairs(contents) do
     assert(count >= 0)
     if count > 0 then
-      GlobalState.deposit_material(item, count)
+      GlobalState.deposit_item(item, count)
     end
   end
 end
@@ -186,7 +186,7 @@ function M.on_update(info)
     if request.type == "provide" then
       local started_full = current_amount >= request.capacity
       if current_amount > 0 then
-        local deposited = GlobalState.deposit_material_to_limit(
+        local deposited = GlobalState.deposit_item_to_limit(
           request.item,
           current_amount
         )
@@ -217,7 +217,7 @@ function M.on_update(info)
       end
     elseif request.type == "request" then
       local started_empty = current_amount == 0
-      local available = GlobalState.get_material_available_to_withdraw(
+      local available = GlobalState.get_item_available_to_withdraw(
         request.item
       )
       local space_in_chest = math.max(0, request.capacity - current_amount)
@@ -231,7 +231,7 @@ function M.on_update(info)
           count = amount_to_withdraw,
         })
         current_amount = current_amount + withdrawn
-        GlobalState.withdraw_material(request.item, withdrawn)
+        GlobalState.withdraw_item(request.item, withdrawn)
         if started_empty and current_amount == request.capacity then
           local next_capacity = math.ceil(1.5 *
             (1 + request.desired_capacity))

@@ -126,10 +126,11 @@ function M.inner_setup()
     -- that stores an entity id to update.
     global.mod.update_queue = Heap.new()
 
-    -- A map from material ID -> info about the material.
-    -- An item's material ID is just the item's name.
+    -- A map from item name -> info about the item
+    global.mod.items = {}
+
     -- A fluid's material ID is the fluid name @ temperature.
-    global.mod.materials = {}
+    global.mod.fluids = {}
 
     -- A map from entity ID to info about the entity.
     global.mod.entities = {}
@@ -214,22 +215,22 @@ function M.missing_item_filter()
 end
 
 -- create a string 'key' for a fluid@temp
-function M.fluid_temp_key_encode(fluid_name, temp)
+function M.encode_fluid_key(fluid_name, temp)
   return string.format("%s@%d", fluid_name, math.floor(temp * 1000))
 end
 
 -- split the key back into the fluid and temp
-function M.fluid_temp_key_decode(key)
+function M.decode_fluid_key(key)
   local idx = string.find(key, "@")
   if idx ~= nil then
     return string.sub(key, 1, idx - 1), tonumber(string.sub(key, idx + 1)) / 1000
   end
-  return nil, nil
+  error("unreachable")
 end
 
 -- mark a fluid/temp combo as missing
 function M.missing_fluid_set(name, temp, unit_number, count)
-  local key = M.fluid_temp_key_encode(name, temp)
+  local key = M.encode_fluid_key(name, temp)
   missing_set(global.mod.missing_fluid, key, unit_number, count)
 end
 
@@ -424,20 +425,26 @@ function M.register_chest_entity(entity, requests)
   global.mod.network_chest_has_been_placed = true
 end
 
-function M.get_material_info(material)
-  local info = global.mod.materials[material]
+function M.get_item_info(item)
+  local info = global.mod.items[item]
   if info == nil then
     info = {
       amount = 0,
       deposit_limit = 1,
     }
-    global.mod.materials[material] = info
+    global.mod.items[item] = info
   end
   return info
 end
 
-local function increment_material_amount(info, delta)
-  info.amount = (info.amount or 0) + delta
+local function increment_material_amount(info, delta, respect_limit)
+  if respect_limit and delta > 0 then
+    local max_delta = math.max(0, info.deposit_limit - info.amount)
+    delta = math.min(delta, max_delta)
+  elseif delta < 0 then
+    delta = math.max(delta, -info.amount)
+  end
+  info.amount = info.amount + delta
   if info.amount >= info.deposit_limit then
     info.has_been_full = true
   elseif info.amount == 0 and info.has_been_full then
@@ -445,34 +452,52 @@ local function increment_material_amount(info, delta)
     local next_limit = math.ceil(1.5 * (1 + info.deposit_limit))
     info.deposit_limit = next_limit
   end
+  return delta
 end
 
-function M.deposit_material_to_limit(material, amount)
-  local info = M.get_material_info(material)
-  local current_amount = info.amount
-  local limit = info.deposit_limit
-  local max_deposit = math.max(0, limit - current_amount)
-  local deposited = math.min(amount, max_deposit)
-  increment_material_amount(info, deposited)
-  return deposited
+function M.deposit_item_to_limit(item, amount)
+  local info = M.get_item_info(item)
+  return increment_material_amount(info, amount, true)
 end
 
-function M.deposit_material(material, amount)
-  local info = M.get_material_info(material)
+function M.deposit_item(item, amount)
+  local info = M.get_item_info(item)
   increment_material_amount(info, amount)
 end
 
-function M.get_material_available_to_withdraw(material)
-  local info = M.get_material_info(material)
-  return info.amount or 0
+function M.get_item_available_to_withdraw(item)
+  local info = M.get_item_info(item)
+  return info.amount
 end
 
-function M.withdraw_material(material, amount)
-  local info = M.get_material_info(material)
-  local current_amount = info.amount or 0
-  local withdrawn = math.min(current_amount, amount)
-  increment_material_amount(info, -withdrawn)
-  return withdrawn
+function M.withdraw_item(item, amount)
+  local info = M.get_item_info(item)
+  return increment_material_amount(info, -amount)
+end
+
+function M.get_fluid_info(fluid_name, fluid_temp)
+  local key = M.encode_fluid_key(fluid_name, fluid_temp)
+  local info = global.mod.fluids[key]
+  if info == nil then
+    info = {
+      amount = 0,
+      deposit_limit = 1,
+      fluid_temp = fluid_temp,
+      fluid_name = fluid_name,
+    }
+    global.mod.fluids[key] = info
+  end
+  return info
+end
+
+function M.deposit_fluid(fluid_name, fluid_temp, amount, respect_limit)
+  local info = M.get_fluid_info(fluid_name, fluid_temp)
+  return increment_material_amount(info, amount, respect_limit)
+end
+
+function M.withdraw_fluid(fluid_name, fluid_temp, amount)
+  local info = M.get_fluid_info(fluid_name, fluid_temp)
+  return increment_material_amount(info, -amount)
 end
 
 function M.put_chest_contents_in_network(entity)
@@ -481,7 +506,7 @@ function M.put_chest_contents_in_network(entity)
   if inv ~= nil then
     local contents = inv.get_contents()
     for item, count in pairs(contents) do
-      M.deposit_material(item, count)
+      M.deposit_item(item, count)
     end
     inv.clear()
   end

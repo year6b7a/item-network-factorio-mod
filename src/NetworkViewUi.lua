@@ -430,7 +430,7 @@ function M.get_list_of_items(view_type)
     -- add fluid shortages
     missing = GlobalState.missing_fluid_filter()
     for fluid_key, count in pairs(missing) do
-      local fluid_name, temp = GlobalState.fluid_temp_key_decode(fluid_key)
+      local fluid_name, temp = GlobalState.decode_fluid_key(fluid_key)
       table.insert(items, { item = fluid_name, count = count, temp = temp })
     end
   end

@@ -8,4 +8,8 @@ M.MAX_TANK_SIZE = M.TANK_AREA * M.TANK_HEIGHT * 100
 M.ALERT_TRANSFER_TICKS = 10 * 60
 M.MAX_MISSING_TICKS = 5 * 60
 
+-- TODO: switch from strings to this for request types
+M.PROVIDE_TYPE = 0
+M.REQUEST_TYPE = 1
+
 return M

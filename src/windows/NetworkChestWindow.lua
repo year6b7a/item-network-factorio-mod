@@ -234,7 +234,7 @@ function M.renreder_selected_item_flow(state)
       },
     })
 
-    local material_info = GlobalState.get_material_info(request.item)
+    local material_info = GlobalState.get_item_info(request.item)
     state.selected_item_flow.add({
       type = "label",
       caption = {
