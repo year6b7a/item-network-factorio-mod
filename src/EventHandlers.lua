@@ -1,3 +1,5 @@
+local NetworkTankEntity = require "src.entities.NetworkTankEntity"
+local NetworkTankWindow = require "src.windows.NetworkTankWindow"
 local NetworkViewWindow = require "src.windows.NetworkViewWindow"
 local NetworkLoaderWindow = require "src.windows.NetworkLoaderWindow"
 local LargeNetworkChestEntity = require "src.entities.LargeNetworkChestEntity"
@@ -17,12 +19,14 @@ local WINDOWS = {
   LargeNetworkChestWindow,
   NetworkLoaderWindow,
   NetworkViewWindow,
+  NetworkTankWindow,
 }
 
 local ENTITIES = {
   NetworkChestEntity,
   MediumNetworkChestEntity,
   LargeNetworkChestEntity,
+  NetworkTankEntity,
 }
 
 local entity_name_to_window_map = {}
@@ -77,6 +81,7 @@ local function open_window(window, player, entity)
   }
   player_state.window = window_state
   local frame = window.on_open_window(window_state, player, entity)
+  frame.name = window.window_name
   window_state.frame = frame
   player.opened = frame
 end
