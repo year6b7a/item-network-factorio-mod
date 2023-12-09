@@ -55,7 +55,9 @@ local function inner_add_network_chest(name, size)
     type = "recipe",
     enabled = true,
     energy_required = 0.5,
-    ingredients = {},
+    ingredients = {
+      { type = "item", name = "iron-plate", amount = 5 },
+    },
     result = name,
     result_count = 1,
   }
@@ -140,7 +142,9 @@ function M.add_loader()
     type = "recipe",
     enabled = true,
     energy_required = 0.5,
-    ingredients = {},
+    ingredients = {
+      { type = "item", name = "iron-plate", amount = 5 },
+    },
     result = name,
     result_count = 1,
   }
@@ -222,7 +226,9 @@ function M.add_network_tank()
     type = "recipe",
     enabled = true,
     energy_required = 0.5,
-    ingredients = {},
+    ingredients = {
+      { type = "item", name = "iron-plate", amount = 5 },
+    },
     result = name,
     result_count = 1,
   }
