@@ -205,7 +205,26 @@ local function get_fluid_icon(info)
   }
 end
 
+local function items_list_sort(left, right)
+  if left.static_idx ~= nil then
+    if right.static_idx ~= nil then
+      return left.static_idx < right.static_idx
+    else
+      return true
+    end
+  elseif right.static_idx ~= nil then
+    return false
+  else
+    return left.number > right.number
+  end
+end
+
+local function sort_items(items)
+  table.sort(items, items_list_sort)
+end
+
 local function render_rows_of_icons(main_flow, icons)
+  sort_items(icons)
   local item_flow = main_flow.add({
     type = "scroll-pane",
     direction = "vertical",
@@ -226,6 +245,8 @@ local function render_rows_of_icons(main_flow, icons)
     end
   end
 end
+
+
 
 function M.render_selected_tab(state)
   -- clear all tabs
