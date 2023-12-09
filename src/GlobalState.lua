@@ -40,8 +40,8 @@ function M.inner_setup()
   if global.mod.fluids == nil then
     global.mod.fluids = {}
   end
-  if global.mod.missing_item == nil then
-    global.mod.missing_item = {} -- missing_item[item][unit_number] = { game.tick, count }
+  if global.mod.missing_items == nil then
+    global.mod.missing_items = {} -- missing_items[item][unit_number] = { game.tick, count }
   end
   if global.mod.missing_fluid == nil then
     global.mod.missing_fluid = {} -- missing_fluid[key][unit_number] = { game.tick, count }
@@ -167,37 +167,37 @@ function M.get_timers()
 end
 
 -- store the missing item: mtab[item_name][unit_number] = { game.tick, count }
-local function missing_set(mtab, item_name, unit_number, count)
-  local tt = mtab[item_name]
+local function set_missing(miss_tbl, item_name, unit_number, count)
+  local tt = miss_tbl[item_name]
   if tt == nil then
     tt = {}
-    mtab[item_name] = tt
+    miss_tbl[item_name] = tt
   end
-  tt[unit_number] = { game.tick, count }
+  tt[unit_number] = { tick = game.tick, count = count }
 end
 
 -- filter the missing table and return: missing[item] = count
-local function missing_filter(tab)
+local function get_missing_and_filter(miss_tbl)
   local deadline = game.tick - constants.MAX_MISSING_TICKS
   local missing = {}
   local to_del = {}
-  for name, xx in pairs(tab) do
+  for name, xx in pairs(miss_tbl) do
     for unit_number, ii in pairs(xx) do
-      local tick = ii[1]
-      local count = ii[2]
+      local tick = ii.tick
+      local count = ii.count
       if tick < deadline then
-        table.insert(to_del, { name, unit_number })
+        table.insert(to_del, { name = name, unit_number = unit_number })
       else
         missing[name] = (missing[name] or 0) + count
       end
     end
   end
-  for _, ii in ipairs(to_del) do
-    local name = ii[1]
-    local unum = ii[2]
-    tab[name][unum] = nil
-    if next(tab[name]) == nil then
-      tab[name] = nil
+  for _, del_info in ipairs(to_del) do
+    local name = del_info.name
+    local unit_number = del_info.unit_number
+    miss_tbl[name][unit_number] = nil
+    if next(miss_tbl[name]) == nil then
+      miss_tbl[name] = nil
     end
   end
   return missing
@@ -205,13 +205,13 @@ end
 
 -- mark an item as missing
 function M.missing_item_set(item_name, unit_number, count)
-  missing_set(global.mod.missing_item, item_name, unit_number, count)
+  set_missing(global.mod.missing_items, item_name, unit_number, count)
 end
 
 -- drop any items that have not been missing for a while
 -- returns the (read-only) table of missing items
-function M.missing_item_filter()
-  return missing_filter(global.mod.missing_item)
+function M.get_missing_items()
+  return get_missing_and_filter(global.mod.missing_items)
 end
 
 -- create a string 'key' for a fluid@temp
@@ -231,13 +231,13 @@ end
 -- mark a fluid/temp combo as missing
 function M.missing_fluid_set(name, temp, unit_number, count)
   local key = M.encode_fluid_key(name, temp)
-  missing_set(global.mod.missing_fluid, key, unit_number, count)
+  set_missing(global.mod.missing_fluid, key, unit_number, count)
 end
 
 -- drop any fluids that have not been missing for a while
 -- returns the (read-only) table of missing items
 function M.missing_fluid_filter()
-  return missing_filter(global.mod.missing_fluid)
+  return get_missing_and_filter(global.mod.missing_fluid)
 end
 
 function M.remove_old_ui()
@@ -472,7 +472,7 @@ end
 
 function M.withdraw_item(item, amount)
   local info = M.get_item_info(item)
-  return increment_material_amount(info, -amount)
+  return -increment_material_amount(info, -amount)
 end
 
 function M.get_fluid_info(fluid_name, fluid_temp)

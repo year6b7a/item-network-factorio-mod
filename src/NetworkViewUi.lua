@@ -419,7 +419,7 @@ function M.get_list_of_items(view_type)
     end
   elseif view_type == "shortage" then
     -- add item shortages
-    local missing = GlobalState.missing_item_filter()
+    local missing = GlobalState.get_missing_items()
     for item_name, count in pairs(missing) do
       -- sometime shortages can have invalid item names.
       if game.item_prototypes[item_name] ~= nil then

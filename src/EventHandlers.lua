@@ -341,6 +341,7 @@ end
 
 function M.on_tick()
   -- called every tick
+  GlobalState.setup()
   GlobalState.start_timer("On Tick")
   GlobalState.start_timer("Get Entities From Queue")
   local entities_to_update = {}

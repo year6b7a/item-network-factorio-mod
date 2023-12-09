@@ -166,6 +166,24 @@ local function get_item_icon(item_name, info)
   }
 end
 
+local function get_missing_item_icon(item_name, missing_count)
+  local item_proto = game.item_prototypes[item_name]
+  return {
+    type = "sprite-button",
+    elem_type = "item",
+    sprite = "item/" .. item_name,
+    tooltip = {
+      "",
+      item_proto.localised_name,
+    },
+    tags = {
+      elem_id = ITEM_SPRITE_BTN_ID,
+      item = item_name,
+    },
+    number = missing_count,
+  }
+end
+
 local function get_fluid_icon(info)
   local proto = game.fluid_prototypes[info.fluid_name]
   return {
@@ -248,6 +266,12 @@ function M.render_selected_tab(state)
     render_rows_of_icons(main_flow, icons)
   elseif selected_tab_idx == 3 then
     -- shortages
+    local missing_items = GlobalState.get_missing_items()
+    local icons = {}
+    for item_name, count in pairs(missing_items) do
+      table.insert(icons, get_missing_item_icon(item_name, count))
+    end
+    render_rows_of_icons(main_flow, icons)
   elseif selected_tab_idx == 4 then
     -- performance
     for _, timer_info in ipairs(GlobalState.get_timers()) do

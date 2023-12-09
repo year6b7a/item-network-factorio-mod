@@ -248,22 +248,33 @@ function M.on_update(info)
       ended_at_limit = end_amount == 0
     elseif request.type == "request" then
       started_at_limit = start_amount == 0
-      local available = GlobalState.get_item_available_to_withdraw(
-        request.item
-      )
       local space_in_chest = math.max(0, request.capacity - start_amount)
-      local amount_to_withdraw = math.min(
-        available,
-        space_in_chest
-      )
-      if amount_to_withdraw > 0 then
-        local withdrawn = inv.insert({
-          name = request.item,
-          count = amount_to_withdraw,
-        })
-        end_amount = start_amount + withdrawn
-        current_delta = withdrawn
-        GlobalState.withdraw_item(request.item, withdrawn)
+      if space_in_chest > 0 then
+        local withdrawn = GlobalState.withdraw_item(request.item, space_in_chest)
+        local shortage = space_in_chest - withdrawn
+        if shortage > 0 then
+          GlobalState.missing_item_set(
+            request.item,
+            info.entity.unit_number,
+            shortage
+          )
+        end
+        if withdrawn > 0 then
+          local actual_withdrawn = inv.insert({
+            name = request.item,
+            count = withdrawn,
+          })
+          if actual_withdrawn ~= withdrawn then
+            game.print(string.format(
+              "Expected to withdraw %d but withdrew %d",
+              withdrawn,
+              actual_withdrawn
+            ))
+            error("unreachable")
+          end
+          end_amount = start_amount + withdrawn
+          current_delta = withdrawn
+        end
       end
       runway = end_amount
       ended_at_limit = end_amount >= request.capacity
