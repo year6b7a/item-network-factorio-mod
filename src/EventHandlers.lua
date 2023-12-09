@@ -1,3 +1,4 @@
+local constants = require "src.constants"
 local NetworkTankEntity = require "src.entities.NetworkTankEntity"
 local NetworkTankWindow = require "src.windows.NetworkTankWindow"
 local NetworkViewWindow = require "src.windows.NetworkViewWindow"
@@ -196,7 +197,7 @@ local function generic_on_create_entity(event)
     GlobalState.register_entity(entity.unit_number, state)
     Heap.insert(
       global.mod.update_queue,
-      0,
+      game.tick + constants.MIN_UPDATE_TICKS,
       entity.unit_number
     )
   end

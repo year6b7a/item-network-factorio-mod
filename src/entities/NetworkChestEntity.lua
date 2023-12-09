@@ -70,7 +70,7 @@ function M.on_remove_entity(event)
   GlobalState.put_chest_contents_in_network(event.entity)
 end
 
-local function update_network_chest_capacity(info)
+function M.update_network_chest_capacity(info)
   -- game.print("updating network chest config")
   -- used to re-filter slots in a network chest when desired capacity changes.
   local inv = info.entity.get_output_inventory()
@@ -142,39 +142,87 @@ local function update_network_chest_capacity(info)
   end
 end
 
-
 function M.on_update(info)
+  if not info.config.has_been_updated then
+    M.update_network_chest_capacity(info)
+    info.config.has_been_updated = true
+  end
+
   local inv = info.entity.get_output_inventory()
   local contents = inv.get_contents()
   local requests = info.config.requests
+  local min_update_delay = constants.MIN_UPDATE_TICKS
+  local max_update_delay = GlobalState.get_default_update_period()
 
-  local next_delay = GlobalState.get_default_update_period()
+  local next_delay = max_update_delay
   local ticks_since = nil
   if info.last_update_tick ~= nil then
     ticks_since = game.tick - info.last_update_tick
   end
 
-  if not info.config.has_been_updated then
-    update_network_chest_capacity(info)
-    info.config.has_been_updated = true
-  end
-
-  local capacity_changed = false
+  local capcacity_changed = false
   for _, request in ipairs(requests) do
+    local prev_at_limit = request.prev_at_limit
+    local prev_active = request.prev_active
     local start_amount = contents[request.item] or 0
-
     local started_at_limit
-    local ended_at_limit
-    local prev_delta
-    local current_delta = 0
-    local runway
-    local end_amount = start_amount
+    local prev_delta = nil
     if request.type == "provide" then
       started_at_limit = start_amount >= request.capacity
-
       if request.prev_amount ~= nil then
         prev_delta = start_amount - request.prev_amount
       end
+    elseif request.type == "request" then
+      started_at_limit = start_amount == 0
+      if request.prev_amount ~= nil then
+        prev_delta = request.prev_amount - start_amount
+      end
+    else
+      error("unreachable")
+    end
+
+    if prev_delta ~= nil then
+      local max_rate = prev_delta / ticks_since
+      if request.max_rate ~= nil then
+        max_rate = math.max(max_rate, request.max_rate)
+      end
+      request.max_rate = max_rate
+    end
+
+    request.prev_active = false
+    if prev_at_limit and started_at_limit then
+      request.prev_active = true
+
+      if prev_active then
+        local next_capacity = math.ceil(
+          1.5 * (1 + request.desired_capacity)
+        )
+        game.print(string.format(
+          "Increasing capacity from %s to %s",
+          request.desired_capacity,
+          next_capacity
+        ))
+        request.desired_capacity = next_capacity
+        capcacity_changed = true
+      end
+    end
+  end
+
+  if capcacity_changed then
+    M.update_network_chest_capacity(info)
+    contents = inv.get_contents()
+  end
+
+  for _, request in ipairs(requests) do
+    local start_amount = contents[request.item] or 0
+
+    local current_delta = 0
+    local end_amount = start_amount
+    local runway
+    local ended_at_limit
+    local started_at_limit
+    if request.type == "provide" then
+      started_at_limit = start_amount >= request.capacity
       if start_amount > 0 then
         local deposited = GlobalState.deposit_item_to_limit(
           request.item,
@@ -192,17 +240,14 @@ function M.on_update(info)
             ))
           end
           assert(deposited == actual_deposited)
-          end_amount = start_amount - deposited
           current_delta = deposited
+          end_amount = start_amount - current_delta
         end
       end
-      ended_at_limit = end_amount == 0
       runway = request.capacity - end_amount
+      ended_at_limit = end_amount == 0
     elseif request.type == "request" then
       started_at_limit = start_amount == 0
-      if request.prev_amount ~= nil then
-        prev_delta = request.prev_amount - start_amount
-      end
       local available = GlobalState.get_item_available_to_withdraw(
         request.item
       )
@@ -220,81 +265,42 @@ function M.on_update(info)
         current_delta = withdrawn
         GlobalState.withdraw_item(request.item, withdrawn)
       end
-      ended_at_limit = end_amount >= request.capacity
       runway = end_amount
+      ended_at_limit = end_amount >= request.capacity
     else
       error("unreachable")
     end
 
     assert(end_amount >= 0)
 
-    if prev_delta ~= nil then
-      local max_rate = prev_delta / ticks_since
-      if request.max_rate ~= nil then
-        max_rate = math.max(max_rate, request.max_rate)
-      end
-      request.max_rate = max_rate
-
-      if not request.initialized and not started_at_limit and prev_delta > 0 then
-        game.print(string.format(
-          "Initialized request type=%s, amounts=[%s, %s, %s], limits=[%s, %s, %s] , prev_delta=%s, ticks_since=%s, capacity=%s, max_rate=%s",
-          request.type,
-          request.prev_amount or "?",
-          start_amount,
-          end_amount,
-          request.prev_at_limit,
-          started_at_limit,
-          ended_at_limit,
-          prev_delta,
-          ticks_since,
-          request.capacity,
-          max_rate
-        ))
-        request.initialized = true
-      end
-    end
-
-    if request.prev_at_limit and started_at_limit then
-      local next_capacity = math.ceil(1.5 *
-        (1 + request.desired_capacity))
-      -- game.print(string.format(
-      --   "Increased desired capactity for item %s from %d to %d",
-      --   request.item, request.desired_capacity, next_capacity
-      -- ))
-      game.print(string.format(
-        "increasing capacity after delay=%s (est=%s) from %s -> %s",
-        info.prev_delay or "?",
-        request.est_delay or "?",
-        request.desired_capacity,
-        next_capacity
-      ))
-      request.desired_capacity = next_capacity
-      capacity_changed = true
-    end
-
     request.est_delay = nil
-    if runway > 0 and request.max_rate ~= nil and request.max_rate > 0 then
-      local stack_size = game.item_prototypes[request.item].stack_size
-      local delay_5_stack = 5 * stack_size / request.max_rate
-      local delay_80_percent = runway * 0.8 / request.max_rate
-      local est_delay = math.min(delay_5_stack, delay_80_percent)
+    if request.prev_active then
+      request.est_delay = min_update_delay
+    elseif runway > 0 and request.max_rate ~= nil and request.max_rate > 0 then
+      local est_delay = runway * 0.8 / request.max_rate
       request.est_delay = est_delay
-      next_delay = math.min(next_delay, est_delay)
+    elseif started_at_limit and ended_at_limit then
+      request.est_delay = min_update_delay
     end
 
-    if not request.initialized and (prev_delta == nil or prev_delta > 0 or current_delta > 0) then
-      next_delay = constants.MIN_UPDATE_TICKS
+    if request.est_delay ~= nil then
+      next_delay = math.min(next_delay, request.est_delay)
     end
 
     request.prev_amount = end_amount
     request.prev_at_limit = ended_at_limit
   end
 
-  if capacity_changed then
-    update_network_chest_capacity(info)
-  end
 
   info.last_update_tick = game.tick
+
+  next_delay = math.min(next_delay, max_update_delay)
+  next_delay = math.max(next_delay, min_update_delay)
+
+  if info.prev_delay ~= nil and next_delay > info.prev_delay then
+    next_delay = (5 * info.prev_delay + next_delay) / 6
+  end
+
   info.prev_delay = next_delay
 
   return next_delay

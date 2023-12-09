@@ -446,9 +446,9 @@ local function increment_material_amount(info, delta, respect_limit)
   end
   info.amount = info.amount + delta
   if info.amount >= info.deposit_limit then
-    info.has_been_full = true
-  elseif info.amount == 0 and info.has_been_full then
-    info.has_been_full = false
+    info.has_been_full_tick = game.tick
+  elseif info.amount == 0 and info.has_been_full_tick ~= nil and (game.tick - info.has_been_full_tick) < (60 * 10) then
+    info.has_been_full_tick = nil
     local next_limit = math.ceil(1.5 * (1 + info.deposit_limit))
     info.deposit_limit = next_limit
   end

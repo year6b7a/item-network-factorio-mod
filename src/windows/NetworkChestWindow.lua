@@ -95,6 +95,19 @@ table.insert(M.elem_handlers, {
   end,
 })
 
+local RESET_GLOBAL_LIMIT_BTN_ID = "60a78ec17216c8772ed2774ec97036fe"
+table.insert(M.elem_handlers, {
+  elem_id = RESET_GLOBAL_LIMIT_BTN_ID,
+  event = "on_gui_click",
+  handler = function(event, state)
+    local request_idx = state.selected_item
+    local request = state.requests[request_idx]
+    local info = GlobalState.get_item_info(request.item)
+    info.deposit_limit = 1
+    M.renreder_selected_item_flow(state)
+  end,
+})
+
 function M.on_open_window(state, player, entity)
   local entity_info = GlobalState.get_entity_info(entity.unit_number)
   assert(entity_info ~= nil)
@@ -174,8 +187,10 @@ function M.rerender_requests(state)
         elem_type = "item",
         sprite = "item/" .. request.item,
         tags = { elem_id = VIEW_REQUEST_SPRITE_BUTTON_ID, request_idx = request_idx },
+        number = request.n_slots,
       }
-      request_h_stack.add(sprite_button)
+      local icon = request_h_stack.add(sprite_button)
+      icon.number = sprite_button.number
     end
   end
 end
@@ -238,8 +253,8 @@ function M.renreder_selected_item_flow(state)
         request.est_delay or "?",
         ", Max Rate=",
         request.max_rate or "?",
-        ", Initialized=",
-        request.initialized and "yes" or "no",
+        ", Active=",
+        request.prev_active and "yes" or "no",
       },
     })
 
@@ -265,6 +280,12 @@ function M.renreder_selected_item_flow(state)
         ", Max Delay: ",
         GlobalState.get_default_update_period(),
       },
+    })
+
+    state.selected_item_flow.add({
+      type = "button",
+      caption = "Reset Global Limit",
+      tags = { elem_id = RESET_GLOBAL_LIMIT_BTN_ID },
     })
 
     state.selected_item_flow.add({
