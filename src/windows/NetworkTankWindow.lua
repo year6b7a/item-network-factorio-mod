@@ -1,4 +1,5 @@
 local GlobalState = require "src.GlobalState"
+local Helpers = require "src.Helpers"
 local M = {}
 
 M.entity_name = "network-tank"
@@ -12,7 +13,8 @@ table.insert(M.elem_handlers, {
   elem_id = PROVIDE_RADIO_BTN_ID,
   event = "on_gui_click",
   handler = function(event, state)
-    state.request_btn.state = false
+    state.config.type = "provide"
+    M.rerender(state)
   end,
 })
 
@@ -21,7 +23,8 @@ table.insert(M.elem_handlers, {
   elem_id = REQUEST_RADIO_BTN_ID,
   event = "on_gui_click",
   handler = function(event, state)
-    state.provide_btn.state = false
+    state.config.type = "request"
+    M.rerender(state)
   end,
 })
 
@@ -30,16 +33,105 @@ table.insert(M.elem_handlers, {
   elem_id = PICK_FLUID_BTN_ID,
   event = "on_gui_elem_changed",
   handler = function(event, state)
+    state.config.fluid = event.element.elem_value
+    M.rerender(state)
   end,
 })
 
 local TEMP_INPUT_ID = "bda9e13d37e8ad4d4f2bae91581d45fa"
 table.insert(M.elem_handlers, {
   elem_id = TEMP_INPUT_ID,
-  event = "on_gui_click",
+  event = "on_gui_text_changed",
   handler = function(event, state)
+    local temp = tonumber(event.element.text)
+    state.config.temp = temp
   end,
 })
+
+local TEMP_DROPDOWN_ID = "45ad2a2d3d081002fc624b7f3ae3f266"
+table.insert(M.elem_handlers, {
+  elem_id = TEMP_DROPDOWN_ID,
+  event = "on_gui_selection_state_changed",
+  handler = function(event, state)
+    local value = state.temp_options[event.element.selected_index]
+      .value
+    state.config.temp = value
+    M.rerender(state)
+  end,
+})
+
+function M.rerender(state)
+  state.frame.clear()
+
+  local main_flow = state.frame.add({ type = "flow", direction = "vertical" })
+  local type_flow = main_flow.add({ type = "flow", direction = "horizontal" })
+
+  type_flow.add({ type = "label", caption = "Type:" })
+  state.provide_btn = type_flow.add({
+    type = "radiobutton",
+    state = state.config.type == "provide",
+    tags = { elem_id = PROVIDE_RADIO_BTN_ID },
+  })
+
+  type_flow.add({ type = "label", caption = "Provide" })
+  state.request_btn = type_flow.add({
+    type = "radiobutton",
+    state = state.config.type == "request",
+    tags = { elem_id = REQUEST_RADIO_BTN_ID },
+  })
+  type_flow.add({ type = "label", caption = "Request" })
+
+  if state.config.type == "request" then
+    local fluid_flow = main_flow.add({ type = "flow", direction = "horizontal" })
+    fluid_flow.add({ type = "label", caption = "Fluid:" })
+    state.fluid_picker = fluid_flow.add({
+      type = "choose-elem-button",
+      elem_type = "fluid",
+      elem_value = state.config.fluid,
+      tags = { elem_id = PICK_FLUID_BTN_ID },
+    })
+    state.fluid_picker.elem_value = state.config.fluid
+
+    local temp_flow = main_flow.add({ type = "flow", direction = "horizontal" })
+    temp_flow.add({ type = "label", caption = "Temperature:" })
+    local temp_input = temp_flow.add({
+      type = "textfield",
+      numeric = true,
+      allow_decimal = true,
+      allow_negative = true,
+      tags = { elem_id = TEMP_INPUT_ID },
+    })
+    if state.config.temp ~= nil then
+      temp_input.text = string.format("%s", state.config.temp)
+    end
+    temp_input.style.width = 100
+    state.temp_input = temp_input
+
+    -- temperature dropdown
+    state.temp_options = {
+      { label = "Choose Temp", value = nil },
+    }
+    if state.config.fluid ~= nil then
+      local available_temps = GlobalState.get_fluid_temps(state.config.fluid)
+      for _, temp in ipairs(available_temps) do
+        local formatted_temp = string.format("%s", temp)
+        table.insert(state.temp_options, {
+          label = formatted_temp, value = temp,
+        })
+      end
+    end
+    local dropdown_items = {}
+    for _, option in ipairs(state.temp_options) do
+      table.insert(dropdown_items, option.label)
+    end
+    temp_flow.add({
+      type = "drop-down",
+      items = dropdown_items,
+      selected_index = 1,
+      tags = { elem_id = TEMP_DROPDOWN_ID },
+    })
+  end
+end
 
 function M.on_open_window(state, player, entity)
   local entity_info = GlobalState.get_entity_info(state.entity.unit_number)
@@ -50,70 +142,17 @@ function M.on_open_window(state, player, entity)
   })
   frame.style.size = { M.WIDTH, M.HEIGHT }
   frame.auto_center = true
+  state.frame = frame
+  state.config = Helpers.shallow_copy(entity_info.config)
 
-  local main_flow = frame.add({ type = "flow", direction = "vertical" })
-
-  local type_flow = main_flow.add({ type = "flow", direction = "horizontal" })
-  type_flow.add({ type = "label", caption = "Type:" })
-  state.provide_btn = type_flow.add({
-    type = "radiobutton",
-    state = entity_info.config.type == "provide",
-    tags = { elem_id = PROVIDE_RADIO_BTN_ID },
-  })
-  type_flow.add({ type = "label", caption = "Provide" })
-  state.request_btn = type_flow.add({
-    type = "radiobutton",
-    state = entity_info.config.type == "request",
-    tags = { elem_id = REQUEST_RADIO_BTN_ID },
-  })
-  type_flow.add({ type = "label", caption = "Request" })
-
-  local fluid_flow = main_flow.add({ type = "flow", direction = "horizontal" })
-  fluid_flow.add({ type = "label", caption = "Fluid:" })
-  state.fluid_picker = fluid_flow.add({
-    type = "choose-elem-button",
-    elem_type = "fluid",
-    elem_value = entity_info.config.fluid,
-    tags = { elem_id = PICK_FLUID_BTN_ID },
-  })
-  state.fluid_picker.elem_value = entity_info.config.fluid
-
-  local temp_flow = main_flow.add({ type = "flow", direction = "horizontal" })
-  temp_flow.add({ type = "label", caption = "Temperature:" })
-  local temp_input = temp_flow.add({
-    type = "textfield",
-    numeric = true,
-    allow_decimal = true,
-    allow_negative = true,
-    tags = { elem_id = TEMP_INPUT_ID },
-  })
-  if entity_info.config.temp ~= nil then
-    temp_input.text = string.format("%s", entity_info.config.temp)
-  end
-  temp_input.style.width = 100
-  state.temp_input = temp_input
+  M.rerender(state)
 
   return frame
 end
 
 function M.on_close_window(state)
   local info = GlobalState.get_entity_info(state.entity.unit_number)
-
-  if state.request_btn.state then
-    info.config.type = "request"
-  else
-    info.config.type = "provide"
-  end
-
-  local temp = tonumber(state.temp_input.text)
-  if temp ~= nil then
-    info.config.temp = temp
-  end
-
-  local fluid = state.fluid_picker.elem_value
-  if fluid ~= nil then
-    info.config.fluid = fluid
-  end
+  info.config = state.config
 end
 
 return M

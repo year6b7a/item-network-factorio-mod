@@ -19,14 +19,56 @@ function M.on_remove_entity(event)
   GlobalState.put_tank_contents_in_network(event.entity)
 end
 
-function M.on_update(info)
-  local defaultUpdate = GlobalState.get_default_update_period()
+function M.on_update(state)
+  local defaultUpdate = 60 * 5
 
-  if info.temp == nil or info.fluid == nil or info.type == nil then
-    return defaultUpdate
+  local fluidbox = state.entity.fluidbox
+  assert(#fluidbox == 1)
+
+  if state.config.type == "request" and state.config.fluid ~= nil and state.config.temp ~= nil then
+    local capacity = fluidbox.get_capacity(1)
+    local fluid = fluidbox[1]
+    if fluid ~= nil then
+      capacity = capacity - fluid.amount
+    end
+    if fluid == nil or (fluid.name == state.config.fluid and fluid.temperature == state.config.temp) then
+      local withdrawn = GlobalState.withdraw_fluid(
+        state.config.fluid,
+        state.config.temp,
+        capacity
+      )
+      if withdrawn > 0 then
+        local inserted = state.entity.insert_fluid({
+          name = state.config.fluid,
+          temperature = state.config.temp,
+          amount = withdrawn,
+        })
+        assert(inserted == withdrawn)
+      end
+    end
+  elseif state.config.type == "provide" then
+    local fluid = fluidbox[1]
+    if fluid ~= nil then
+      local deposited = GlobalState.deposit_fluid(
+        fluid.name,
+        fluid.temperature,
+        fluid.amount,
+        true
+      )
+      if deposited > 0 then
+        local result_amount = fluid.amount - deposited
+        assert(result_amount >= 0)
+        if result_amount == 0 then
+          fluidbox[1] = nil
+        else
+          fluid.amount = fluid.amount - deposited
+          fluidbox[1] = fluid
+        end
+      end
+    end
+  else
+    error("unreachable")
   end
-
-
 
   return defaultUpdate
 end

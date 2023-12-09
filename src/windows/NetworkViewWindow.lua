@@ -184,22 +184,23 @@ local function get_missing_item_icon(item_name, missing_count)
   }
 end
 
-local function get_fluid_icon(info)
-  local proto = game.fluid_prototypes[info.fluid_name]
+local function get_fluid_icon(info, fluid_name, temp)
+  game.print(fluid_name or "fluid name is nil")
+  local proto = game.fluid_prototypes[fluid_name]
   return {
     type = "sprite-button",
     elem_type = "fluid",
-    sprite = "fluid/" .. info.fluid_name,
+    sprite = "fluid/" .. fluid_name,
     tooltip = {
       "in_nv.fluid_sprite_btn_tooltip",
       proto.localised_name,
       string.format("%.0f", info.amount),
-      { "format-degrees-c", string.format("%.0f", info.fluid_temp) },
+      { "format-degrees-c", string.format("%.0f", temp) },
     },
     tags = {
       elem_id = FLUID_SPRITE_BTN_ID,
-      fluid_name = info.fluid_name,
-      fluid_temp = info.fluid_temp,
+      fluid_name = fluid_name,
+      fluid_temp = temp,
     },
     number = info.amount,
   }
@@ -246,8 +247,6 @@ local function render_rows_of_icons(main_flow, icons)
   end
 end
 
-
-
 function M.render_selected_tab(state)
   -- clear all tabs
   for _, tab in ipairs(state.tabbed_pane.tabs) do
@@ -279,9 +278,11 @@ function M.render_selected_tab(state)
     -- fluids
     local icons = {}
     local fluids = GlobalState.get_fluids()
-    for _, info in pairs(fluids) do
-      if info.amount > 0 then
-        table.insert(icons, get_fluid_icon(info))
+    for fluid_name, temp_map in pairs(fluids) do
+      for temp, info in pairs(temp_map) do
+        if info.amount > 0 then
+          table.insert(icons, get_fluid_icon(info, fluid_name, temp))
+        end
       end
     end
     render_rows_of_icons(main_flow, icons)

@@ -476,17 +476,17 @@ function M.withdraw_item(item, amount)
 end
 
 function M.get_fluid_info(fluid_name, fluid_temp)
-  local key = M.encode_fluid_key(fluid_name, fluid_temp)
-  local info = global.mod.fluids[key]
-  if info == nil then
-    info = {
+  -- local key = M.encode_fluid_key(fluid_name, fluid_temp)
+  if global.mod.fluids[fluid_name] == nil then
+    global.mod.fluids[fluid_name] = {}
+  end
+  if global.mod.fluids[fluid_name][fluid_temp] == nil then
+    global.mod.fluids[fluid_name][fluid_temp] = {
       amount = 0,
       deposit_limit = 1,
-      fluid_temp = fluid_temp,
-      fluid_name = fluid_name,
     }
-    global.mod.fluids[key] = info
   end
+  local info = global.mod.fluids[fluid_name][fluid_temp]
   return info
 end
 
@@ -497,7 +497,18 @@ end
 
 function M.withdraw_fluid(fluid_name, fluid_temp, amount)
   local info = M.get_fluid_info(fluid_name, fluid_temp)
-  return increment_material_amount(info, -amount)
+  return -increment_material_amount(info, -amount)
+end
+
+function M.get_fluid_temps(fluid_name)
+  local temps = {}
+  local temp_map = global.mod.fluids[fluid_name]
+  if temp_map ~= nil then
+    for temp, _ in pairs(temp_map) do
+      table.insert(temps, temp)
+    end
+  end
+  return temps
 end
 
 function M.put_chest_contents_in_network(entity)
