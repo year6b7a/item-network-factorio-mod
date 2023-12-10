@@ -496,13 +496,24 @@ function M.withdraw_fluid(fluid_name, fluid_temp, amount)
 end
 
 function M.get_fluid_temps(fluid_name)
-  local temps = {}
+  local function sort_fluids(left, right)
+    return left.order < right.order
+  end
+
+  local temp_pairs = {}
   local temp_map = global.mod.fluids[fluid_name]
   if temp_map ~= nil then
-    for temp, _ in pairs(temp_map) do
-      table.insert(temps, temp)
+    for temp, info in pairs(temp_map) do
+      table.insert(temp_pairs, { temp = temp, order = -info.deposit_limit })
     end
   end
+  table.sort(temp_pairs, sort_fluids)
+
+  local temps = {}
+  for _, pair in ipairs(temp_pairs) do
+    table.insert(temps, pair.temp)
+  end
+
   return temps
 end
 

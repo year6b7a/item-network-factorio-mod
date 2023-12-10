@@ -92,22 +92,7 @@ function M.rerender(state)
     })
     state.fluid_picker.elem_value = state.config.fluid
 
-    local temp_flow = main_flow.add({ type = "flow", direction = "horizontal" })
-    temp_flow.add({ type = "label", caption = "Temperature:" })
-    local temp_input = temp_flow.add({
-      type = "textfield",
-      numeric = true,
-      allow_decimal = true,
-      allow_negative = true,
-      tags = { elem_id = TEMP_INPUT_ID },
-    })
-    if state.config.temp ~= nil then
-      temp_input.text = string.format("%s", state.config.temp)
-    end
-    temp_input.style.width = 100
-    state.temp_input = temp_input
-
-    -- temperature dropdown
+    -- temperature choices
     state.temp_options = {
       { label = "Choose Temp", value = nil },
     }
@@ -120,6 +105,28 @@ function M.rerender(state)
         })
       end
     end
+
+    local temp_flow = main_flow.add({ type = "flow", direction = "horizontal" })
+    temp_flow.add({ type = "label", caption = "Temperature:" })
+    local temp_input = temp_flow.add({
+      type = "textfield",
+      numeric = true,
+      allow_decimal = true,
+      allow_negative = true,
+      tags = { elem_id = TEMP_INPUT_ID },
+    })
+    if state.config.temp == nil then
+      if #state.temp_options >= 2 then
+        state.config.temp = state.temp_options[2].value
+      end
+    end
+
+    if state.config.temp ~= nil then
+      temp_input.text = string.format("%s", state.config.temp)
+    end
+    temp_input.style.width = 100
+    state.temp_input = temp_input
+
     local dropdown_items = {}
     for _, option in ipairs(state.temp_options) do
       table.insert(dropdown_items, option.label)
