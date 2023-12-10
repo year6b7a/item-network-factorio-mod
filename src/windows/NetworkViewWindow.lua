@@ -185,7 +185,6 @@ local function get_missing_item_icon(item_name, missing_count)
 end
 
 local function get_fluid_icon(info, fluid_name, temp)
-  game.print(fluid_name or "fluid name is nil")
   local proto = game.fluid_prototypes[fluid_name]
   return {
     type = "sprite-button",

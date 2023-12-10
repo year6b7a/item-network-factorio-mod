@@ -197,11 +197,11 @@ function M.on_update(info)
         local next_capacity = math.ceil(
           1.5 * (1 + request.desired_capacity)
         )
-        game.print(string.format(
-          "Increasing capacity from %s to %s",
-          request.desired_capacity,
-          next_capacity
-        ))
+        -- game.print(string.format(
+        --   "Increasing capacity from %s to %s",
+        --   request.desired_capacity,
+        --   next_capacity
+        -- ))
         request.desired_capacity = next_capacity
         capcacity_changed = true
       end
@@ -224,9 +224,10 @@ function M.on_update(info)
     if request.type == "provide" then
       started_at_limit = start_amount >= request.capacity
       if start_amount > 0 then
-        local deposited = GlobalState.deposit_item_to_limit(
+        local deposited = GlobalState.deposit_item(
           request.item,
-          start_amount
+          start_amount,
+          not request.no_limit
         )
         if deposited > 0 then
           local actual_deposited = inv.remove(

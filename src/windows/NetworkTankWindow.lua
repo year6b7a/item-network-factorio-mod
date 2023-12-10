@@ -66,14 +66,14 @@ function M.rerender(state)
   local main_flow = state.frame.add({ type = "flow", direction = "vertical" })
   local type_flow = main_flow.add({ type = "flow", direction = "horizontal" })
 
-  type_flow.add({ type = "label", caption = "Type:" })
+  type_flow.add({ type = "label", caption = "Mode:" })
   state.provide_btn = type_flow.add({
     type = "radiobutton",
     state = state.config.type == "provide",
     tags = { elem_id = PROVIDE_RADIO_BTN_ID },
   })
-
   type_flow.add({ type = "label", caption = "Provide" })
+
   state.request_btn = type_flow.add({
     type = "radiobutton",
     state = state.config.type == "request",
@@ -143,7 +143,11 @@ function M.on_open_window(state, player, entity)
   frame.style.size = { M.WIDTH, M.HEIGHT }
   frame.auto_center = true
   state.frame = frame
-  state.config = Helpers.shallow_copy(entity_info.config)
+  state.config = {
+    type = entity_info.config.type,
+    fluid = entity_info.config.fluid,
+    temp = entity_info.config.temp,
+  }
 
   M.rerender(state)
 

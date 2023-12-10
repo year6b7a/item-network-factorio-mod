@@ -455,14 +455,9 @@ local function increment_material_amount(info, delta, respect_limit)
   return delta
 end
 
-function M.deposit_item_to_limit(item, amount)
+function M.deposit_item(item, amount, respect_limit)
   local info = M.get_item_info(item)
-  return increment_material_amount(info, amount, true)
-end
-
-function M.deposit_item(item, amount)
-  local info = M.get_item_info(item)
-  increment_material_amount(info, amount)
+  return increment_material_amount(info, amount, respect_limit)
 end
 
 function M.get_item_available_to_withdraw(item)

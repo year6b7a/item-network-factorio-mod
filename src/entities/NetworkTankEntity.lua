@@ -20,7 +20,7 @@ function M.on_remove_entity(event)
 end
 
 function M.on_update(state)
-  local defaultUpdate = 60 * 5
+  local defaultUpdate = 60 * 1
 
   local fluidbox = state.entity.fluidbox
   assert(#fluidbox == 1)

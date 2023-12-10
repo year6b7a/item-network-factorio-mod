@@ -36,7 +36,7 @@ table.insert(M.elem_handlers, {
       state.selected_item = #state.requests
       state.has_made_changes = true
       M.rerender_requests(state)
-      M.renreder_selected_item_flow(state)
+      M.rerender_selected_item_flow(state)
     end
   end,
 })
@@ -48,32 +48,50 @@ table.insert(M.elem_handlers, {
   handler = function(event, state)
     local request_idx = event.element.tags.request_idx
     state.selected_item = request_idx
-    M.renreder_selected_item_flow(state)
+    M.rerender_selected_item_flow(state)
   end,
 })
 
-local REQUEST_MODE_DROPDOWN_OPTIONS = {
-  { label = "Provide to Network",   value = "provide" },
-  { label = "Request from Network", value = "request" },
-}
-
-local REQUEST_MODE_DROPDOWN_ID = "b93ece4f5efe2e0d2f45ecd61c44ca9d"
+local PROVIDE_RADIO_BTN_ID = "b47c2883fdf5528c13df768d0909c8e3"
 table.insert(M.elem_handlers, {
-  elem_id = REQUEST_MODE_DROPDOWN_ID,
-  event = "on_gui_selection_state_changed",
+  elem_id = PROVIDE_RADIO_BTN_ID,
+  event = "on_gui_click",
   handler = function(event, state)
     local request_idx = state.selected_item
     local request = state.requests[request_idx]
-    local value = REQUEST_MODE_DROPDOWN_OPTIONS[event.element.selected_index]
-      .value
-    state.requests[request_idx] = {
-      type = value,
-      item = request.item,
-    }
+    request.type = "provide"
     state.has_made_changes = true
-    M.renreder_selected_item_flow(state)
+    M.rerender_selected_item_flow(state)
   end,
 })
+
+local REQUEST_RADIO_BTN_ID = "46c71b81915f031baf51bf40b6f35dea"
+table.insert(M.elem_handlers, {
+  elem_id = REQUEST_RADIO_BTN_ID,
+  event = "on_gui_click",
+  handler = function(event, state)
+    local request_idx = state.selected_item
+    local request = state.requests[request_idx]
+    request.type = "request"
+    state.has_made_changes = true
+    M.rerender_selected_item_flow(state)
+  end,
+})
+
+local NO_LIMIT_CHECKBOX_ID = "153d27003e23e7ae2d30ca4a6c74bee2"
+table.insert(M.elem_handlers, {
+  elem_id = NO_LIMIT_CHECKBOX_ID,
+  event = "on_gui_checked_state_changed",
+  handler = function(event, state)
+    local request_idx = state.selected_item
+    local request = state.requests[request_idx]
+    request.no_limit = event.element.state
+    state.has_made_changes = true
+    M.rerender_selected_item_flow(state)
+  end,
+})
+
+
 
 local REMOVE_REQUEST_BTN_ID = "35a6053bbb570ace4a806bb32c0f186c"
 table.insert(M.elem_handlers, {
@@ -91,7 +109,7 @@ table.insert(M.elem_handlers, {
     state.selected_item = nil
     state.has_made_changes = true
     M.rerender_requests(state)
-    M.renreder_selected_item_flow(state)
+    M.rerender_selected_item_flow(state)
   end,
 })
 
@@ -104,7 +122,7 @@ table.insert(M.elem_handlers, {
     local request = state.requests[request_idx]
     local info = GlobalState.get_item_info(request.item)
     info.deposit_limit = 1
-    M.renreder_selected_item_flow(state)
+    M.rerender_selected_item_flow(state)
   end,
 })
 
@@ -118,6 +136,10 @@ function M.on_open_window(state, player, entity)
     table.insert(window_requests, Helpers.shallow_copy(request))
   end
   state.requests = window_requests
+
+  if #requests > 0 then
+    state.selected_item = 1
+  end
 
 
   local frame = player.gui.screen.add({
@@ -154,14 +176,14 @@ function M.on_open_window(state, player, entity)
     direction = "vertical",
     vertical_scroll_policy = "always",
   })
-  state.requests_flow.style.size = { M.WIDTH - 30, M.HEIGHT - 300 }
+  state.requests_flow.style.size = { M.WIDTH - 30, 300 }
   M.rerender_requests(state)
 
   state.selected_item_flow = main_flow.add({
     type = "flow",
     direction = "vertical",
   })
-  M.renreder_selected_item_flow(state)
+  M.rerender_selected_item_flow(state)
 
   state.entity = entity
 
@@ -195,7 +217,7 @@ function M.rerender_requests(state)
   end
 end
 
-function M.renreder_selected_item_flow(state)
+function M.rerender_selected_item_flow(state)
   state.selected_item_flow.clear()
   if state.selected_item ~= nil then
     local request = state.requests[state.selected_item]
@@ -206,7 +228,6 @@ function M.renreder_selected_item_flow(state)
       type = "label",
       caption = {
         "",
-        "Selected Item: ",
         name,
       },
     })
@@ -219,20 +240,38 @@ function M.renreder_selected_item_flow(state)
       type = "label",
       caption = "Mode:",
     })
-    local dropdown_items = {}
-    local selected_index = 0
-    for option_idx, option in ipairs(REQUEST_MODE_DROPDOWN_OPTIONS) do
-      table.insert(dropdown_items, option.label)
-      if option.value == request.type then
-        selected_index = option_idx
-      end
-    end
+
     mode_flow.add({
-      type = "drop-down",
-      items = dropdown_items,
-      selected_index = selected_index,
-      tags = { elem_id = REQUEST_MODE_DROPDOWN_ID },
+      type = "radiobutton",
+      state = request.type == "provide",
+      tags = { elem_id = PROVIDE_RADIO_BTN_ID },
     })
+    mode_flow.add({ type = "label", caption = "Provide" })
+
+    mode_flow.add({
+      type = "radiobutton",
+      state = request.type == "request",
+      tags = { elem_id = REQUEST_RADIO_BTN_ID },
+    })
+    mode_flow.add({ type = "label", caption = "Request" })
+
+    if request.type == "provide" then
+      local no_limit_flow = state.selected_item_flow.add({
+        type = "flow",
+        direction = "horizontal",
+      })
+
+      no_limit_flow.add({
+        type = "checkbox",
+        state = request.no_limit or false,
+        tags = { elem_id = NO_LIMIT_CHECKBOX_ID },
+      })
+
+      no_limit_flow.add({
+        type = "label",
+        caption = "No Limit",
+      })
+    end
 
     local inv = state.entity.get_output_inventory()
     local contents = inv.get_contents()

@@ -13,7 +13,7 @@ function M.main()
   data:extend(Hotkeys.hotkeys)
 end
 
-local function inner_add_network_chest(name, size)
+local function inner_add_network_chest(name, size, order)
   local override_item_name = "iron-chest"
   local overwrite_prototype = "container"
 
@@ -47,8 +47,9 @@ local function inner_add_network_chest(name, size)
   local item = table.deepcopy(data.raw["item"][override_item_name])
   item.name = name
   item.place_result = name
-  item.icon = Paths.graphics .. "/items/network-chest.png"
+  item.icon = Paths.graphics .. "/items/" .. name .. ".png"
   item.size = 64
+  item.order = item.order .. order
 
   local recipe = {
     name = name,
@@ -66,9 +67,9 @@ local function inner_add_network_chest(name, size)
 end
 
 function M.add_network_chests()
-  inner_add_network_chest("network-chest", 1)
-  inner_add_network_chest("medium-network-chest", 3)
-  inner_add_network_chest("large-network-chest", 5)
+  inner_add_network_chest("network-chest", 1, "0")
+  inner_add_network_chest("medium-network-chest", 3, "1")
+  inner_add_network_chest("large-network-chest", 5, "2")
 end
 
 function M.add_loader()
