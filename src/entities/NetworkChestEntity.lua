@@ -10,13 +10,19 @@ function M.on_create_entity(state)
   if state.config == nil then
     state.config = { requests = {}, has_been_updated = false }
   end
+
+  global.mod.network_chest_has_been_placed = true
 end
 
 function M.copy_config(entity_id)
   local info = GlobalState.get_entity_info(entity_id)
   local new_requests = {}
   for _, request in ipairs(info.config.requests) do
-    table.insert(new_requests, { type = request.type, item = request.item })
+    table.insert(new_requests, {
+      type = request.type,
+      item = request.item,
+      no_limit = request.no_limit,
+    })
   end
   local new_config = {
     requests = new_requests,

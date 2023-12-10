@@ -1,3 +1,4 @@
+local UpdatePlayerLogistics = require "src.UpdatePlayerLogistics"
 local constants = require "src.constants"
 local NetworkTankEntity = require "src.entities.NetworkTankEntity"
 local NetworkTankWindow = require "src.windows.NetworkTankWindow"
@@ -374,6 +375,12 @@ function M.on_tick()
     end
   end
   GlobalState.stop_timer("On Tick")
+end
+
+function M.on_tick_60()
+  GlobalState.start_timer("Update Player Logistics")
+  UpdatePlayerLogistics.update_player_logistics()
+  GlobalState.stop_timer("Update Player Logistics")
 end
 
 function M.on_init()

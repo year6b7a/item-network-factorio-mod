@@ -119,7 +119,7 @@ local function main()
   )
 
   script.on_nth_tick(1, EventHandlers.on_tick)
-  -- script.on_nth_tick(60, NetworkChest.onTick_60)
+  script.on_nth_tick(60, EventHandlers.on_tick_60)
   -- script.on_nth_tick(60 * 3, NetworkChest.on_every_5_seconds)
   -- script.on_nth_tick(120, NetworkChest.service_sensors)
 

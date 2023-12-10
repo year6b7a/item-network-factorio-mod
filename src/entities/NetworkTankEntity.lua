@@ -53,7 +53,7 @@ function M.on_update(state)
         fluid.name,
         fluid.temperature,
         fluid.amount,
-        true
+        not fluid.no_limit
       )
       if deposited > 0 then
         local result_amount = fluid.amount - deposited

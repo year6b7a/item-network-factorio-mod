@@ -519,7 +519,10 @@ end
 
 function M.put_chest_contents_in_network(entity)
   local inv = entity.get_output_inventory()
+  M.deposit_inv_contents(inv)
+end
 
+function M.deposit_inv_contents(inv)
   if inv ~= nil then
     local contents = inv.get_contents()
     for item, count in pairs(contents) do

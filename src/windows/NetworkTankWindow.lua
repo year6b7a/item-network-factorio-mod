@@ -60,6 +60,16 @@ table.insert(M.elem_handlers, {
   end,
 })
 
+local NO_LIMIT_CHECKBOX_ID = "153d27003e23e7ae2d30ca4a6c74bee2"
+table.insert(M.elem_handlers, {
+  elem_id = NO_LIMIT_CHECKBOX_ID,
+  event = "on_gui_checked_state_changed",
+  handler = function(event, state)
+    state.config.no_limit = event.element.state
+    M.rerender(state)
+  end,
+})
+
 function M.rerender(state)
   state.frame.clear()
 
@@ -137,6 +147,22 @@ function M.rerender(state)
       selected_index = 1,
       tags = { elem_id = TEMP_DROPDOWN_ID },
     })
+  elseif state.config.type == "provide" then
+    local no_limit_flow = main_flow.add({
+      type = "flow",
+      direction = "horizontal",
+    })
+
+    no_limit_flow.add({
+      type = "checkbox",
+      state = state.config.no_limit or false,
+      tags = { elem_id = NO_LIMIT_CHECKBOX_ID },
+    })
+
+    no_limit_flow.add({
+      type = "label",
+      caption = "No Limit",
+    })
   end
 end
 
@@ -154,6 +180,7 @@ function M.on_open_window(state, player, entity)
     type = entity_info.config.type,
     fluid = entity_info.config.fluid,
     temp = entity_info.config.temp,
+    no_limit = entity_info.config.no_limit,
   }
 
   M.rerender(state)
