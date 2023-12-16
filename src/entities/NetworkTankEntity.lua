@@ -25,25 +25,27 @@ function M.on_update(state)
   local fluidbox = state.entity.fluidbox
   assert(#fluidbox == 1)
 
-  if state.config.type == "request" and state.config.fluid ~= nil and state.config.temp ~= nil then
-    local capacity = fluidbox.get_capacity(1)
-    local fluid = fluidbox[1]
-    if fluid ~= nil then
-      capacity = capacity - fluid.amount
-    end
-    if fluid == nil or (fluid.name == state.config.fluid and fluid.temperature == state.config.temp) then
-      local withdrawn = GlobalState.withdraw_fluid(
-        state.config.fluid,
-        state.config.temp,
-        capacity
-      )
-      if withdrawn > 0 then
-        local inserted = state.entity.insert_fluid({
-          name = state.config.fluid,
-          temperature = state.config.temp,
-          amount = withdrawn,
-        })
-        assert(inserted == withdrawn)
+  if state.config.type == "request" then
+    if state.config.fluid ~= nil and state.config.temp ~= nil then
+      local capacity = fluidbox.get_capacity(1)
+      local fluid = fluidbox[1]
+      if fluid ~= nil then
+        capacity = capacity - fluid.amount
+      end
+      if fluid == nil or (fluid.name == state.config.fluid and fluid.temperature == state.config.temp) then
+        local withdrawn = GlobalState.withdraw_fluid(
+          state.config.fluid,
+          state.config.temp,
+          capacity
+        )
+        if withdrawn > 0 then
+          local inserted = state.entity.insert_fluid({
+            name = state.config.fluid,
+            temperature = state.config.temp,
+            amount = withdrawn,
+          })
+          assert(inserted == withdrawn)
+        end
       end
     end
   elseif state.config.type == "provide" then
@@ -53,7 +55,7 @@ function M.on_update(state)
         fluid.name,
         fluid.temperature,
         fluid.amount,
-        not fluid.no_limit
+        not state.config.no_limit
       )
       if deposited > 0 then
         local result_amount = fluid.amount - deposited

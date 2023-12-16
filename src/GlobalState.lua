@@ -129,11 +129,25 @@ function M.inner_setup()
     -- A map from item name -> info about the item
     global.mod.items = {}
 
-    -- A fluid's material ID is the fluid name @ temperature.
+    -- A map from fluid name to
+    --   a map from temp to info about the fluid x temp
     global.mod.fluids = {}
 
     -- A map from entity ID to info about the entity.
     global.mod.entities = {}
+  end
+
+  for _, info in pairs(global.mod.items) do
+    if info.max_amount == nil then
+      info.max_amount = info.amount
+    end
+  end
+  for _, temp_map in pairs(global.mod.fluids) do
+    for _, info in pairs(temp_map) do
+      if info.max_amount == nil then
+        info.max_amount = info.amount
+      end
+    end
   end
 end
 
@@ -431,6 +445,7 @@ function M.get_item_info(item)
     info = {
       amount = 0,
       deposit_limit = 1,
+      max_amount = 0,
     }
     global.mod.items[item] = info
   end
@@ -439,12 +454,15 @@ end
 
 local function increment_material_amount(info, delta, respect_limit)
   if respect_limit and delta > 0 then
+    delta = math.floor(delta)
     local max_delta = math.max(0, info.deposit_limit - info.amount)
     delta = math.min(delta, max_delta)
   elseif delta < 0 then
+    delta = -math.floor(-delta)
     delta = math.max(delta, -info.amount)
   end
   info.amount = info.amount + delta
+  info.max_amount = math.max(info.max_amount, info.amount)
   if info.amount >= info.deposit_limit then
     info.has_been_full_tick = game.tick
   elseif info.amount == 0 and info.has_been_full_tick ~= nil and (game.tick - info.has_been_full_tick) < (60 * 10) then
@@ -479,6 +497,7 @@ function M.get_fluid_info(fluid_name, fluid_temp)
     global.mod.fluids[fluid_name][fluid_temp] = {
       amount = 0,
       deposit_limit = 1,
+      max_amount = 0,
     }
   end
   local info = global.mod.fluids[fluid_name][fluid_temp]
@@ -504,7 +523,9 @@ function M.get_fluid_temps(fluid_name)
   local temp_map = global.mod.fluids[fluid_name]
   if temp_map ~= nil then
     for temp, info in pairs(temp_map) do
-      table.insert(temp_pairs, { temp = temp, order = -info.deposit_limit })
+      if info.max_amount > 0 then
+        table.insert(temp_pairs, { temp = temp, order = -info.deposit_limit })
+      end
     end
   end
   table.sort(temp_pairs, sort_fluids)
@@ -556,8 +577,8 @@ function M.put_tank_contents_in_network(entity)
   local fluidbox = entity.fluidbox
   for idx = 1, #fluidbox do
     local fluid = fluidbox[idx]
-    if fluid ~= nil then
-      M.increment_fluid_count(fluid.name, fluid.temperature, fluid.amount)
+    if fluid ~= nil and fluid.name ~= nil and fluid.temperature ~= nil and fluid.amount ~= nil then
+      M.deposit_fluid(fluid.name, fluid.temperature, fluid.amount)
     end
   end
   entity.clear_fluid_inside()
@@ -605,7 +626,7 @@ function M.get_fluid_count(fluid_name, temp)
   if fluid_temps == nil then
     return 0
   end
-  return fluid_temps[temp] or 0
+  return fluid_temps[temp].amount or 0
 end
 
 function M.get_items()
