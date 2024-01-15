@@ -1,3 +1,7 @@
+local LargeNetworkTankWindow = require "src.windows.LargeNetworkTankWindow"
+local MediumNetworkTankWindow = require "src.windows.MediumNetworkTankWindow"
+local LargeNetworkTankEntity = require "src.entities.LargeNetworkTankEntity"
+local MediumNetworkTankEntity = require "src.entities.MediumNetworkTankEntity"
 local UpdatePlayerLogistics = require "src.UpdatePlayerLogistics"
 local constants = require "src.constants"
 local NetworkTankEntity = require "src.entities.NetworkTankEntity"
@@ -22,6 +26,8 @@ local WINDOWS = {
   NetworkLoaderWindow,
   NetworkViewWindow,
   NetworkTankWindow,
+  MediumNetworkTankWindow,
+  LargeNetworkTankWindow,
 }
 
 local ENTITIES = {
@@ -29,6 +35,8 @@ local ENTITIES = {
   MediumNetworkChestEntity,
   LargeNetworkChestEntity,
   NetworkTankEntity,
+  MediumNetworkTankEntity,
+  LargeNetworkTankEntity,
 }
 
 local entity_name_to_window_map = {}

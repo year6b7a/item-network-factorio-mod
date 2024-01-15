@@ -7,7 +7,7 @@ local M = {}
 function M.main()
   M.add_network_chests()
   M.add_loader()
-  M.add_network_tank()
+  M.add_network_tanks()
   M.add_network_sensor()
 
   data:extend(Hotkeys.hotkeys)
@@ -28,7 +28,7 @@ local function inner_add_network_chest(name, size, order)
   entity.inventory_size = constants.NUM_INVENTORY_SLOTS
   entity.inventory_type = "with_filters_and_bar"
   entity.minable.result = name
-  local collision_size = size * 0.5 - 0.05
+  local collision_size = size * 0.5 - 0.1
   entity.collision_box = {
     { -collision_size, -collision_size },
     { collision_size,  collision_size },
@@ -153,9 +153,46 @@ function M.add_loader()
   data:extend({ entity, item, recipe })
 end
 
-function M.add_network_tank()
-  local name = "network-tank"
+function M.add_network_tanks()
+  M.add_network_tank(
+    "network-tank", 1, "0", 50,
+    { { 0, 1 } }
+  )
+  M.add_network_tank(
+    "medium-network-tank", 3, "1", 250,
+    {
+      { 0,  2 },
+      { 0,  -2 },
+      { 2,  0 },
+      { -2, 0 },
+    }
+  )
+  M.add_network_tank(
+    "large-network-tank", 5, "2", 1000,
+    {
+      { 1,  3 },
+      { -1, 3 },
+      { 1,  -3 },
+      { -1, -3 },
+      { 3,  1 },
+      { 3,  -1 },
+      { -3, 1 },
+      { -3, -1 },
+    }
+  )
+end
+
+function M.add_network_tank(name, size, order, area, positions)
   local override_item_name = "storage-tank"
+
+  local collision_size = size * 0.5 - 0.1
+  local selection_size = size * 0.5
+  local drawing_size = size * 0.5
+
+  local pipe_connections = {}
+  for _, pos in ipairs(positions) do
+    table.insert(pipe_connections, { position = pos, type = "input-output" })
+  end
 
   local entity = {
     name = name,
@@ -167,17 +204,26 @@ function M.add_network_tank()
     },
     icon = Paths.graphics .. "/entities/network-tank.png",
     icon_size = 64,
-    selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
-    collision_box = { { -0.4, -0.4 }, { 0.4, 0.4 } },
-    window_bounding_box = { { -1, -0.5 }, { 1, 0.5 } },
-    drawing_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
+    selection_box = {
+      { -selection_size, -selection_size },
+      { selection_size,  selection_size },
+    },
+    collision_box = {
+      { -collision_size, -collision_size },
+      { collision_size,  collision_size },
+    },
+    window_bounding_box = {
+      { -drawing_size, -drawing_size },
+      { drawing_size,  drawing_size },
+    },
+    drawing_box = {
+      { -drawing_size, -drawing_size },
+      { drawing_size,  drawing_size },
+    },
     fluid_box = {
-      base_area = constants.TANK_AREA,
+      base_area = area,
       height = constants.TANK_HEIGHT,
-      pipe_connections =
-      {
-        { position = { 0, 1 }, type = "input-output" },
-      },
+      pipe_connections = pipe_connections,
     },
     two_direction_only = false,
     pictures = {
@@ -185,7 +231,7 @@ function M.add_network_tank()
         sheet = {
           filename = Paths.graphics .. "/entities/network-tank.png",
           size = 64,
-          scale = 0.5,
+          scale = size * 0.5,
         },
       },
       window_background = {
@@ -221,6 +267,7 @@ function M.add_network_tank()
   item.place_result = name
   item.icon = Paths.graphics .. "/items/network-tank.png"
   item.size = 64
+  item.order = item.order .. order
 
   local recipe = {
     name = name,
