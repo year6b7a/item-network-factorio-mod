@@ -1,6 +1,9 @@
 local EventHandlers = require "src.EventHandlers"
 
 local function main()
+  -- if "" == "" then return end
+  -- if script.active_mods["gvv"] then require("__gvv__.gvv")() end
+
   -- create
   script.on_event(
     defines.events.on_built_entity,
