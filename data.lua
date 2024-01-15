@@ -213,8 +213,8 @@ function M.add_network_tank(name, size, order, area, positions)
       { collision_size,  collision_size },
     },
     window_bounding_box = {
-      { -drawing_size, -drawing_size },
-      { drawing_size,  drawing_size },
+      { -0.5, -0.5 },
+      { 0.5,  0.5 },
     },
     drawing_box = {
       { -drawing_size, -drawing_size },
@@ -241,6 +241,7 @@ function M.add_network_tank(name, size, order, area, positions)
       fluid_background = {
         filename = Paths.graphics .. "/entities/fluid-background.png",
         size = { 32, 32 },
+        scale = size * 0.7,
       },
       flow_sprite = {
         filename = Paths.graphics .. "/empty-pixel.png",
