@@ -28,7 +28,7 @@ local function inner_add_network_chest(name, size, order)
   entity.inventory_size = constants.NUM_INVENTORY_SLOTS
   entity.inventory_type = "with_filters_and_bar"
   entity.minable.result = name
-  local collision_size = size * 0.5 - 0.1
+  local collision_size = size * 0.5 - 0.15
   entity.collision_box = {
     { -collision_size, -collision_size },
     { collision_size,  collision_size },
@@ -185,7 +185,7 @@ end
 function M.add_network_tank(name, size, order, area, positions)
   local override_item_name = "storage-tank"
 
-  local collision_size = size * 0.5 - 0.1
+  local collision_size = size * 0.5 - 0.15
   local selection_size = size * 0.5
   local drawing_size = size * 0.5
 
