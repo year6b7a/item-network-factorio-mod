@@ -40,12 +40,90 @@ table.insert(M.elem_handlers, {
   elem_id = ITEM_SPRITE_BTN_ID,
   event = "on_gui_click",
   handler = function(event, state)
+    --[[
+    This handles a click on an item sprite in the item view.
+    If the cursor has something in it, then the cursor content is dumped into the item network.
+    If the cursor is empty then we grab something from the item network.
+      left-click grabs one item.
+      shift + left-click grabs one stack.
+      ctrl + left-click grabs it all.
+    ]]
+    local element = event.element
+    local player = game.players[event.player_index]
+    if player == nil then
+      return
+    end
+    local inv = player.get_main_inventory()
+    if inv == nil then
+      return
+    end
+
+    -- if we have an empty cursor, then we are taking items, which requires a valid target
+    if player.is_cursor_empty() then
+      local item_name = event.element.tags.item
+      if item_name == nil then
+        return
+      end
+
+      local network_count = GlobalState.get_item_info(item_name).amount
+      local stack_size = game.item_prototypes[item_name].stack_size
+
+      if event.button == defines.mouse_button_type.left then
+        -- shift moves a stack, non-shift moves 1 item
+        local n_transfer = 1
+        if event.shift then
+          n_transfer = stack_size
+        elseif event.control then
+          n_transfer = network_count
+        end
+        n_transfer = math.min(network_count, n_transfer)
+        -- move one item or stack to player inventory
+        if n_transfer > 0 then
+          local n_moved = inv.insert({ name = item_name, count = n_transfer })
+          if n_moved > 0 then
+            local withdrawn = GlobalState.withdraw_item(item_name, n_moved)
+            assert(n_moved == withdrawn)
+            element.number = network_count - n_moved
+          end
+        end
+      end
+      return
+    else
+      -- There is a stack in the cursor. Deposit it.
+      local cursor_stack = player.cursor_stack
+      if not cursor_stack or not cursor_stack.valid_for_read then
+        return
+      end
+
+      -- don't deposit tracked entities (can be unique)
+      if cursor_stack.item_number ~= nil then
+        game.print(string.format(
+          "Unable to deposit %s because it might be a vehicle with items that will be lost.",
+          cursor_stack.name))
+        return
+      end
+
+      if event.button == defines.mouse_button_type.left then
+        GlobalState.deposit_item(cursor_stack.name, cursor_stack.count, false)
+        cursor_stack.clear()
+        player.clear_cursor()
+        M.render_selected_tab(state)
+      end
+    end
   end,
 })
 
 local FLUID_SPRITE_BTN_ID = "f40451f7ff4908eab256c3cae2073587"
 table.insert(M.elem_handlers, {
   elem_id = FLUID_SPRITE_BTN_ID,
+  event = "on_gui_click",
+  handler = function(event, state)
+  end,
+})
+
+local MISSING_SPRITE_BTN_ID = "0fe523a0d7ebe2ecf19d3a5d86237624"
+table.insert(M.elem_handlers, {
+  elem_id = MISSING_SPRITE_BTN_ID,
   event = "on_gui_click",
   handler = function(event, state)
   end,
@@ -177,7 +255,7 @@ local function get_missing_item_icon(item_name, missing_count)
       item_proto.localised_name,
     },
     tags = {
-      elem_id = ITEM_SPRITE_BTN_ID,
+      elem_id = MISSING_SPRITE_BTN_ID,
       item = item_name,
     },
     number = missing_count,
