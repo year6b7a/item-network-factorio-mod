@@ -35,31 +35,34 @@ function M.on_paste_settings(source, dest)
     local recipe = source.get_recipe()
     if recipe ~= nil then
       local dest_info = GlobalState.get_entity_info(dest.unit_number)
-      local new_requests = {}
-      local tracked_items = {}
+      local request_map = {}
       for _, request in ipairs(dest_info.config.requests) do
-        table.insert(new_requests, request)
-        tracked_items[request.item] = true
+        request_map[request.item] = request
       end
 
       for _, ingredient in ipairs(recipe.ingredients) do
-        if ingredient.type == "item" and tracked_items[ingredient.name] == nil then
-          tracked_items[ingredient.name] = true
-          table.insert(new_requests, {
+        if ingredient.type == "item" and request_map[ingredient.name] == nil then
+          request_map[ingredient.name] = {
             item = ingredient.name,
             type = "request",
-          })
+          }
         end
       end
 
       for _, product in ipairs(recipe.products) do
-        if product.type == "item" and tracked_items[product.name] == nil then
-          tracked_items[product.name] = true
-          table.insert(new_requests, {
-            item = product.name,
-            type = "provide",
-          })
+        if product.type == "item" then
+          if request_map[product.name] == nil or request_map[product.name].type == "request" then
+            request_map[product.name] = {
+              item = product.name,
+              type = "provide",
+            }
+          end
         end
+      end
+
+      local new_requests = {}
+      for _, request in pairs(request_map) do
+        table.insert(new_requests, request)
       end
 
       dest_info.config.requests = new_requests
