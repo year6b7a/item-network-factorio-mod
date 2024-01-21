@@ -155,7 +155,7 @@ end
 
 function M.add_network_tanks()
   M.add_network_tank(
-    "network-tank", 1, "0", 50,
+    "network-tank", 1, "0", 5,
     { { 0, 1 } }
   )
   M.add_network_tank(
