@@ -198,12 +198,13 @@ function M.rerender_requests(state)
     requests,
     MAX_REQUEST_ROW_SIZE
   )
+  local request_idx = 1
   for _, row in ipairs(request_rows) do
     local request_h_stack = state.requests_flow.add({
       type = "flow",
       direction = "horizontal",
     })
-    for request_idx, request in ipairs(row) do
+    for _, request in ipairs(row) do
       local sprite_button = {
         type = "sprite-button",
         elem_type = "item",
@@ -213,6 +214,7 @@ function M.rerender_requests(state)
       }
       local icon = request_h_stack.add(sprite_button)
       icon.number = sprite_button.number
+      request_idx = request_idx + 1
     end
   end
 end
