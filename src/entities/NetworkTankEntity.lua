@@ -1,5 +1,6 @@
 local Helpers = require "src.Helpers"
 local GlobalState = require "src.GlobalState"
+local NetworkTankPasteWindow = require "src.windows.NetworkTankPasteWindow"
 local M = {}
 
 M.entity_name = "network-tank"
@@ -18,6 +19,33 @@ function M.copy_config(entity_id)
     temp = info.config.temp,
   }
   -- return Helpers.shallow_copy(info.config)
+end
+
+function M.on_paste_settings(source, dest, player)
+  if source.type == "assembling-machine" then
+    local recipe = source.get_recipe()
+    if recipe ~= nil then
+      local requested_fluids = {}
+
+      for _, ingredient in ipairs(recipe.ingredients) do
+        if ingredient.type == "fluid" then
+          table.insert(requested_fluids, {
+            name = ingredient.name,
+            minimum_temperature = ingredient.minimum_temperature,
+            maximum_temperature = ingredient.maximum_temperature,
+          })
+        end
+      end
+
+      if #requested_fluids > 0 then
+        NetworkTankPasteWindow.open_window(player, dest, requested_fluids)
+      end
+    end
+  elseif source.name == "network-tank" or source.name == "medium-network-tank" or source.name == "large-network-tank" then
+    local dest_info = GlobalState.get_entity_info(dest.unit_number)
+    dest_info.config = M.copy_config(source.unit_number)
+    dest_info.config.has_been_updated = false
+  end
 end
 
 function M.on_remove_entity(event)

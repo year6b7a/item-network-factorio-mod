@@ -267,7 +267,6 @@ function M.add_network_tank(name, size, order, area, positions)
     },
     se_allow_in_space = true,
     allow_copy_paste = true,
-    additional_pastable_entities = { "network-tank" },
     max_health = 200,
   }
 

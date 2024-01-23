@@ -1,3 +1,4 @@
+local NetworkTankPasteWindow = require "src.windows.NetworkTankPasteWindow"
 local LargeNetworkTankWindow = require "src.windows.LargeNetworkTankWindow"
 local MediumNetworkTankWindow = require "src.windows.MediumNetworkTankWindow"
 local LargeNetworkTankEntity = require "src.entities.LargeNetworkTankEntity"
@@ -28,6 +29,7 @@ local WINDOWS = {
   NetworkTankWindow,
   MediumNetworkTankWindow,
   LargeNetworkTankWindow,
+  NetworkTankPasteWindow,
 }
 
 local ENTITIES = {
@@ -283,8 +285,9 @@ function M.on_pre_entity_settings_pasted(event)
     end
   else
     local dest_entity = entity_name_to_entity_map[dest.name]
-    if dest_entity ~= nil then
-      dest_entity.on_paste_settings(source, dest)
+    local player = game.get_player(event.player_index)
+    if dest_entity ~= nil and player ~= nil then
+      dest_entity.on_paste_settings(source, dest, player)
     end
   end
 end
