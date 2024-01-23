@@ -187,4 +187,7 @@ function M.rerender(state)
   })
 end
 
+function M.on_close_window(state)
+end
+
 return M
