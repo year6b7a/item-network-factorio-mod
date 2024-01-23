@@ -4,6 +4,14 @@ local Hotkeys = require "src.Hotkeys"
 
 local M = {}
 
+local RECIPE_PREFIX = "";
+local IRON_PLATE = "iron-plate"
+
+if mods["nullius"] ~= nil then
+  RECIPE_PREFIX = "nullius-"
+  IRON_PLATE = "nullius-iron-plate"
+end
+
 function M.main()
   M.add_network_chests()
   M.add_loader()
@@ -52,12 +60,12 @@ local function inner_add_network_chest(name, size, order)
   item.order = item.order .. order
 
   local recipe = {
-    name = name,
+    name = RECIPE_PREFIX .. name,
     type = "recipe",
     enabled = true,
     energy_required = 0.5,
     ingredients = {
-      { type = "item", name = "iron-plate", amount = 5 },
+      { type = "item", name = IRON_PLATE, amount = 5 },
     },
     result = name,
     result_count = 1,
@@ -139,12 +147,12 @@ function M.add_loader()
   }
 
   local recipe = {
-    name = name,
+    name = RECIPE_PREFIX .. name,
     type = "recipe",
     enabled = true,
     energy_required = 0.5,
     ingredients = {
-      { type = "item", name = "iron-plate", amount = 5 },
+      { type = "item", name = IRON_PLATE, amount = 5 },
     },
     result = name,
     result_count = 1,
@@ -271,12 +279,12 @@ function M.add_network_tank(name, size, order, area, positions)
   item.order = item.order .. order
 
   local recipe = {
-    name = name,
+    name = RECIPE_PREFIX .. name,
     type = "recipe",
     enabled = true,
     energy_required = 0.5,
     ingredients = {
-      { type = "item", name = "iron-plate", amount = 5 },
+      { type = "item", name = IRON_PLATE, amount = 5 },
     },
     result = name,
     result_count = 1,
@@ -303,7 +311,7 @@ function M.add_network_sensor()
   item.order = item.order .. "2"
 
   local recipe = table.deepcopy(data.raw["recipe"][override_item_name])
-  recipe.name = name
+  recipe.name = RECIPE_PREFIX .. name
   recipe.result = name
   recipe.enabled = true
 
