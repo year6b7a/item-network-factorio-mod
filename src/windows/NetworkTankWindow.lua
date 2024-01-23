@@ -1,5 +1,4 @@
 local GlobalState = require "src.GlobalState"
-local Helpers = require "src.Helpers"
 local M = {}
 
 M.entity_name = "network-tank"
