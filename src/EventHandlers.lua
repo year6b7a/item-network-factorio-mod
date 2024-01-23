@@ -338,12 +338,14 @@ function M.on_player_setup_blueprint(event)
         entity.name,
         entity.position
       )
-      local config = entity_def.copy_config(real_entity.unit_number)
-      blueprint.set_blueprint_entity_tag(
-        entity.entity_number,
-        "config",
-        config
-      )
+      if real_entity ~= nil then
+        local config = entity_def.copy_config(real_entity.unit_number)
+        blueprint.set_blueprint_entity_tag(
+          entity.entity_number,
+          "config",
+          config
+        )
+      end
     end
   end
 end
