@@ -1,3 +1,4 @@
+local Priority = require "src.Priority"
 local Heap = require "src.Heap"
 local Timer = require "src.Timer"
 local Queue = require "src.Queue"
@@ -147,6 +148,31 @@ function M.inner_setup()
       if info.max_amount == nil then
         info.max_amount = info.amount
       end
+    end
+  end
+  for _, entity in pairs(global.mod.entities) do
+    if entity.type == "network-chest" or entity.type == "medium-network-chest" or entity.type == "large-network-chest" then
+      for _, request in ipairs(entity.config.requests) do
+        if request.priority == nil then
+          if request.type == "provide" and request.no_limit then
+            request.priority = Priority.HIGH
+          else
+            request.priority = Priority.DEFAULT
+          end
+          request.no_limit = nil
+        end
+      end
+    elseif entity.type == "network-tank" then
+      if entity.config.priority == nil then
+        if entity.config.type == "provide" and entity.config.no_limit then
+          entity.config.priority = Priority.HIGH
+        else
+          entity.config.priority = Priority.DEFAULT
+        end
+        entity.config.no_limit = nil
+      end
+    else
+      error(entity.type)
     end
   end
 end
@@ -452,44 +478,75 @@ function M.get_item_info(item)
   return info
 end
 
-local function increment_material_amount(info, delta, respect_limit)
-  if respect_limit and delta > 0 then
-    delta = math.floor(delta)
-    local max_delta = math.max(0, info.deposit_limit - info.amount)
-    delta = math.min(delta, max_delta)
-  elseif delta < 0 then
-    delta = -math.floor(-delta)
-    delta = math.max(delta, -info.amount)
+function M.deposit_item2(item, amount, priority)
+  local info = M.get_item_info(item)
+  return M.deposit_material2(info, amount, priority)
+end
+
+function M.deposit_material2(info, amount, priority)
+  assert(priority ~= nil)
+  amount = math.floor(amount)
+  amount = math.max(0, amount)
+  if priority == Priority.DEFAULT then
+    local max_amount = math.max(0, info.deposit_limit - info.amount)
+    amount = math.min(amount, max_amount)
+  elseif priority == Priority.LOW then
+    local deposit_limit = math.floor(0.2 * info.deposit_limit)
+    deposit_limit = math.max(1, deposit_limit)
+    local max_amount = math.max(0, deposit_limit - info.amount)
+    amount = math.min(amount, max_amount)
   end
-  info.amount = info.amount + delta
-  info.max_amount = math.max(info.max_amount, info.amount)
-  if info.amount >= info.deposit_limit then
-    info.has_been_full_tick = game.tick
-  elseif info.amount == 0 and info.has_been_full_tick ~= nil and (game.tick - info.has_been_full_tick) < (60 * 10) then
-    info.has_been_full_tick = nil
-    local next_limit = math.ceil(1.5 * (1 + info.deposit_limit))
-    info.deposit_limit = next_limit
+
+  if amount == 0 then
+    return 0
   end
-  return delta
+
+  info.amount = info.amount + amount
+
+  if info.amount >= info.deposit_limit and info.last_full_tick == nil then
+    info.last_full_tick = game.tick
+  end
+
+  return amount
 end
 
-function M.deposit_item(item, amount, respect_limit)
-  local info = M.get_item_info(item)
-  return increment_material_amount(info, amount, respect_limit)
+function M.withdraw_material2(info, amount, priority)
+  assert(priority ~= nil)
+  amount = math.floor(amount)
+  amount = math.max(0, amount)
+  local default_limit = math.floor(0.2 * info.deposit_limit)
+  local max_amount = info.amount
+  if priority == Priority.DEFAULT then
+    max_amount = math.max(0, info.amount - default_limit)
+  elseif priority == Priority.LOW then
+    max_amount = math.max(0, info.amount - info.deposit_limit)
+  end
+
+  amount = math.min(amount, max_amount)
+
+  if amount == 0 then
+    return 0
+  end
+
+  info.amount = info.amount - amount
+
+  if info.amount <= default_limit and info.last_full_tick ~= nil then
+    if game.tick - info.last_full_tick < 60 * 10 then
+      local next_limit = math.ceil(1.5 * (1 + info.deposit_limit))
+      info.deposit_limit = next_limit
+    end
+    info.last_full_tick = nil
+  end
+
+  return amount
 end
 
-function M.get_item_available_to_withdraw(item)
+function M.withdraw_item2(item, amount, priority)
   local info = M.get_item_info(item)
-  return info.amount
-end
-
-function M.withdraw_item(item, amount)
-  local info = M.get_item_info(item)
-  return -increment_material_amount(info, -amount)
+  return M.withdraw_material2(info, amount, priority)
 end
 
 function M.get_fluid_info(fluid_name, fluid_temp)
-  -- local key = M.encode_fluid_key(fluid_name, fluid_temp)
   if global.mod.fluids[fluid_name] == nil then
     global.mod.fluids[fluid_name] = {}
   end
@@ -504,14 +561,14 @@ function M.get_fluid_info(fluid_name, fluid_temp)
   return info
 end
 
-function M.deposit_fluid(fluid_name, fluid_temp, amount, respect_limit)
+function M.deposit_fluid2(fluid_name, fluid_temp, amount, priority)
   local info = M.get_fluid_info(fluid_name, fluid_temp)
-  return increment_material_amount(info, amount, respect_limit)
+  return M.deposit_material2(info, amount, priority)
 end
 
-function M.withdraw_fluid(fluid_name, fluid_temp, amount)
+function M.withdraw_fluid2(fluid_name, fluid_temp, amount, priority)
   local info = M.get_fluid_info(fluid_name, fluid_temp)
-  return -increment_material_amount(info, -amount)
+  return M.withdraw_material2(info, amount, priority)
 end
 
 function M.get_fluid_temps(fluid_name)

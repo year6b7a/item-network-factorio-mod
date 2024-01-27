@@ -1,3 +1,4 @@
+local Priority = require "src.Priority"
 local GlobalState = require "src.GlobalState"
 local M = {}
 
@@ -55,14 +56,22 @@ function M.update_player_logistics()
                 0,
                 slot.min - current_amount
               )
-              local withdrawn = GlobalState.withdraw_item(slot.name, missing)
+              local withdrawn = GlobalState.withdraw_item2(
+                slot.name,
+                missing,
+                Priority.HIGH
+              )
               if withdrawn > 0 then
                 local n_inserted = main_inv.insert({
                   name = slot.name,
                   count = withdrawn,
                 })
                 if n_inserted < withdrawn then
-                  GlobalState.deposit_item(slot.name, withdrawn - n_inserted)
+                  GlobalState.deposit_item2(
+                    slot.name,
+                    withdrawn - n_inserted,
+                    Priority.HIGH
+                  )
                 end
               end
             end

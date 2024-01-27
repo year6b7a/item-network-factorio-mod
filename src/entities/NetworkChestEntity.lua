@@ -1,3 +1,4 @@
+local Priority = require "src.Priority"
 local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
 local constants = require "src.constants"
@@ -21,7 +22,7 @@ function M.copy_config(entity_id)
     table.insert(new_requests, {
       type = request.type,
       item = request.item,
-      no_limit = request.no_limit,
+      priority = request.priority,
     })
   end
   local new_config = {
@@ -146,7 +147,7 @@ function M.update_network_chest_capacity(info)
   for item, count in pairs(contents) do
     assert(count >= 0)
     if count > 0 then
-      GlobalState.deposit_item(item, count)
+      GlobalState.deposit_item2(item, count, Priority.HIGH)
     end
   end
 end
@@ -233,10 +234,10 @@ function M.on_update(info)
     if request.type == "provide" then
       started_at_limit = start_amount >= request.capacity
       if start_amount > 0 then
-        local deposited = GlobalState.deposit_item(
+        local deposited = GlobalState.deposit_item2(
           request.item,
           start_amount,
-          not request.no_limit
+          request.priority
         )
         if deposited > 0 then
           local actual_deposited = inv.remove(
@@ -260,7 +261,11 @@ function M.on_update(info)
       started_at_limit = start_amount == 0
       local space_in_chest = math.max(0, request.capacity - start_amount)
       if space_in_chest > 0 then
-        local withdrawn = GlobalState.withdraw_item(request.item, space_in_chest)
+        local withdrawn = GlobalState.withdraw_item2(
+          request.item,
+          space_in_chest,
+          request.priority
+        )
         local shortage = space_in_chest - withdrawn
         if shortage > 0 then
           GlobalState.missing_item_set(

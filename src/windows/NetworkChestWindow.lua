@@ -1,5 +1,7 @@
 local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
+local PriorityDropDown = require "src.windows.PriorityDropDown"
+local Priority = require "src.Priority"
 
 local M = {}
 
@@ -32,6 +34,7 @@ table.insert(M.elem_handlers, {
       table.insert(state.requests, {
         type = "provide",
         item = item,
+        priority = Priority.DEFAULT,
       })
       state.selected_item = #state.requests
       state.has_made_changes = true
@@ -78,21 +81,6 @@ table.insert(M.elem_handlers, {
   end,
 })
 
-local NO_LIMIT_CHECKBOX_ID = "153d27003e23e7ae2d30ca4a6c74bee2"
-table.insert(M.elem_handlers, {
-  elem_id = NO_LIMIT_CHECKBOX_ID,
-  event = "on_gui_checked_state_changed",
-  handler = function(event, state)
-    local request_idx = state.selected_item
-    local request = state.requests[request_idx]
-    request.no_limit = event.element.state
-    state.has_made_changes = true
-    M.rerender_selected_item_flow(state)
-  end,
-})
-
-
-
 local REMOVE_REQUEST_BTN_ID = "35a6053bbb570ace4a806bb32c0f186c"
 table.insert(M.elem_handlers, {
   elem_id = REMOVE_REQUEST_BTN_ID,
@@ -123,6 +111,19 @@ table.insert(M.elem_handlers, {
     local info = GlobalState.get_item_info(request.item)
     info.deposit_limit = 1
     M.rerender_selected_item_flow(state)
+  end,
+})
+
+local PRIORITY_DROP_DOWN_ID = "4f0e45af275d06f24986a1c55020bfc3"
+table.insert(M.elem_handlers, {
+  elem_id = PRIORITY_DROP_DOWN_ID,
+  event = "on_gui_selection_state_changed",
+  handler = function(event, state)
+    local value = PriorityDropDown.options[event.element.selected_index]
+      .value
+    local request = state.requests[state.selected_item]
+    request.priority = value
+    state.has_made_changes = true
   end,
 })
 
@@ -257,23 +258,18 @@ function M.rerender_selected_item_flow(state)
     })
     mode_flow.add({ type = "label", caption = "Request" })
 
-    if request.type == "provide" then
-      local no_limit_flow = state.selected_item_flow.add({
-        type = "flow",
-        direction = "horizontal",
-      })
+    local priority_flow = state.selected_item_flow.add({
+      type = "flow",
+      direction = "horizontal",
+    })
 
-      no_limit_flow.add({
-        type = "checkbox",
-        state = request.no_limit or false,
-        tags = { elem_id = NO_LIMIT_CHECKBOX_ID },
-      })
+    priority_flow.add({ type = "label", caption = "Priority:" })
 
-      no_limit_flow.add({
-        type = "label",
-        caption = "No Limit",
-      })
-    end
+    PriorityDropDown.add_elem(
+      priority_flow,
+      request.priority,
+      PRIORITY_DROP_DOWN_ID
+    )
 
     local inv = state.entity.get_output_inventory()
     local contents = inv.get_contents()

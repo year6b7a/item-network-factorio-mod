@@ -1,4 +1,5 @@
 local GlobalState = require "src.GlobalState"
+local PriorityDropDown = require "src.windows.PriorityDropDown"
 local M = {}
 
 M.entity_name = "network-tank"
@@ -59,13 +60,15 @@ table.insert(M.elem_handlers, {
   end,
 })
 
-local NO_LIMIT_CHECKBOX_ID = "153d27003e23e7ae2d30ca4a6c74bee2"
+
+local PRIORITY_DROP_DOWN_ID = "057d92c76fbdc8ee7087519a0b704a53"
 table.insert(M.elem_handlers, {
-  elem_id = NO_LIMIT_CHECKBOX_ID,
-  event = "on_gui_checked_state_changed",
+  elem_id = PRIORITY_DROP_DOWN_ID,
+  event = "on_gui_selection_state_changed",
   handler = function(event, state)
-    state.config.no_limit = event.element.state
-    M.rerender(state)
+    local value = PriorityDropDown.options[event.element.selected_index]
+      .value
+    state.config.priority = value
   end,
 })
 
@@ -89,6 +92,19 @@ function M.rerender(state)
     tags = { elem_id = REQUEST_RADIO_BTN_ID },
   })
   type_flow.add({ type = "label", caption = "Request" })
+
+  local priority_flow = main_flow.add({
+    type = "flow",
+    direction = "horizontal",
+  })
+
+  priority_flow.add({ type = "label", caption = "Priority:" })
+
+  PriorityDropDown.add_elem(
+    priority_flow,
+    state.config.priority,
+    PRIORITY_DROP_DOWN_ID
+  )
 
   if state.config.type == "request" then
     local fluid_flow = main_flow.add({ type = "flow", direction = "horizontal" })
@@ -146,22 +162,6 @@ function M.rerender(state)
       selected_index = 1,
       tags = { elem_id = TEMP_DROPDOWN_ID },
     })
-  elseif state.config.type == "provide" then
-    local no_limit_flow = main_flow.add({
-      type = "flow",
-      direction = "horizontal",
-    })
-
-    no_limit_flow.add({
-      type = "checkbox",
-      state = state.config.no_limit or false,
-      tags = { elem_id = NO_LIMIT_CHECKBOX_ID },
-    })
-
-    no_limit_flow.add({
-      type = "label",
-      caption = "No Limit",
-    })
   end
 end
 
@@ -179,7 +179,7 @@ function M.on_open_window(state, player, entity)
     type = entity_info.config.type,
     fluid = entity_info.config.fluid,
     temp = entity_info.config.temp,
-    no_limit = entity_info.config.no_limit,
+    priority = entity_info.config.priority,
   }
 
   M.rerender(state)

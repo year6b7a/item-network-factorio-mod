@@ -1,6 +1,6 @@
-local Helpers = require "src.Helpers"
 local GlobalState = require "src.GlobalState"
 local NetworkTankPasteWindow = require "src.windows.NetworkTankPasteWindow"
+local Priority = require "src.Priority"
 local M = {}
 
 M.entity_name = "network-tank"
@@ -17,8 +17,8 @@ function M.copy_config(entity_id)
     type = info.config.type,
     fluid = info.config.fluid,
     temp = info.config.temp,
+    priority = Priority.DEFAULT,
   }
-  -- return Helpers.shallow_copy(info.config)
 end
 
 function M.on_paste_settings(source, dest, player)
@@ -89,10 +89,11 @@ function M.on_update(state)
 
         local desired_amount = math.max(0, capacity - current_amount)
         if desired_amount > 0 then
-          local withdrawn = GlobalState.withdraw_fluid(
+          local withdrawn = GlobalState.withdraw_fluid2(
             state.config.fluid,
             state.config.temp,
-            desired_amount
+            desired_amount,
+            state.config.priority
           )
           if withdrawn > 0 then
             local inserted = state.entity.insert_fluid({
@@ -111,11 +112,11 @@ function M.on_update(state)
   elseif state.config.type == "provide" then
     local fluid = fluidbox[1]
     if fluid ~= nil then
-      local deposited = GlobalState.deposit_fluid(
+      local deposited = GlobalState.deposit_fluid2(
         fluid.name,
         fluid.temperature,
         fluid.amount,
-        not state.config.no_limit
+        state.config.priority
       )
       if deposited > 0 then
         local result_amount = fluid.amount - deposited

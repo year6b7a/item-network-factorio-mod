@@ -1,6 +1,7 @@
 local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
 local Timer = require "src.Timer"
+local Priority = require "src.Priority"
 local M = {}
 
 M.window_name = "cbe5507815be529f2ee8cc652a7d4cbe"
@@ -81,7 +82,11 @@ table.insert(M.elem_handlers, {
         if n_transfer > 0 then
           local n_moved = inv.insert({ name = item_name, count = n_transfer })
           if n_moved > 0 then
-            local withdrawn = GlobalState.withdraw_item(item_name, n_moved)
+            local withdrawn = GlobalState.withdraw_item2(
+              item_name,
+              n_moved,
+              Priority.HIGH
+            )
             assert(n_moved == withdrawn)
             element.number = network_count - n_moved
           end
@@ -104,7 +109,11 @@ table.insert(M.elem_handlers, {
       end
 
       if event.button == defines.mouse_button_type.left then
-        GlobalState.deposit_item(cursor_stack.name, cursor_stack.count, false)
+        GlobalState.deposit_item2(
+          cursor_stack.name,
+          cursor_stack.count,
+          Priority.HIGH
+        )
         cursor_stack.clear()
         player.clear_cursor()
         M.render_selected_tab(state)
