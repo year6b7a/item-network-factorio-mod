@@ -378,9 +378,10 @@ function M.on_tick()
       if entity_handler ~= nil then
         GlobalState.start_timer("Update Entity")
         local next_update_ticks = entity_handler.on_update(entity_info)
+        local rand_delta = global.mod.rand() * 0.1 * next_update_ticks
         Heap.insert(
           global.mod.update_queue,
-          game.tick + next_update_ticks,
+          game.tick + next_update_ticks + rand_delta,
           entity_id
         )
         GlobalState.stop_timer("Update Entity")
