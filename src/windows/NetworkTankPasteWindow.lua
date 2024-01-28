@@ -1,5 +1,6 @@
 local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
+local Priority = require "src.Priority"
 local M = {}
 
 M.window_name = "587cd09398c9bdedbae71dfd4d85ad5d"
@@ -56,6 +57,7 @@ table.insert(M.elem_handlers, {
         type = "request",
         fluid = fluid.name,
         temp = temp,
+        priority = Priority.DEFAULT,
       }
       player.opened = nil
     end

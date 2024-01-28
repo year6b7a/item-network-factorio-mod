@@ -1,5 +1,6 @@
 local GlobalState = require "src.GlobalState"
 local PriorityDropDown = require "src.windows.PriorityDropDown"
+local Priority = require "src.Priority"
 local M = {}
 
 M.entity_name = "network-tank"
@@ -179,7 +180,7 @@ function M.on_open_window(state, player, entity)
     type = entity_info.config.type,
     fluid = entity_info.config.fluid,
     temp = entity_info.config.temp,
-    priority = entity_info.config.priority,
+    priority = entity_info.config.priority or Priority.DEFAULT,
   }
 
   M.rerender(state)

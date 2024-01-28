@@ -162,7 +162,7 @@ function M.inner_setup()
           request.no_limit = nil
         end
       end
-    elseif entity.type == "network-tank" then
+    elseif entity.type == "network-tank" or entity.type == "medium-network-tank" or entity.type == "large-network-tank" then
       if entity.config.priority == nil then
         if entity.config.type == "provide" and entity.config.no_limit then
           entity.config.priority = Priority.HIGH
@@ -503,7 +503,7 @@ function M.deposit_material2(info, amount, priority)
 
   info.amount = info.amount + amount
 
-  if info.amount >= info.deposit_limit and info.last_full_tick == nil then
+  if info.amount >= info.deposit_limit then
     info.last_full_tick = game.tick
   end
 
@@ -635,7 +635,12 @@ function M.put_tank_contents_in_network(entity)
   for idx = 1, #fluidbox do
     local fluid = fluidbox[idx]
     if fluid ~= nil and fluid.name ~= nil and fluid.temperature ~= nil and fluid.amount ~= nil then
-      M.deposit_fluid(fluid.name, fluid.temperature, fluid.amount)
+      M.deposit_fluid2(
+        fluid.name,
+        fluid.temperature,
+        fluid.amount,
+        Priority.HIGH
+      )
     end
   end
   entity.clear_fluid_inside()
