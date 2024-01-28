@@ -17,7 +17,7 @@ function M.copy_config(entity_id)
     type = info.config.type,
     fluid = info.config.fluid,
     temp = info.config.temp,
-    priority = Priority.DEFAULT,
+    priority = info.config.priority,
   }
 end
 
@@ -116,6 +116,7 @@ function M.on_update(state)
         fluid.name,
         fluid.temperature,
         fluid.amount,
+        state.config.priority == nil and Priority.DEFAULT or
         state.config.priority
       )
       if deposited > 0 then

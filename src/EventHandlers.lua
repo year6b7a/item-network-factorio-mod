@@ -1,3 +1,4 @@
+local NetworkLoaderEntity = require "src.entities.NetworkLoaderEntity"
 local NetworkTankPasteWindow = require "src.windows.NetworkTankPasteWindow"
 local LargeNetworkTankWindow = require "src.windows.LargeNetworkTankWindow"
 local MediumNetworkTankWindow = require "src.windows.MediumNetworkTankWindow"
@@ -39,6 +40,7 @@ local ENTITIES = {
   NetworkTankEntity,
   MediumNetworkTankEntity,
   LargeNetworkTankEntity,
+  NetworkLoaderEntity,
 }
 
 local entity_name_to_window_map = {}
@@ -205,12 +207,15 @@ local function generic_on_create_entity(event)
     end
 
     entity_def.on_create_entity(state)
-    GlobalState.register_entity(entity.unit_number, state)
-    Heap.insert(
-      global.mod.update_queue,
-      game.tick + constants.MIN_UPDATE_TICKS,
-      entity.unit_number
-    )
+
+    if not entity_def.do_not_add_to_update_queue then
+      GlobalState.register_entity(entity.unit_number, state)
+      Heap.insert(
+        global.mod.update_queue,
+        game.tick + constants.MIN_UPDATE_TICKS,
+        entity.unit_number
+      )
+    end
   end
 end
 
@@ -241,7 +246,7 @@ local function generic_on_remove_entity(event)
   end
 
   local entity_def = entity_name_to_entity_map[entity.name]
-  if entity_def ~= nil then
+  if entity_def ~= nil and entity_def.on_remove_entity ~= nil then
     entity_def.on_remove_entity(event)
   end
   if entity.unit_number ~= nil then
@@ -279,14 +284,14 @@ function M.on_pre_entity_settings_pasted(event)
   local dest = event.destination
   if source.name == dest.name then
     local entity = entity_name_to_entity_map[source.name]
-    if entity ~= nil then
+    if entity ~= nil and entity.copy_config ~= nil then
       local dest_info = GlobalState.get_entity_info(dest.unit_number)
       dest_info.config = entity.copy_config(source.unit_number)
     end
   else
     local dest_entity = entity_name_to_entity_map[dest.name]
     local player = game.get_player(event.player_index)
-    if dest_entity ~= nil and player ~= nil then
+    if dest_entity ~= nil and player ~= nil and dest_entity.on_paste_settings ~= nil then
       dest_entity.on_paste_settings(source, dest, player)
     end
   end
@@ -336,7 +341,7 @@ function M.on_player_setup_blueprint(event)
 
   for _, entity in ipairs(entities) do
     local entity_def = entity_name_to_entity_map[entity.name]
-    if entity_def ~= nil then
+    if entity_def ~= nil and entity_def.copy_config ~= nil then
       local real_entity = event.surface.find_entity(
         entity.name,
         entity.position

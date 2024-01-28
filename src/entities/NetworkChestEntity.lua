@@ -46,6 +46,7 @@ function M.on_paste_settings(source, dest)
           request_map[ingredient.name] = {
             item = ingredient.name,
             type = "request",
+            priority = Priority.DEFAULT,
           }
         end
       end
@@ -56,6 +57,7 @@ function M.on_paste_settings(source, dest)
             request_map[product.name] = {
               item = product.name,
               type = "provide",
+              priority = Priority.DEFAULT,
             }
           end
         end

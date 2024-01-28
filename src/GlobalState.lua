@@ -604,7 +604,7 @@ function M.deposit_inv_contents(inv)
   if inv ~= nil then
     local contents = inv.get_contents()
     for item, count in pairs(contents) do
-      M.deposit_item(item, count)
+      M.deposit_item2(item, count, Priority.HIGH)
     end
     inv.clear()
   end
