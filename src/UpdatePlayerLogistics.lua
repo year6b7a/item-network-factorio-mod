@@ -70,7 +70,7 @@ function M.update_player_logistics()
                   GlobalState.deposit_item2(
                     slot.name,
                     withdrawn - n_inserted,
-                    Priority.HIGH
+                    Priority.ALWAYS_INSERT
                   )
                 end
               end

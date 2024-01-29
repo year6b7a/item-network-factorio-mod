@@ -6,7 +6,7 @@ local M = {}
 
 M.window_name = "cbe5507815be529f2ee8cc652a7d4cbe"
 M.WIDTH = 500
-M.HEIGHT = 500
+M.HEIGHT = 800
 M.elem_handlers = {}
 
 local REFRESH_BTN_ID = "e71d0cba6dfebf9aaa9c266cc8475a7f"
@@ -112,7 +112,7 @@ table.insert(M.elem_handlers, {
         GlobalState.deposit_item2(
           cursor_stack.name,
           cursor_stack.count,
-          Priority.HIGH
+          Priority.ALWAYS_INSERT
         )
         cursor_stack.clear()
         player.clear_cursor()
@@ -127,6 +127,11 @@ table.insert(M.elem_handlers, {
   elem_id = FLUID_SPRITE_BTN_ID,
   event = "on_gui_click",
   handler = function(event, state)
+    state.selected_fluid = {
+      fluid_name = event.element.tags.fluid_name,
+      fluid_temp = event.element.tags.fluid_temp,
+    }
+    M.render_selected_tab(state)
   end,
 })
 
@@ -135,6 +140,22 @@ table.insert(M.elem_handlers, {
   elem_id = MISSING_SPRITE_BTN_ID,
   event = "on_gui_click",
   handler = function(event, state)
+  end,
+})
+
+local GLOBAL_LIMIT_INPUT_ID = "f255a84c7337ef62619b01c3b55c2b45"
+table.insert(M.elem_handlers, {
+  elem_id = GLOBAL_LIMIT_INPUT_ID,
+  event = "on_gui_text_changed",
+  handler = function(event, state)
+    if state.selected_fluid ~= nil then
+      local info = GlobalState.get_fluid_info(
+        state.selected_fluid.fluid_name,
+        state.selected_fluid.fluid_temp
+      )
+      local value = tonumber(event.element.text)
+      info.max_deposit_limit = value
+    end
   end,
 })
 
@@ -244,6 +265,8 @@ local function get_item_icon(item_name, info)
       item_proto.localised_name,
       info.amount,
       info.deposit_limit,
+      info.max_deposit_limit == nil and "None" or
+      info.max_deposit_limit,
     },
     tags = {
       elem_id = ITEM_SPRITE_BTN_ID,
@@ -271,8 +294,15 @@ local function get_missing_item_icon(item_name, missing_count)
   }
 end
 
-local function get_fluid_icon(info, fluid_name, temp)
+local function get_fluid_icon(state, info, fluid_name, temp)
   local proto = game.fluid_prototypes[fluid_name]
+
+  local highlighted = (
+    state.selected_fluid ~= nil
+    and state.selected_fluid.fluid_name == fluid_name
+    and state.selected_fluid.fluid_temp == temp
+  )
+
   return {
     type = "sprite-button",
     elem_type = "fluid",
@@ -282,6 +312,9 @@ local function get_fluid_icon(info, fluid_name, temp)
       proto.localised_name,
       string.format("%.0f", info.amount),
       { "format-degrees-c", string.format("%.0f", temp) },
+      info.deposit_limit,
+      info.max_deposit_limit == nil and "None" or
+      info.max_deposit_limit,
     },
     tags = {
       elem_id = FLUID_SPRITE_BTN_ID,
@@ -289,6 +322,7 @@ local function get_fluid_icon(info, fluid_name, temp)
       fluid_temp = temp,
     },
     number = info.amount,
+    toggled = highlighted,
   }
 end
 
@@ -317,7 +351,7 @@ local function render_rows_of_icons(main_flow, icons)
     direction = "vertical",
     vertical_scroll_policy = "always",
   })
-  item_flow.style.size = { width = M.WIDTH - 42, height = M.HEIGHT - 108 }
+  item_flow.style.size = { width = M.WIDTH - 42, height = M.HEIGHT - 408 }
   item_flow.style.left_margin = 5
 
   local rows = Helpers.split_list_by_batch_size(icons, 10)
@@ -367,11 +401,37 @@ function M.render_selected_tab(state)
     for fluid_name, temp_map in pairs(fluids) do
       for temp, info in pairs(temp_map) do
         if info.amount > 0 then
-          table.insert(icons, get_fluid_icon(info, fluid_name, temp))
+          table.insert(icons, get_fluid_icon(state, info, fluid_name, temp))
         end
       end
     end
     render_rows_of_icons(main_flow, icons)
+
+    if state.selected_fluid ~= nil then
+      local fluid_info = GlobalState.get_fluid_info(
+        state.selected_fluid.fluid_name,
+        state.selected_fluid.fluid_temp
+      )
+
+      local global_limit_flow = main_flow.add({
+        type = "flow",
+        direction = "horizontal",
+      })
+
+      global_limit_flow.add({ type = "label", caption = "Global Deposit Limit" })
+
+      local field = global_limit_flow.add({
+        type = "textfield",
+        numeric = true,
+        allow_decimal = false,
+        allow_negative = false,
+        tags = { elem_id = GLOBAL_LIMIT_INPUT_ID },
+      })
+      if fluid_info.max_deposit_limit ~= nil then
+        field.text = string.format("%s", fluid_info.max_deposit_limit)
+      end
+      field.style.width = 150
+    end
   elseif selected_tab_idx == 3 then
     -- shortages
     local missing_items = GlobalState.get_missing_items()

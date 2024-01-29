@@ -495,6 +495,11 @@ function M.deposit_material2(info, amount, priority)
     deposit_limit = math.max(1, deposit_limit)
     local max_amount = math.max(0, deposit_limit - info.amount)
     amount = math.min(amount, max_amount)
+  elseif priority == Priority.HIGH then
+    if info.max_deposit_limit ~= nil then
+      local max_amount = math.max(0, info.max_deposit_limit - info.amount)
+      amount = math.min(amount, max_amount)
+    end
   end
 
   if amount == 0 then
@@ -604,7 +609,7 @@ function M.deposit_inv_contents(inv)
   if inv ~= nil then
     local contents = inv.get_contents()
     for item, count in pairs(contents) do
-      M.deposit_item2(item, count, Priority.HIGH)
+      M.deposit_item2(item, count, Priority.ALWAYS_INSERT)
     end
     inv.clear()
   end
@@ -639,7 +644,7 @@ function M.put_tank_contents_in_network(entity)
         fluid.name,
         fluid.temperature,
         fluid.amount,
-        Priority.HIGH
+        Priority.ALWAYS_INSERT
       )
     end
   end
