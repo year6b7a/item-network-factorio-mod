@@ -73,7 +73,7 @@ function M.on_update(state)
           current_amount = fluid.amount
         end
 
-        if state.config.prev_at_limit and current_amount < 100 then
+        if state.config.prev_at_limit and current_amount < 0.05 * max_capacity then
           -- increase capacity
           if capacity < max_capacity then
             -- game.print("Increasing capacity from " ..
