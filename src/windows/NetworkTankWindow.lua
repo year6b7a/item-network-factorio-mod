@@ -1,6 +1,7 @@
 local GlobalState = require "src.GlobalState"
 local PriorityDropDown = require "src.windows.PriorityDropDown"
 local Priority = require "src.Priority"
+local Helpers = require "src.Helpers"
 local M = {}
 
 M.entity_name = "network-tank"
@@ -15,6 +16,7 @@ table.insert(M.elem_handlers, {
   event = "on_gui_click",
   handler = function(event, state)
     state.config.type = "provide"
+    state.has_made_changes = true
     M.rerender(state)
   end,
 })
@@ -25,6 +27,7 @@ table.insert(M.elem_handlers, {
   event = "on_gui_click",
   handler = function(event, state)
     state.config.type = "request"
+    state.has_made_changes = true
     M.rerender(state)
   end,
 })
@@ -35,6 +38,7 @@ table.insert(M.elem_handlers, {
   event = "on_gui_elem_changed",
   handler = function(event, state)
     state.config.fluid = event.element.elem_value
+    state.has_made_changes = true
     M.rerender(state)
   end,
 })
@@ -45,6 +49,7 @@ table.insert(M.elem_handlers, {
   event = "on_gui_text_changed",
   handler = function(event, state)
     local temp = tonumber(event.element.text)
+    state.has_made_changes = true
     state.config.temp = temp
   end,
 })
@@ -57,6 +62,7 @@ table.insert(M.elem_handlers, {
     local value = state.temp_options[event.element.selected_index]
       .value
     state.config.temp = value
+    state.has_made_changes = true
     M.rerender(state)
   end,
 })
@@ -70,6 +76,7 @@ table.insert(M.elem_handlers, {
     local value = PriorityDropDown.options[event.element.selected_index]
       .value
     state.config.priority = value
+    state.has_made_changes = true
   end,
 })
 
@@ -163,6 +170,12 @@ function M.rerender(state)
       selected_index = 1,
       tags = { elem_id = TEMP_DROPDOWN_ID },
     })
+
+    main_flow.add({
+      type = "label",
+      caption = string.format("Capacity: %s, Prev at limit: %s",
+        state.config.capacity, state.config.prev_at_limit),
+    })
   end
 end
 
@@ -176,12 +189,7 @@ function M.on_open_window(state, player, entity)
   frame.style.size = { M.WIDTH, M.HEIGHT }
   frame.auto_center = true
   state.frame = frame
-  state.config = {
-    type = entity_info.config.type,
-    fluid = entity_info.config.fluid,
-    temp = entity_info.config.temp,
-    priority = entity_info.config.priority or Priority.DEFAULT,
-  }
+  state.config = Helpers.shallow_copy(entity_info.config)
 
   M.rerender(state)
 
@@ -189,8 +197,10 @@ function M.on_open_window(state, player, entity)
 end
 
 function M.on_close_window(state)
-  local info = GlobalState.get_entity_info(state.entity.unit_number)
-  info.config = state.config
+  if state.has_made_changes then
+    local info = GlobalState.get_entity_info(state.entity.unit_number)
+    info.config = state.config
+  end
 end
 
 return M

@@ -160,6 +160,10 @@ function M.on_update(info)
     info.config.has_been_updated = true
   end
 
+  if info.entity.to_be_deconstructed() then
+    return GlobalState.get_default_update_period()
+  end
+
   local inv = info.entity.get_output_inventory()
   local contents = inv.get_contents()
   local requests = info.config.requests
@@ -332,6 +336,10 @@ function M.on_update(info)
   info.prev_delay = next_delay
 
   return next_delay
+end
+
+function M.on_marked_for_deconstruction(event)
+  GlobalState.put_chest_contents_in_network(event.entity)
 end
 
 return M

@@ -7,7 +7,7 @@ M.entity_name = "network-tank"
 
 function M.on_create_entity(state)
   if state.config == nil then
-    state.config = { type = "provide" }
+    state.config = { type = "provide", priority = Priority.DEFAULT }
   end
 end
 
@@ -55,6 +55,10 @@ end
 function M.on_update(state)
   local defaultUpdate = GlobalState.get_default_update_period()
 
+  if state.entity.to_be_deconstructed() then
+    return defaultUpdate
+  end
+
   local fluidbox = state.entity.fluidbox
   assert(#fluidbox == 1)
 
@@ -95,6 +99,15 @@ function M.on_update(state)
             desired_amount,
             state.config.priority
           )
+          local shortage = desired_amount - withdrawn
+          if shortage > 0 then
+            GlobalState.missing_fluid_set(
+              state.config.fluid,
+              state.config.temp,
+              state.entity.unit_number,
+              shortage
+            )
+          end
           if withdrawn > 0 then
             local inserted = state.entity.insert_fluid({
               name = state.config.fluid,
@@ -135,6 +148,10 @@ function M.on_update(state)
   end
 
   return defaultUpdate
+end
+
+function M.on_marked_for_deconstruction(event)
+  GlobalState.put_tank_contents_in_network(event.entity)
 end
 
 return M

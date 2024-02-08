@@ -271,6 +271,13 @@ function M.on_entity_died(event)
 end
 
 function M.on_marked_for_deconstruction(event)
+  local name = event.entity.name
+  if entity_name_to_entity_map[name] ~= nil then
+    local entity_def = entity_name_to_entity_map[name]
+    if entity_def.on_marked_for_deconstruction ~= nil then
+      entity_def.on_marked_for_deconstruction(event)
+    end
+  end
 end
 
 function M.on_post_entity_died(event)

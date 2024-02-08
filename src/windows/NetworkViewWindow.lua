@@ -439,6 +439,7 @@ function M.render_selected_tab(state)
     for item_name, count in pairs(missing_items) do
       table.insert(icons, get_missing_item_icon(item_name, count))
     end
+
     render_rows_of_icons(main_flow, icons)
   elseif selected_tab_idx == 4 then
     -- performance

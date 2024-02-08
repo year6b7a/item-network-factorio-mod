@@ -507,6 +507,9 @@ function M.deposit_material2(info, amount, priority)
   end
 
   info.amount = info.amount + amount
+  if info.max_amount == nil or info.amount > info.max_amount then
+    info.max_amount = info.amount
+  end
 
   if info.amount >= info.deposit_limit then
     info.last_full_tick = game.tick
