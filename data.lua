@@ -6,10 +6,12 @@ local M = {}
 
 local RECIPE_PREFIX = "";
 local IRON_PLATE = "iron-plate"
+local RECIPE_CATEGORY = nil
 
 if mods["nullius"] ~= nil then
   RECIPE_PREFIX = "nullius-"
   IRON_PLATE = "nullius-iron-plate"
+  RECIPE_CATEGORY = "medium-crafting"
 end
 
 function M.main()
@@ -63,6 +65,7 @@ local function inner_add_network_chest(name, size, order)
     name = RECIPE_PREFIX .. name,
     type = "recipe",
     enabled = true,
+    category = RECIPE_CATEGORY,
     energy_required = 0.5,
     ingredients = {
       { type = "item", name = IRON_PLATE, amount = 5 },
@@ -150,6 +153,7 @@ function M.add_loader()
     name = RECIPE_PREFIX .. name,
     type = "recipe",
     enabled = true,
+    category = RECIPE_CATEGORY,
     energy_required = 0.5,
     ingredients = {
       { type = "item", name = IRON_PLATE, amount = 5 },
@@ -281,6 +285,7 @@ function M.add_network_tank(name, size, order, area, positions)
     name = RECIPE_PREFIX .. name,
     type = "recipe",
     enabled = true,
+    category = RECIPE_CATEGORY,
     energy_required = 0.5,
     ingredients = {
       { type = "item", name = IRON_PLATE, amount = 5 },
@@ -313,6 +318,7 @@ function M.add_network_sensor()
   recipe.name = RECIPE_PREFIX .. name
   recipe.result = name
   recipe.enabled = true
+  recipe.category = RECIPE_CATEGORY
 
   data:extend({ entity, item, recipe })
 end
