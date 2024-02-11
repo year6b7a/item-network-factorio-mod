@@ -273,7 +273,7 @@ function M.on_update(info)
           request.priority
         )
         local shortage = space_in_chest - withdrawn
-        if shortage > 0 then
+        if shortage > 0 and request.priority ~= Priority.LOW then
           GlobalState.missing_item_set(
             request.item,
             info.entity.unit_number,
