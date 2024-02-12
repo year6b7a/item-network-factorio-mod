@@ -23,7 +23,7 @@ function M.main()
   data:extend(Hotkeys.hotkeys)
 end
 
-local function inner_add_network_chest(name, size, order)
+local function inner_add_network_chest(name, size, order, n_slots)
   local override_item_name = "iron-chest"
   local overwrite_prototype = "container"
 
@@ -35,7 +35,7 @@ local function inner_add_network_chest(name, size, order)
     size = 64,
     scale = size * 0.5,
   }
-  entity.inventory_size = constants.NUM_INVENTORY_SLOTS
+  entity.inventory_size = n_slots
   entity.inventory_type = "with_filters_and_bar"
   entity.minable.result = name
   local collision_size = size * 0.5 - 0.15
@@ -78,9 +78,9 @@ local function inner_add_network_chest(name, size, order)
 end
 
 function M.add_network_chests()
-  inner_add_network_chest("network-chest", 1, "0")
-  inner_add_network_chest("medium-network-chest", 3, "1")
-  inner_add_network_chest("large-network-chest", 5, "2")
+  inner_add_network_chest("network-chest", 1, "0", 48)
+  inner_add_network_chest("medium-network-chest", 3, "1", 96)
+  inner_add_network_chest("large-network-chest", 5, "2", 256)
 end
 
 function M.add_loader()
@@ -171,26 +171,12 @@ function M.add_network_tanks()
     { { 0, 1 } }
   )
   M.add_network_tank(
-    "medium-network-tank", 3, "1", 250,
-    {
-      { 0,  2 },
-      { 0,  -2 },
-      { 2,  0 },
-      { -2, 0 },
-    }
+    "medium-network-tank", 1, "1", 250,
+    { { 0, 1 } }
   )
   M.add_network_tank(
-    "large-network-tank", 5, "2", 1000,
-    {
-      { 1,  3 },
-      { -1, 3 },
-      { 1,  -3 },
-      { -1, -3 },
-      { 3,  1 },
-      { 3,  -1 },
-      { -3, 1 },
-      { -3, -1 },
-    }
+    "large-network-tank", 1, "2", 1000,
+    { { 0, 1 } }
   )
 end
 
@@ -277,7 +263,7 @@ function M.add_network_tank(name, size, order, area, positions)
   local item = table.deepcopy(data.raw["item"][override_item_name])
   item.name = name
   item.place_result = name
-  item.icon = Paths.graphics .. "/items/network-tank.png"
+  item.icon = Paths.graphics .. "/items/" .. name .. ".png"
   item.size = 64
   item.order = item.order .. order
 
