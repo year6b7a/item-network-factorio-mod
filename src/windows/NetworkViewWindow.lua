@@ -135,11 +135,55 @@ table.insert(M.elem_handlers, {
   end,
 })
 
-local MISSING_SPRITE_BTN_ID = "0fe523a0d7ebe2ecf19d3a5d86237624"
+local ITEM_SHORTAGE_SPRITE_BTN_ID = "0fe523a0d7ebe2ecf19d3a5d86237624"
 table.insert(M.elem_handlers, {
-  elem_id = MISSING_SPRITE_BTN_ID,
+  elem_id = ITEM_SHORTAGE_SPRITE_BTN_ID,
   event = "on_gui_click",
   handler = function(event, state)
+    local player = game.players[event.player_index]
+    if player == nil then
+      return
+    end
+
+    local item = event.element.tags.item
+    local entity_map = GlobalState.get_item_shortage_entities(item)
+    for _, info in pairs(entity_map) do
+      if info.entity.valid then
+        player.add_custom_alert(
+          info.entity,
+          { type = "item", name = item },
+          "Entity is missing item",
+          true
+        )
+      end
+    end
+  end,
+})
+
+local FLUID_SHORTAGE_SPRITE_BTN_ID = "f602cec6caf4484d0b036bc47d10db01"
+table.insert(M.elem_handlers, {
+  elem_id = FLUID_SHORTAGE_SPRITE_BTN_ID,
+  event = "on_gui_click",
+  handler = function(event, state)
+    local player = game.players[event.player_index]
+    if player == nil then
+      return
+    end
+
+    local fluid = event.element.tags.fluid
+    local temp = event.element.tags.temp
+
+    local entity_map = GlobalState.get_fluid_shortage_entities(fluid, temp)
+    for _, info in pairs(entity_map) do
+      if info.entity.valid then
+        player.add_custom_alert(
+          info.entity,
+          { type = "fluid", name = fluid },
+          "Entity is missing fluid",
+          true
+        )
+      end
+    end
   end,
 })
 
@@ -287,8 +331,28 @@ local function get_missing_item_icon(item_name, missing_count)
       item_proto.localised_name,
     },
     tags = {
-      elem_id = MISSING_SPRITE_BTN_ID,
+      elem_id = ITEM_SHORTAGE_SPRITE_BTN_ID,
       item = item_name,
+    },
+    number = missing_count,
+  }
+end
+
+local function get_missing_fluid_icon(fluid, temp, missing_count)
+  local fluid_proto = game.fluid_prototypes[fluid]
+  return {
+    type = "sprite-button",
+    elem_type = "fluid",
+    sprite = "fluid/" .. fluid,
+    tooltip = {
+      "in_nv.fluid_shortage_sprite_btn_tooltip",
+      fluid_proto.localised_name,
+      { "format-degrees-c", string.format("%.0f", temp) },
+    },
+    tags = {
+      elem_id = FLUID_SHORTAGE_SPRITE_BTN_ID,
+      fluid = fluid,
+      temp = temp,
     },
     number = missing_count,
   }
@@ -434,10 +498,24 @@ function M.render_selected_tab(state)
     end
   elseif selected_tab_idx == 3 then
     -- shortages
-    local missing_items = GlobalState.get_missing_items()
+    local missing_items = GlobalState.get_item_shortages()
     local icons = {}
-    for item_name, count in pairs(missing_items) do
-      table.insert(icons, get_missing_item_icon(item_name, count))
+    for item, amount in pairs(missing_items) do
+      table.insert(icons, get_missing_item_icon(
+        item,
+        amount
+      ))
+    end
+
+    local missing_fluids = GlobalState.get_fluid_shortages()
+    for fluid, temp_map in pairs(missing_fluids) do
+      for temp, amount in pairs(temp_map) do
+        table.insert(icons, get_missing_fluid_icon(
+          fluid,
+          temp,
+          amount
+        ))
+      end
     end
 
     render_rows_of_icons(main_flow, icons)

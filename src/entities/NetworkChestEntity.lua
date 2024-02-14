@@ -27,6 +27,7 @@ function M.copy_config(entity_id)
   end
   local new_config = {
     requests = new_requests,
+    dump_mode = info.config.dump_mode,
   }
   return new_config
 end
@@ -154,7 +155,18 @@ function M.update_network_chest_capacity(info)
   end
 end
 
+function M.dump_mode_update(info)
+  local inv = info.entity.get_output_inventory()
+  inv.set_bar()
+  GlobalState.deposit_inv_contents(inv)
+  return GlobalState.get_default_update_period()
+end
+
 function M.on_update(info)
+  if info.config.dump_mode then
+    return M.dump_mode_update(info)
+  end
+
   if not info.config.has_been_updated then
     M.update_network_chest_capacity(info)
     info.config.has_been_updated = true
@@ -274,9 +286,9 @@ function M.on_update(info)
         )
         local shortage = space_in_chest - withdrawn
         if shortage > 0 and request.priority ~= Priority.LOW then
-          GlobalState.missing_item_set(
+          GlobalState.register_item_shortage(
             request.item,
-            info.entity.unit_number,
+            info.entity,
             shortage
           )
         end

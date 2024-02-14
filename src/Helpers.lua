@@ -76,4 +76,12 @@ function Helpers.deep_copy(datatable)
   return res
 end
 
+function Helpers.table_len(table)
+  local len = 0
+  for _, _ in pairs(table) do
+    len = len + 1
+  end
+  return len
+end
+
 return Helpers

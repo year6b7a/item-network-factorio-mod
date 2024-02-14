@@ -175,6 +175,14 @@ function M.inner_setup()
       error(entity.type)
     end
   end
+
+  if global.mod.item_shortages == nil then
+    global.mod.item_shortages = {}
+  end
+
+  if global.mod.fluid_shortages == nil then
+    global.mod.fluid_shortages = {}
+  end
 end
 
 function M.start_timer(name)
@@ -243,24 +251,151 @@ local function get_missing_and_filter(miss_tbl)
   return missing
 end
 
+function M.register_item_shortage(item, entity, amount)
+  if global.mod.item_shortages[item] == nil then
+    global.mod.item_shortages[item] = {}
+  end
+
+  local item_map = global.mod.item_shortages[item]
+
+  item_map[entity.unit_number] = {
+    entity = entity,
+    tick = game.tick,
+    amount = amount,
+  }
+end
+
+function M.get_item_shortages()
+  local deadline = game.tick - constants.MAX_MISSING_TICKS
+  local shortages = {}
+  local items_to_delete = {}
+  for item, item_map in pairs(global.mod.item_shortages) do
+    local uns_to_delete = {}
+    for unit_number, info in pairs(item_map) do
+      if info.tick >= deadline then
+        shortages[item] = (shortages[item] or 0) + info.amount
+      else
+        table.insert(uns_to_delete, unit_number)
+      end
+    end
+
+    for _, unit_number in ipairs(uns_to_delete) do
+      item_map[unit_number] = nil
+    end
+
+    if Helpers.table_len(item_map) == 0 then
+      table.insert(items_to_delete, item)
+    end
+  end
+
+  for _, item in ipairs(items_to_delete) do
+    global.mod.item_shortages[item] = nil
+  end
+  return shortages
+end
+
+function M.get_item_shortage_entities(item)
+  if global.mod.item_shortages[item] ~= nil then
+    return global.mod.item_shortages[item]
+  end
+  return {}
+end
+
+function M.register_fluid_shortage(fluid, temp, entity, amount)
+  if global.mod.fluid_shortages[fluid] == nil then
+    global.mod.fluid_shortages[fluid] = {}
+  end
+
+  local fluid_map = global.mod.fluid_shortages[fluid]
+  if fluid_map[temp] == nil then
+    fluid_map[temp] = {}
+  end
+
+  local temp_map = fluid_map[temp]
+  temp_map[entity.unit_number] = {
+    entity = entity,
+    tick = game.tick,
+    amount = amount,
+  }
+end
+
+function M.get_fluid_shortage_entities(fluid, temp)
+  local temp_map = global.mod.fluid_shortages[fluid]
+  if temp_map == nil then
+    return {}
+  end
+
+  local entity_map = temp_map[temp]
+  if entity_map == nil then
+    return {}
+  end
+
+  return entity_map
+end
+
+function M.get_fluid_shortages()
+  local deadline = game.tick - constants.MAX_MISSING_TICKS
+  local shortages = {}
+  local fluids_to_delete = {}
+  for fluid, fluid_map in pairs(global.mod.fluid_shortages) do
+    local temps_to_delete = {}
+    for temp, temp_map in pairs(fluid_map) do
+      local uns_to_delete = {}
+      for unit_number, info in pairs(temp_map) do
+        if info.tick >= deadline then
+          if shortages[fluid] == nil then
+            shortages[fluid] = {}
+          end
+
+          shortages[fluid][temp] = (shortages[fluid][temp] or 0) + info.amount
+        else
+          table.insert(uns_to_delete, unit_number)
+        end
+      end
+
+      for _, unit_number in ipairs(uns_to_delete) do
+        temp_map[unit_number] = nil
+      end
+
+      if Helpers.table_len(temp_map) == 0 then
+        table.insert(temps_to_delete, temp)
+      end
+    end
+
+    for _, temp in ipairs(temps_to_delete) do
+      fluid_map[temp] = nil
+    end
+
+    if Helpers.table_len(fluid_map) == 0 then
+      table.insert(fluids_to_delete, fluid)
+    end
+  end
+
+  for _, fluid in ipairs(fluids_to_delete) do
+    global.mod.fluid_shortages[fluid] = nil
+  end
+
+  return shortages
+end
+
 -- mark an item as missing
-function M.missing_item_set(item_name, unit_number, count)
+function M.DPRECATED_missing_item_set(item_name, unit_number, count)
   set_missing(global.mod.missing_items, item_name, unit_number, count)
 end
 
 -- drop any items that have not been missing for a while
 -- returns the (read-only) table of missing items
-function M.get_missing_items()
+function M.DEPRECATED_get_missing_items()
   return get_missing_and_filter(global.mod.missing_items)
 end
 
 -- create a string 'key' for a fluid@temp
-function M.encode_fluid_key(fluid_name, temp)
+function M.DEPRECATED_encode_fluid_key(fluid_name, temp)
   return string.format("%s@%d", fluid_name, math.floor(temp * 1000))
 end
 
 -- split the key back into the fluid and temp
-function M.decode_fluid_key(key)
+function M.DEPRECATED_decode_fluid_key(key)
   local idx = string.find(key, "@")
   if idx ~= nil then
     return string.sub(key, 1, idx - 1), tonumber(string.sub(key, idx + 1)) / 1000
@@ -269,14 +404,14 @@ function M.decode_fluid_key(key)
 end
 
 -- mark a fluid/temp combo as missing
-function M.missing_fluid_set(name, temp, unit_number, count)
+function M.DEPRECATED_missing_fluid_set(name, temp, unit_number, count)
   local key = M.encode_fluid_key(name, temp)
   set_missing(global.mod.missing_fluid, key, unit_number, count)
 end
 
 -- drop any fluids that have not been missing for a while
 -- returns the (read-only) table of missing items
-function M.missing_fluid_filter()
+function M.DEPRECATED_missing_fluid_filter()
   return get_missing_and_filter(global.mod.missing_fluid)
 end
 

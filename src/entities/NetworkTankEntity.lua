@@ -100,11 +100,11 @@ function M.on_update(state)
             state.config.priority
           )
           local shortage = desired_amount - withdrawn
-          if shortage > 0 then
-            GlobalState.missing_fluid_set(
+          if shortage >= 1 and state.config.priority ~= Priority.LOW then
+            GlobalState.register_fluid_shortage(
               state.config.fluid,
               state.config.temp,
-              state.entity.unit_number,
+              state.entity,
               shortage
             )
           end
