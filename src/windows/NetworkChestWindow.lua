@@ -44,6 +44,16 @@ table.insert(M.elem_handlers, {
   end,
 })
 
+local TOGGLE_DUMP_MODE_BTN_ID = "22386b90b7d818d131d9d04a33bf2b8e"
+table.insert(M.elem_handlers, {
+  elem_id = TOGGLE_DUMP_MODE_BTN_ID,
+  event = "on_gui_click",
+  handler = function(event, state)
+    state.dump_mode = not state.dump_mode
+    M.rerender(state)
+  end,
+})
+
 local VIEW_REQUEST_SPRITE_BUTTON_ID = "5c7f290fe03db063b032a8249e349237"
 table.insert(M.elem_handlers, {
   elem_id = VIEW_REQUEST_SPRITE_BUTTON_ID,
@@ -138,10 +148,13 @@ function M.on_open_window(state, player, entity)
   end
   state.requests = window_requests
 
+  state.dump_mode = entity_info.config.dump_mode
+
   if #requests > 0 then
     state.selected_item = 1
   end
 
+  state.entity = entity
 
   local frame = player.gui.screen.add({
     type = "frame",
@@ -150,8 +163,22 @@ function M.on_open_window(state, player, entity)
   })
   frame.style.size = { M.WIDTH, M.HEIGHT }
   frame.auto_center = true
+  state.frame = frame
 
-  local main_flow = frame.add({
+  M.rerender(state)
+
+  return frame
+end
+
+function M.rerender(state)
+  state.frame.clear()
+
+  if state.dump_mode then
+    M.render_dump_mode(state)
+    return
+  end
+
+  local main_flow = state.frame.add({
     type = "flow",
     direction = "vertical",
   })
@@ -172,6 +199,12 @@ function M.on_open_window(state, player, entity)
     tags = { elem_id = ADD_ITEM_BUTTON_ID },
   })
 
+  add_item_flow.add({
+    type = "button",
+    caption = "Enable Dump Mode",
+    tags = { elem_id = TOGGLE_DUMP_MODE_BTN_ID },
+  })
+
   state.requests_flow = main_flow.add({
     type = "scroll-pane",
     direction = "vertical",
@@ -185,11 +218,19 @@ function M.on_open_window(state, player, entity)
     direction = "vertical",
   })
   M.rerender_selected_item_flow(state)
+end
 
-  state.entity = entity
+function M.render_dump_mode(state)
+  local main_flow = state.frame.add({
+    type = "flow",
+    direction = "vertical",
+  })
 
-
-  return frame
+  main_flow.add({
+    type = "button",
+    caption = "Disable Dump Mode",
+    tags = { elem_id = TOGGLE_DUMP_MODE_BTN_ID },
+  })
 end
 
 function M.rerender_requests(state)
@@ -339,6 +380,9 @@ end
 
 function M.on_close_window(state)
   local entity_info = GlobalState.get_entity_info(state.entity.unit_number)
+
+  entity_info.config.dump_mode = state.dump_mode
+
   if state.has_made_changes then
     entity_info.config = {
       requests = state.requests,
