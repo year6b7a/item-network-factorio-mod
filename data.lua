@@ -19,6 +19,7 @@ function M.main()
   M.add_loader()
   M.add_network_tanks()
   M.add_network_sensor()
+  M.add_logistic_network_chest()
 
   data:extend(Hotkeys.hotkeys)
 end
@@ -91,8 +92,11 @@ function M.add_loader()
     type = "loader-1x1",
     icon = Paths.graphics .. "/entities/express-loader.png",
     icon_size = 64,
-    flags = { "placeable-neutral", "player-creation",
-      "fast-replaceable-no-build-while-moving" },
+    flags = {
+      "placeable-neutral",
+      "player-creation",
+      "fast-replaceable-no-build-while-moving",
+    },
     minable = {
       mining_time = 0.2,
       result = "network-loader",
@@ -305,6 +309,66 @@ function M.add_network_sensor()
   recipe.result = name
   recipe.enabled = true
   recipe.category = RECIPE_CATEGORY
+
+  data:extend({ entity, item, recipe })
+end
+
+function M.add_logistic_network_chest()
+  local name = "logistic-network-chest"
+
+  local entity = {
+    name = name,
+    type = "logistic-container",
+    icon = Paths.graphics .. "/entities/logistic-network-chest.png",
+    icon_size = 64,
+    flags = {
+      "placeable-neutral",
+      "player-creation",
+      "fast-replaceable-no-build-while-moving",
+    },
+    minable = {
+      mining_time = 0.2,
+      result = name,
+    },
+    max_health = 300,
+    corpse = "small-remnants",
+    collision_box = { { -0.4, -0.45 }, { 0.4, 0.45 } },
+    selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
+    drawing_box = { { -0.4, -0.4 }, { 0.4, 0.4 } },
+    inventory_type = "with_filters_and_bar",
+    inventory_size = 48,
+    logistic_mode = "storage",
+    picture = {
+      filename = Paths.graphics .. "/entities/logistic-network-chest.png",
+      size = 64,
+      scale = 0.5,
+    },
+    max_logistic_slots = 0,
+  }
+
+  local item = {
+    name = name,
+    type = "item",
+    place_result = name,
+    icon = Paths.graphics .. "/items/logistic-network-chest.png",
+    icon_size = 64,
+    stack_size = 50,
+    subgroup = data.raw["item"]["iron-chest"].subgroup,
+    order = data.raw["item"]["iron-chest"].order,
+  }
+
+  local recipe = {
+    name = RECIPE_PREFIX .. name,
+    type = "recipe",
+    enabled = true,
+    category = RECIPE_CATEGORY,
+    energy_required = 0.5,
+    ingredients = {
+      { type = "item", name = IRON_PLATE, amount = 5 },
+    },
+    result = name,
+    result_count = 1,
+  }
 
   data:extend({ entity, item, recipe })
 end

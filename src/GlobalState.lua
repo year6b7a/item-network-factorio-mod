@@ -150,31 +150,6 @@ function M.inner_setup()
       end
     end
   end
-  for _, entity in pairs(global.mod.entities) do
-    if entity.type == "network-chest" or entity.type == "medium-network-chest" or entity.type == "large-network-chest" then
-      for _, request in ipairs(entity.config.requests) do
-        if request.priority == nil then
-          if request.type == "provide" and request.no_limit then
-            request.priority = Priority.HIGH
-          else
-            request.priority = Priority.DEFAULT
-          end
-          request.no_limit = nil
-        end
-      end
-    elseif entity.type == "network-tank" or entity.type == "medium-network-tank" or entity.type == "large-network-tank" then
-      if entity.config.priority == nil then
-        if entity.config.type == "provide" and entity.config.no_limit then
-          entity.config.priority = Priority.HIGH
-        else
-          entity.config.priority = Priority.DEFAULT
-        end
-        entity.config.no_limit = nil
-      end
-    else
-      error(entity.type)
-    end
-  end
 
   if global.mod.item_shortages == nil then
     global.mod.item_shortages = {}

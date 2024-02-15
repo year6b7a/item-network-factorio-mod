@@ -1,3 +1,5 @@
+local LogisticNetworkChestWindow = require "src.windows.LogisticNetworkChestWindow"
+local LogisticNetworkChestEntity = require "src.entities.LogisticNetworkChestEntity"
 local NetworkLoaderEntity = require "src.entities.NetworkLoaderEntity"
 local NetworkTankPasteWindow = require "src.windows.NetworkTankPasteWindow"
 local LargeNetworkTankWindow = require "src.windows.LargeNetworkTankWindow"
@@ -25,6 +27,7 @@ local WINDOWS = {
   NetworkChestWindow,
   MediumNetworkChestWindow,
   LargeNetworkChestWindow,
+  LogisticNetworkChestWindow,
   NetworkLoaderWindow,
   NetworkViewWindow,
   NetworkTankWindow,
@@ -37,6 +40,7 @@ local ENTITIES = {
   NetworkChestEntity,
   MediumNetworkChestEntity,
   LargeNetworkChestEntity,
+  LogisticNetworkChestEntity,
   NetworkTankEntity,
   MediumNetworkTankEntity,
   LargeNetworkTankEntity,

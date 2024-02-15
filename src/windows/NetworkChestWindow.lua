@@ -61,7 +61,7 @@ table.insert(M.elem_handlers, {
   handler = function(event, state)
     local request_idx = event.element.tags.request_idx
     state.selected_item = request_idx
-    M.rerender_selected_item_flow(state)
+    M.rerender(state)
   end,
 })
 
@@ -247,12 +247,16 @@ function M.rerender_requests(state)
       direction = "horizontal",
     })
     for _, request in ipairs(row) do
+      local item_proto = game.item_prototypes[request.item]
+      local name = item_proto.localised_name
       local sprite_button = {
         type = "sprite-button",
         elem_type = "item",
         sprite = "item/" .. request.item,
         tags = { elem_id = VIEW_REQUEST_SPRITE_BUTTON_ID, request_idx = request_idx },
         number = request.n_slots,
+        toggled = request_idx == state.selected_item,
+        tooltip = name,
       }
       local icon = request_h_stack.add(sprite_button)
       icon.number = sprite_button.number
