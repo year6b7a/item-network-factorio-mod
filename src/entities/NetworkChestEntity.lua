@@ -303,7 +303,15 @@ function M.on_update(info)
               withdrawn,
               actual_withdrawn
             ))
-            error("unreachable")
+            local excess = withdrawn - actual_withdrawn
+            assert(excess >= 0)
+            if excess > 0 then
+              GlobalState.deposit_item2(
+                request.item,
+                excess,
+                Priority.ALWAYS_INSERT
+              )
+            end
           end
           end_amount = start_amount + withdrawn
           current_delta = withdrawn
