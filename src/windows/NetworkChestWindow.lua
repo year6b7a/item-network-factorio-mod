@@ -385,7 +385,12 @@ end
 function M.on_close_window(state)
   local entity_info = GlobalState.get_entity_info(state.entity.unit_number)
 
-  entity_info.config.dump_mode = state.dump_mode
+  if state.dump_mode ~= entity_info.config.dump_mode then
+    entity_info.config.dump_mode = state.dump_mode
+    if not state.dump_mode then
+      entity_info.config.has_been_updated = nil
+    end
+  end
 
   if state.has_made_changes then
     entity_info.config = {
