@@ -175,4 +175,8 @@ function M.on_close_window(state)
   entity_info.config.requests = state.requests
 end
 
+function M.on_marked_for_deconstruction(event)
+  GlobalState.put_chest_contents_in_network(event.entity)
+end
+
 return M
