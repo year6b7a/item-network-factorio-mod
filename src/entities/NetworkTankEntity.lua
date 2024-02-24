@@ -93,14 +93,18 @@ function M.on_update(state)
 
         local desired_amount = math.max(0, capacity - current_amount)
         if desired_amount > 0 then
+          local priority = state.config.priority
+          if priority == nil then
+            priority = Priority.DEFAULT
+          end
           local withdrawn = GlobalState.withdraw_fluid2(
             state.config.fluid,
             state.config.temp,
             desired_amount,
-            state.config.priority
+            priority
           )
           local shortage = desired_amount - withdrawn
-          if shortage >= 1 and state.config.priority ~= Priority.LOW then
+          if shortage >= 1 and priority ~= Priority.LOW then
             GlobalState.register_fluid_shortage(
               state.config.fluid,
               state.config.temp,
@@ -125,12 +129,16 @@ function M.on_update(state)
   elseif state.config.type == "provide" then
     local fluid = fluidbox[1]
     if fluid ~= nil then
+      local priority = state.config.priority
+      if priority == nil then
+        priority = Priority.DEFAULT
+      end
       local deposited = GlobalState.deposit_fluid2(
         fluid.name,
         fluid.temperature,
         fluid.amount,
-        state.config.priority == nil and Priority.DEFAULT or
-        state.config.priority
+        priority == nil and Priority.DEFAULT or
+        priority
       )
       if deposited > 0 then
         local result_amount = fluid.amount - deposited

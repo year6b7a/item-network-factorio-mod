@@ -252,10 +252,14 @@ function M.on_update(info)
     if request.type == "provide" then
       started_at_limit = start_amount >= request.capacity
       if start_amount > 0 then
+        local priority = request.priority
+        if priority == nil then
+          priority = Priority.DEFAULT
+        end
         local deposited = GlobalState.deposit_item2(
           request.item,
           start_amount,
-          request.priority
+          priority
         )
         if deposited > 0 then
           local actual_deposited = inv.remove(
@@ -279,10 +283,14 @@ function M.on_update(info)
       started_at_limit = start_amount == 0
       local space_in_chest = math.max(0, request.capacity - start_amount)
       if space_in_chest > 0 then
+        local priority = request.priority
+        if priority == nil then
+          priority = Priority.DEFAULT
+        end
         local withdrawn = GlobalState.withdraw_item2(
           request.item,
           space_in_chest,
-          request.priority
+          priority
         )
         local shortage = space_in_chest - withdrawn
         if shortage > 0 and request.priority ~= Priority.LOW then
