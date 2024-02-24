@@ -196,6 +196,15 @@ local function generic_on_create_entity(event)
   local entity = event.created_entity
   if entity == nil then
     entity = event.entity
+
+    if entity == nil then
+      entity = event.destination
+
+      if entity == nil then
+        game.print("unknown create event")
+        return
+      end
+    end
   end
 
   local entity_def = entity_name_to_entity_map[entity.name]
