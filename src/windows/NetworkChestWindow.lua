@@ -54,14 +54,33 @@ table.insert(M.elem_handlers, {
   end,
 })
 
+local function remove_request_and_rerender(state, request_idx)
+  local new_requests = {}
+  for idx, request in ipairs(state.requests) do
+    if idx ~= request_idx then
+      table.insert(new_requests, request)
+    end
+  end
+  state.requests = new_requests
+  if state.selected_item ~= nil and state.selected_item > #state.requests then
+    state.selected_item = #state.requests
+  end
+  state.has_made_changes = true
+  M.rerender(state)
+end
+
 local VIEW_REQUEST_SPRITE_BUTTON_ID = "5c7f290fe03db063b032a8249e349237"
 table.insert(M.elem_handlers, {
   elem_id = VIEW_REQUEST_SPRITE_BUTTON_ID,
   event = "on_gui_click",
   handler = function(event, state)
     local request_idx = event.element.tags.request_idx
-    state.selected_item = request_idx
-    M.rerender(state)
+    if event.button == defines.mouse_button_type.right and event.shift then
+      remove_request_and_rerender(state, request_idx)
+    else
+      state.selected_item = request_idx
+      M.rerender(state)
+    end
   end,
 })
 
@@ -96,18 +115,7 @@ table.insert(M.elem_handlers, {
   elem_id = REMOVE_REQUEST_BTN_ID,
   event = "on_gui_click",
   handler = function(event, state)
-    local request_idx = state.selected_item
-    local new_requests = {}
-    for idx, request in ipairs(state.requests) do
-      if idx ~= request_idx then
-        table.insert(new_requests, request)
-      end
-    end
-    state.requests = new_requests
-    state.selected_item = nil
-    state.has_made_changes = true
-    M.rerender_requests(state)
-    M.rerender_selected_item_flow(state)
+    remove_request_and_rerender(state, state.selected_item)
   end,
 })
 
@@ -256,7 +264,7 @@ function M.rerender_requests(state)
         tags = { elem_id = VIEW_REQUEST_SPRITE_BUTTON_ID, request_idx = request_idx },
         number = request.n_slots,
         toggled = request_idx == state.selected_item,
-        tooltip = name,
+        tooltip = { "in_nc.request_sprite_btn_tooltip", name },
       }
       local icon = request_h_stack.add(sprite_button)
       icon.number = sprite_button.number
