@@ -111,7 +111,7 @@ function M.on_gui_opened(event)
     return
   end
 
-  if event.gui_type == defines.gui_type.entity then
+  if event.gui_type == defines.gui_type.entity and event.entity ~= nil then
     local entity_name = event.entity.name
     local window = entity_name_to_window_map[entity_name]
     if window ~= nil then
