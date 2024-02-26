@@ -1,3 +1,4 @@
+local NetworkChestHelpers = require "src.NetworkChestHelpers"
 local Priority = require "src.Priority"
 local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
@@ -19,11 +20,10 @@ function M.copy_config(entity_id)
   local info = GlobalState.get_entity_info(entity_id)
   local new_requests = {}
   for _, request in ipairs(info.config.requests) do
-    table.insert(new_requests, {
-      type = request.type,
-      item = request.item,
-      priority = request.priority,
-    })
+    table.insert(
+      new_requests,
+      NetworkChestHelpers.copy_request(request)
+    )
   end
   local new_config = {
     requests = new_requests,

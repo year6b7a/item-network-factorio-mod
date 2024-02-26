@@ -2,6 +2,7 @@ local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
 local PriorityDropDown = require "src.windows.PriorityDropDown"
 local Priority = require "src.Priority"
+local NetworkChestHelpers = require "src.NetworkChestHelpers"
 
 local M = {}
 
@@ -90,8 +91,9 @@ table.insert(M.elem_handlers, {
   event = "on_gui_click",
   handler = function(event, state)
     local request_idx = state.selected_item
-    local request = state.requests[request_idx]
+    local request = NetworkChestHelpers.copy_request(state.requests[request_idx])
     request.type = "provide"
+    state.requests[request_idx] = request
     state.has_made_changes = true
     M.rerender_selected_item_flow(state)
   end,
@@ -103,8 +105,9 @@ table.insert(M.elem_handlers, {
   event = "on_gui_click",
   handler = function(event, state)
     local request_idx = state.selected_item
-    local request = state.requests[request_idx]
+    local request = NetworkChestHelpers.copy_request(state.requests[request_idx])
     request.type = "request"
+    state.requests[request_idx] = request
     state.has_made_changes = true
     M.rerender_selected_item_flow(state)
   end,
@@ -275,7 +278,7 @@ end
 
 function M.rerender_selected_item_flow(state)
   state.selected_item_flow.clear()
-  if state.selected_item ~= nil then
+  if state.selected_item ~= nil and state.requests[state.selected_item] ~= nil then
     local request = state.requests[state.selected_item]
     local item_proto = game.item_prototypes[request.item]
     local name = item_proto.localised_name
