@@ -1,6 +1,6 @@
 local Helpers = require "src.Helpers"
-local Priority = require "src.Priority"
 local GlobalState = require "src.GlobalState"
+local constants = require "src.constants"
 
 local M = {}
 
@@ -21,20 +21,28 @@ table.insert(M.elem_handlers, {
     local item = element.elem_value
     element.elem_value = nil
 
-    local item_already_picked = false
-    for _, request in ipairs(state.requests) do
-      if request.item == item then
-        item_already_picked = true
-        break
+    local remaining_slots = (
+      constants.LOGISTIC_NETWORK_CHEST_N_TOTAL_SLOTS -
+      constants.LOGISTIC_NETWORK_CHEST_N_DUMP_SLOTS -
+      #state.requests
+    )
+
+    if remaining_slots > 0 then
+      local item_already_picked = false
+      for _, request in ipairs(state.requests) do
+        if request.item == item then
+          item_already_picked = true
+          break
+        end
       end
-    end
 
-    if not item_already_picked then
-      table.insert(state.requests, { item = item })
-      state.selected_item = #state.requests
-      state.has_made_changes = true
+      if not item_already_picked then
+        table.insert(state.requests, { item = item })
+        state.selected_item = #state.requests
+        state.has_made_changes = true
 
-      M.rerender(state)
+        M.rerender(state)
+      end
     end
   end,
 })

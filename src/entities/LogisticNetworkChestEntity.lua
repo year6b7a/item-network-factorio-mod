@@ -1,6 +1,7 @@
 local Helpers = require "src.Helpers"
 local Priority = require "src.Priority"
-local GlobalState = require("src.GlobalState")
+local GlobalState = require "src.GlobalState"
+local Constants = require "src.constants"
 
 local M = {}
 
@@ -26,10 +27,6 @@ function M.copy_config(entity_id)
     requests = new_requests,
   }
   return new_config
-end
-
-function M.on_remove_entity(event)
-  GlobalState.put_chest_contents_in_network(event.entity)
 end
 
 function M.on_update(info)
@@ -149,7 +146,10 @@ function M.update_request_capacities(info)
     table.insert(desired_slots, n_slots)
   end
 
-  local slots = Helpers.int_partition(desired_slots, total_slots - 8)
+  local slots = Helpers.int_partition(
+    desired_slots,
+    total_slots - Constants.LOGISTIC_NETWORK_CHEST_N_DUMP_SLOTS
+  )
   for idx, request_slots in ipairs(slots) do
     local request = requests[idx]
     local stack_size = game.item_prototypes[request.item].stack_size

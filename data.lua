@@ -336,7 +336,7 @@ function M.add_logistic_network_chest()
     selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } },
     drawing_box = { { -0.4, -0.4 }, { 0.4, 0.4 } },
     inventory_type = "with_filters_and_bar",
-    inventory_size = 48,
+    inventory_size = constants.LOGISTIC_NETWORK_CHEST_N_TOTAL_SLOTS,
     logistic_mode = "storage",
     picture = {
       filename = Paths.graphics .. "/entities/logistic-network-chest.png",
