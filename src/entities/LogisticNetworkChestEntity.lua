@@ -165,4 +165,8 @@ function M.on_remove_entity(event)
   GlobalState.put_chest_contents_in_network(event.entity)
 end
 
+function M.on_marked_for_deconstruction(event)
+  GlobalState.put_chest_contents_in_network(event.entity)
+end
+
 return M
