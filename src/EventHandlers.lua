@@ -304,9 +304,15 @@ function M.on_pre_entity_settings_pasted(event)
   local dest = event.destination
   if source.name == dest.name then
     local entity = entity_name_to_entity_map[source.name]
-    if entity ~= nil and entity.copy_config ~= nil then
-      local dest_info = GlobalState.get_entity_info(dest.unit_number)
-      dest_info.config = entity.copy_config(source.unit_number)
+    if entity ~= nil then
+      if entity.on_paste_same_entity_settings ~= nil then
+        entity.on_paste_same_entity_settings(source, dest)
+      elseif entity.copy_config ~= nil then
+        local dest_info = GlobalState.get_entity_info(dest.unit_number)
+        if dest_info ~= nil then
+          dest_info.config = entity.copy_config(source.unit_number)
+        end
+      end
     end
   else
     local dest_entity = entity_name_to_entity_map[dest.name]

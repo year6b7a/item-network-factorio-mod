@@ -1,5 +1,6 @@
 local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
+local NetworkChestHelpers = require "src.NetworkChestHelpers"
 
 local M = {}
 
@@ -46,7 +47,7 @@ function M.on_open_window(state, player, entity)
   end
 
   if container ~= nil then
-    if container.name == "network-chest" or container.name == "medium-network-chest" or container.name == "large-network-chest" then
+    if NetworkChestHelpers.is_network_chest(container.name) then
       local info = GlobalState.get_entity_info(container.unit_number)
       if info ~= nil then
         for _, request in ipairs(info.config.requests) do
