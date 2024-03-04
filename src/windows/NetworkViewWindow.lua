@@ -327,7 +327,7 @@ local function get_missing_item_icon(item_name, missing_count)
     elem_type = "item",
     sprite = "item/" .. item_name,
     tooltip = {
-      "",
+      "in_nv.item_shortage_sprite_btn_tooltip",
       item_proto.localised_name,
     },
     tags = {
