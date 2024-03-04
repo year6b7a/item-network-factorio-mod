@@ -601,7 +601,7 @@ function M.deposit_material2(info, amount, priority)
     local max_amount = math.max(0, info.deposit_limit - info.amount)
     amount = math.min(amount, max_amount)
   elseif priority == Priority.LOW then
-    local deposit_limit = math.floor(0.2 * info.deposit_limit)
+    local deposit_limit = math.floor(0.5 * info.deposit_limit)
     deposit_limit = math.max(1, deposit_limit)
     local max_amount = math.max(0, deposit_limit - info.amount)
     amount = math.min(amount, max_amount)
