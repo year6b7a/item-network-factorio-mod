@@ -20,6 +20,7 @@ local Heap = require "src.Heap"
 local NetworkChestWindow = require "src.windows.NetworkChestWindow"
 local GlobalState = require "src.GlobalState"
 local NetworkChestEntity = require "src.entities.NetworkChestEntity"
+local SpidertronEntity = require "src.entities.SpidertronEntity"
 
 local M = {}
 
@@ -45,6 +46,7 @@ local ENTITIES = {
   MediumNetworkTankEntity,
   LargeNetworkTankEntity,
   NetworkLoaderEntity,
+  SpidertronEntity,
 }
 
 local entity_name_to_window_map = {}
@@ -219,7 +221,9 @@ local function generic_on_create_entity(event)
       state.config = event.tags.config
     end
 
-    entity_def.on_create_entity(state)
+    if entity_def.on_create_entity then
+      entity_def.on_create_entity(state)
+    end
 
     if not entity_def.do_not_add_to_update_queue then
       GlobalState.register_entity(entity.unit_number, state)
