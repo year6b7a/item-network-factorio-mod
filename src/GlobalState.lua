@@ -358,38 +358,6 @@ function M.DPRECATED_missing_item_set(item_name, unit_number, count)
   set_missing(global.mod.missing_items, item_name, unit_number, count)
 end
 
--- drop any items that have not been missing for a while
--- returns the (read-only) table of missing items
-function M.DEPRECATED_get_missing_items()
-  return get_missing_and_filter(global.mod.missing_items)
-end
-
--- create a string 'key' for a fluid@temp
-function M.DEPRECATED_encode_fluid_key(fluid_name, temp)
-  return string.format("%s@%d", fluid_name, math.floor(temp * 1000))
-end
-
--- split the key back into the fluid and temp
-function M.DEPRECATED_decode_fluid_key(key)
-  local idx = string.find(key, "@")
-  if idx ~= nil then
-    return string.sub(key, 1, idx - 1), tonumber(string.sub(key, idx + 1)) / 1000
-  end
-  error("unreachable")
-end
-
--- mark a fluid/temp combo as missing
-function M.DEPRECATED_missing_fluid_set(name, temp, unit_number, count)
-  local key = M.encode_fluid_key(name, temp)
-  set_missing(global.mod.missing_fluid, key, unit_number, count)
-end
-
--- drop any fluids that have not been missing for a while
--- returns the (read-only) table of missing items
-function M.DEPRECATED_missing_fluid_filter()
-  return get_missing_and_filter(global.mod.missing_fluid)
-end
-
 function M.remove_old_ui()
   if global.mod.network_chest_gui ~= nil then
     global.mod.network_chest_gui = nil
