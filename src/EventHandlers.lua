@@ -1,3 +1,5 @@
+local GhostEntity = require "src.entities.GhostEntity"
+local Priority = require "src.Priority"
 local LogisticNetworkChestWindow = require "src.windows.LogisticNetworkChestWindow"
 local LogisticNetworkChestEntity = require "src.entities.LogisticNetworkChestEntity"
 local NetworkLoaderEntity = require "src.entities.NetworkLoaderEntity"
@@ -47,6 +49,7 @@ local ENTITIES = {
   LargeNetworkTankEntity,
   NetworkLoaderEntity,
   SpidertronEntity,
+  GhostEntity,
 }
 
 local entity_name_to_window_map = {}
@@ -194,6 +197,20 @@ function M.on_gui_selection_state_changed(event)
   handle_generic_gui_event(event, "on_gui_selection_state_changed")
 end
 
+local function on_create_ghost(entity)
+  if not GhostEntity.revive_ghost(entity) then
+    GlobalState.register_entity(
+      entity.unit_number,
+      { type = entity.name, entity = entity }
+    )
+    Heap.insert(
+      global.mod.update_queue,
+      game.tick + GlobalState.get_default_update_period(),
+      entity.unit_number
+    )
+  end
+end
+
 local function generic_on_create_entity(event)
   local entity = event.created_entity
   if entity == nil then
@@ -207,6 +224,11 @@ local function generic_on_create_entity(event)
         return
       end
     end
+  end
+
+  if entity.name == "entity-ghost" then
+    on_create_ghost(entity)
+    return
   end
 
   local entity_def = entity_name_to_entity_map[entity.name]
@@ -408,18 +430,25 @@ function M.on_tick()
   for _, entity_id in ipairs(entities_to_update) do
     local entity_info = GlobalState.get_entity_info(entity_id)
     if entity_info ~= nil then
+      local entity = entity_info.entity
       local entity_name = entity_info.type
       local entity_handler = entity_name_to_entity_map[entity_name]
-      if entity_handler ~= nil then
+      if entity.valid and entity_handler ~= nil then
         GlobalState.start_timer("Update Entity")
         local next_update_ticks = entity_handler.on_update(entity_info)
-        local rand_delta = global.mod.rand() * 0.1 * next_update_ticks
-        Heap.insert(
-          global.mod.update_queue,
-          game.tick + next_update_ticks + rand_delta,
-          entity_id
-        )
+        if next_update_ticks == "UNREGISTER_ENTITY" then
+          GlobalState.unregister_entity(entity_id)
+        elseif type(next_update_ticks) == "number" then
+          local rand_delta = global.mod.rand() * 0.1 * next_update_ticks
+          Heap.insert(
+            global.mod.update_queue,
+            game.tick + next_update_ticks + rand_delta,
+            entity_id
+          )
+        end
         GlobalState.stop_timer("Update Entity")
+      else
+        GlobalState.unregister_entity(entity_id)
       end
     end
   end
