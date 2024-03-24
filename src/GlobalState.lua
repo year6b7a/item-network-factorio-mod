@@ -526,7 +526,9 @@ function M.register_entity(entity_id, info)
 end
 
 function M.unregister_entity(entity_id)
-  global.mod.entities[entity_id] = nil
+  if entity_id ~= nil then
+    global.mod.entities[entity_id] = nil
+  end
 end
 
 function M.register_chest_entity(entity, requests)
@@ -694,6 +696,30 @@ function M.deposit_inv_contents(inv)
     end
     inv.clear()
   end
+end
+
+function M.mine_entity_into_network(entity)
+  local unit_number = entity.unit_number
+  local temp_inv = game.create_inventory(128)
+
+  while true do
+    local mined = entity.mine({
+      inventory = temp_inv,
+    })
+    if mined then
+      M.unregister_entity(unit_number)
+    end
+    if not temp_inv.is_empty() then
+      M.deposit_inv_contents(temp_inv)
+      if mined then
+        break
+      end
+    else
+      break
+    end
+  end
+
+  temp_inv.destroy()
 end
 
 function M.get_entity_info(entity_id)

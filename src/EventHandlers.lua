@@ -317,6 +317,25 @@ function M.on_marked_for_deconstruction(event)
       entity_def.on_marked_for_deconstruction(event)
     end
   end
+
+  if event.entity.can_be_destroyed() then
+    local can_destroy = true
+    if name == "cliff" then
+      can_destroy = false
+      local withdrawn = GlobalState.withdraw_item2(
+        "cliff-explosives",
+        1,
+        Priority.HIGH
+      )
+      if withdrawn > 0 then
+        can_destroy = true
+      end
+    end
+
+    if can_destroy then
+      GlobalState.mine_entity_into_network(event.entity)
+    end
+  end
 end
 
 function M.on_post_entity_died(event)
@@ -436,6 +455,10 @@ function M.on_tick()
       if entity.valid and entity_handler ~= nil then
         GlobalState.start_timer("Update Entity")
         local next_update_ticks = entity_handler.on_update(entity_info)
+        if next_update_ticks == nil then
+          next_update_ticks = GlobalState.get_default_update_period()
+        end
+
         if next_update_ticks == "UNREGISTER_ENTITY" then
           GlobalState.unregister_entity(entity_id)
         elseif type(next_update_ticks) == "number" then
