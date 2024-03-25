@@ -715,6 +715,18 @@ end
 
 function M.mine_entity_into_network(entity)
   local unit_number = entity.unit_number
+
+  -- deposit fluids into network
+  for fluid_idx = 1, #entity.fluidbox do
+    local fluid = entity.fluidbox[fluid_idx]
+    M.deposit_fluid2(
+      fluid.name,
+      fluid.temperature,
+      fluid.amount,
+      Priority.ALWAYS_INSERT
+    )
+  end
+
   local temp_inv = game.create_inventory(128)
 
   while true do
