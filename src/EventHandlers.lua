@@ -1,3 +1,6 @@
+local ItemRequestProxyEntity = require "src.entities.ItemRequestProxyEntity"
+local Helpers = require "src.Helpers"
+local TileGhostEntity = require "src.entities.TileGhostEntity"
 local GhostEntity = require "src.entities.GhostEntity"
 local Priority = require "src.Priority"
 local LogisticNetworkChestWindow = require "src.windows.LogisticNetworkChestWindow"
@@ -50,6 +53,8 @@ local ENTITIES = {
   NetworkLoaderEntity,
   SpidertronEntity,
   GhostEntity,
+  TileGhostEntity,
+  ItemRequestProxyEntity,
 }
 
 local entity_name_to_window_map = {}
@@ -226,7 +231,7 @@ local function generic_on_create_entity(event)
     end
   end
 
-  if entity.name == "entity-ghost" then
+  if entity.name == "entity-ghost" or entity.name == "tile-ghost" then
     on_create_ghost(entity)
     return
   end
@@ -474,6 +479,12 @@ function M.on_tick()
         GlobalState.unregister_entity(entity_id)
       end
     end
+  end
+  if not (global.mod.update_queue.size == Helpers.table_len(global.mod.entities)) then
+    game.print(string.format("update queue %s != entities %s",
+      global.mod.update_queue.size,
+      Helpers.table_len(global.mod.entities)
+    ))
   end
   GlobalState.stop_timer("On Tick")
 end

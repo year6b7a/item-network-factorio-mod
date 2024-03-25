@@ -525,6 +525,21 @@ function M.register_entity(entity_id, info)
   global.mod.entities[entity_id] = info
 end
 
+function M.register_and_enqueue_entity(entity, info)
+  if info == nil then
+    info = {}
+  end
+  info.type = entity.name
+  info.entity = entity
+
+  M.register_entity(entity.unit_number, info)
+  Heap.insert(
+    global.mod.update_queue,
+    game.tick + M.get_default_update_period(),
+    entity.unit_number
+  )
+end
+
 function M.unregister_entity(entity_id)
   if entity_id ~= nil then
     global.mod.entities[entity_id] = nil

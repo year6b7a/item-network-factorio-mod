@@ -3,13 +3,13 @@ local Priority = require "src.Priority"
 local GlobalState = require "src.GlobalState"
 local Helpers = require "src.Helpers"
 local constants = require "src.constants"
+local ItemRequestProxyEntity = require "src.entities.ItemRequestProxyEntity"
 
 local M = {}
 
 M.entity_name = "entity-ghost"
 
 function M.on_update(info)
-  game.print("trying to revive entity")
   if M.revive_ghost(info.entity) then
     return "UNREGISTER_ENTITY"
   else
@@ -34,7 +34,24 @@ function M.revive_ghost(entity)
         return false
       else
         -- place the ghost
-        entity.revive()
+        local collided_items, revived_entity, request_proxy = entity.revive({
+          raise_revive = true,
+          return_item_request_proxy = true,
+        })
+        if request_proxy ~= nil then
+          local item_requests = {}
+          for item_name, item_count in pairs(request_proxy.item_requests) do
+            if item_count > 0 then
+              item_requests[item_name] = item_count
+            end
+          end
+          if not ItemRequestProxyEntity.fulfill_requests(request_proxy, item_requests) then
+            -- add item request proxy to queue
+            GlobalState.register_and_enqueue_entity(request_proxy, {
+              item_requests = item_requests,
+            })
+          end
+        end
         return true
       end
     end
